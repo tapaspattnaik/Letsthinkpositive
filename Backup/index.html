@@ -1,0 +1,2268 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>letsthinkpositive.com — where every thought begins with hope</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap"
+    rel="stylesheet">
+  <style>
+    /* ── RESET & VARIABLES ── */
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --teal-deep: #1A6B6B;
+      --teal-mid: #2D9B8A;
+      --teal-light: #A8D8D0;
+      --teal-ghost: #EEF7F6;
+      --teal-dark: #0F4040;
+      --amber: #E8A020;
+      --amber-soft: #F5C96A;
+      --amber-pale: #FFF8EC;
+      --ivory: #F8F8F4;
+      --charcoal: #1C2B2B;
+      --text-mid: #2E4A4A;
+      --text-light: #4A6565;
+      --text-xlight: #7A9898;
+      --white: #FFFFFF;
+      --ff-display: 'Playfair Display', Georgia, serif;
+      --ff-serif: 'DM Serif Display', Georgia, serif;
+      --ff-body: 'DM Sans', system-ui, sans-serif;
+      --radius: 12px;
+      --radius-lg: 24px;
+      --shadow: 0 4px 24px rgba(26, 107, 107, 0.10);
+      --shadow-lg: 0 12px 48px rgba(26, 107, 107, 0.15);
+      --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: var(--ff-body);
+      background: var(--ivory);
+      color: var(--charcoal);
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    /* ── NAVIGATION ── */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      background: rgba(248, 248, 244, 0.92);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--teal-light);
+      padding: 0 5%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 72px;
+      transition: var(--transition);
+    }
+
+    .nav-logo {
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      flex-shrink: 0;
+      transition: opacity var(--transition);
+    }
+
+    .nav-logo:hover {
+      opacity: 0.85;
+    }
+
+    .nav-emblem {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+    }
+
+    .nav-wordmark {
+      display: flex;
+      align-items: baseline;
+      font-family: var(--ff-body);
+      font-size: 1.15rem;
+      line-height: 1;
+    }
+
+    .nav-logo .lets {
+      color: var(--teal-mid);
+      font-weight: 300;
+    }
+
+    .nav-logo .think {
+      color: var(--teal-deep);
+      font-weight: 700;
+    }
+
+    .nav-logo .pos {
+      color: var(--amber);
+      font-weight: 300;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text-mid);
+      text-decoration: none;
+      letter-spacing: 0.02em;
+      transition: color var(--transition);
+      position: relative;
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--amber);
+      border-radius: 2px;
+      transform: scaleX(0);
+      transition: transform var(--transition);
+    }
+
+    .nav-links a:hover {
+      color: var(--teal-deep);
+    }
+
+    .nav-links a:hover::after {
+      transform: scaleX(1);
+    }
+
+    .nav-cta {
+      background: var(--teal-deep);
+      color: var(--white) !important;
+      padding: 0.5rem 1.2rem;
+      border-radius: 50px;
+      font-size: 0.85rem !important;
+      font-weight: 500 !important;
+      transition: background var(--transition), transform var(--transition) !important;
+    }
+
+    .nav-cta::after {
+      display: none !important;
+    }
+
+    .nav-cta:hover {
+      background: var(--teal-dark) !important;
+      transform: translateY(-1px);
+    }
+
+    /* ── PAGE SYSTEM ── */
+    .page {
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      background: linear-gradient(135deg, var(--teal-dark) 0%, var(--teal-deep) 45%, #1E5A5A 100%);
+      display: flex;
+      align-items: center;
+      padding: 120px 5% 80px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -20%;
+      right: -10%;
+      width: 700px;
+      height: 700px;
+      background: radial-gradient(circle, rgba(232, 160, 32, 0.12) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute;
+      bottom: -10%;
+      left: -5%;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(45, 155, 138, 0.2) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+
+    .hero-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-eyebrow {
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      color: var(--amber-soft);
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .hero-eyebrow::before {
+      content: '';
+      width: 32px;
+      height: 2px;
+      background: var(--amber);
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    .hero h1 {
+      font-family: var(--ff-display);
+      font-size: clamp(2.4rem, 4vw, 3.6rem);
+      font-weight: 700;
+      line-height: 1.15;
+      color: var(--white);
+      margin-bottom: 1.5rem;
+    }
+
+    .hero h1 em {
+      color: var(--amber-soft);
+      font-style: italic;
+    }
+
+    .hero-sub {
+      font-size: 1.05rem;
+      color: rgba(255, 255, 255, 0.75);
+      line-height: 1.8;
+      margin-bottom: 2.5rem;
+      max-width: 480px;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--amber);
+      color: var(--charcoal);
+      padding: 0.85rem 2rem;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-decoration: none;
+      transition: all var(--transition);
+      border: none;
+      cursor: pointer;
+      letter-spacing: 0.01em;
+    }
+
+    .btn-primary:hover {
+      background: var(--amber-soft);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(232, 160, 32, 0.3);
+    }
+
+    .btn-outline {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      border: 1.5px solid rgba(255, 255, 255, 0.35);
+      color: var(--white);
+      padding: 0.85rem 2rem;
+      border-radius: 50px;
+      font-weight: 500;
+      font-size: 0.95rem;
+      text-decoration: none;
+      transition: all var(--transition);
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .btn-outline:hover {
+      border-color: var(--white);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    /* Hero symbol */
+    .hero-symbol {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .symbol-rings {
+      width: 320px;
+      height: 320px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .ring {
+      position: absolute;
+      border-radius: 50%;
+      border: 1px solid rgba(168, 216, 208, 0.2);
+      animation: pulse-ring 4s ease-in-out infinite;
+    }
+
+    .ring:nth-child(1) {
+      width: 100%;
+      height: 100%;
+      animation-delay: 0s;
+    }
+
+    .ring:nth-child(2) {
+      width: 78%;
+      height: 78%;
+      animation-delay: 0.6s;
+      border-color: rgba(168, 216, 208, 0.3);
+    }
+
+    .ring:nth-child(3) {
+      width: 58%;
+      height: 58%;
+      animation-delay: 1.2s;
+      border-color: rgba(168, 216, 208, 0.4);
+    }
+
+    @keyframes pulse-ring {
+
+      0%,
+      100% {
+        opacity: 0.4;
+        transform: scale(1);
+      }
+
+      50% {
+        opacity: 0.9;
+        transform: scale(1.02);
+      }
+    }
+
+    .symbol-core {
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--teal-mid), var(--teal-deep));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 2;
+      box-shadow: 0 0 60px rgba(45, 155, 138, 0.4);
+    }
+
+    .symbol-inner {
+      width: 94px;
+      height: 94px;
+      border-radius: 50%;
+      background: var(--teal-mid);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .symbol-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: rgba(255, 248, 236, 0.9);
+    }
+
+    .symbol-strokes {
+      position: absolute;
+      bottom: calc(50% + 64px);
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 6px;
+      align-items: flex-end;
+    }
+
+    .stroke {
+      width: 3px;
+      border-radius: 3px;
+      background: var(--amber);
+      animation: stroke-glow 2.5s ease-in-out infinite;
+    }
+
+    .stroke:nth-child(1) {
+      height: 52px;
+      animation-delay: 0s;
+    }
+
+    .stroke:nth-child(2) {
+      height: 76px;
+      animation-delay: 0.3s;
+    }
+
+    .stroke:nth-child(3) {
+      height: 52px;
+      animation-delay: 0.6s;
+    }
+
+    @keyframes stroke-glow {
+
+      0%,
+      100% {
+        opacity: 0.7;
+      }
+
+      50% {
+        opacity: 1;
+        box-shadow: 0 0 8px rgba(232, 160, 32, 0.6);
+      }
+    }
+
+    .symbol-arcs {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      align-items: center;
+      bottom: calc(50% - 18px);
+    }
+
+    .arc {
+      border-radius: 50px 50px 0 0;
+      border: 3px solid var(--amber);
+      border-bottom: none;
+      animation: arc-glow 3s ease-in-out infinite;
+    }
+
+    .arc:nth-child(1) {
+      width: 48px;
+      height: 24px;
+      animation-delay: 0s;
+    }
+
+    .arc:nth-child(2) {
+      width: 32px;
+      height: 16px;
+      animation-delay: 0.4s;
+      opacity: 0.75;
+    }
+
+    .arc:nth-child(3) {
+      width: 18px;
+      height: 9px;
+      animation-delay: 0.8s;
+      opacity: 0.5;
+    }
+
+    @keyframes arc-glow {
+
+      0%,
+      100% {
+        border-color: var(--amber);
+      }
+
+      50% {
+        border-color: var(--amber-soft);
+      }
+    }
+
+    .hero-tagline {
+      margin-top: 2rem;
+      text-align: center;
+      font-family: var(--ff-display);
+      font-style: italic;
+      font-size: 0.95rem;
+      color: rgba(255, 255, 255, 0.55);
+      letter-spacing: 0.03em;
+    }
+
+    /* ── SECTIONS ── */
+    section {
+      padding: 80px 5%;
+    }
+
+    .section-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      color: var(--teal-mid);
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .section-label::before {
+      content: '';
+      width: 24px;
+      height: 2px;
+      background: var(--amber);
+      border-radius: 2px;
+    }
+
+    .section-title {
+      font-family: var(--ff-display);
+      font-size: clamp(1.9rem, 3vw, 2.8rem);
+      line-height: 1.25;
+      color: var(--charcoal);
+      margin-bottom: 1.2rem;
+    }
+
+    .section-title em {
+      color: var(--teal-deep);
+      font-style: italic;
+    }
+
+    .section-sub {
+      font-size: 1.05rem;
+      color: var(--text-light);
+      max-width: 560px;
+      line-height: 1.8;
+      margin-bottom: 2.5rem;
+    }
+
+    /* ── QUOTE WIDGET ── */
+    .quote-section {
+      background: var(--teal-ghost);
+    }
+
+    .quote-card {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      padding: 3rem;
+      max-width: 720px;
+      margin: 2rem auto;
+      box-shadow: var(--shadow-lg);
+      border-left: 6px solid var(--amber);
+      position: relative;
+    }
+
+    .quote-card::before {
+      content: '\201C';
+      font-family: var(--ff-display);
+      font-size: 6rem;
+      line-height: 0.8;
+      color: var(--teal-light);
+      position: absolute;
+      top: 1.5rem;
+      left: 1.5rem;
+      opacity: 0.5;
+    }
+
+    .quote-text {
+      font-family: var(--ff-display);
+      font-size: 1.4rem;
+      font-style: italic;
+      color: var(--teal-deep);
+      line-height: 1.6;
+      margin-bottom: 1.2rem;
+      padding-left: 1rem;
+    }
+
+    .quote-author {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-light);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .quote-category {
+      display: inline-block;
+      margin-top: 0.75rem;
+      background: var(--teal-ghost);
+      color: var(--teal-deep);
+      padding: 0.25rem 0.75rem;
+      border-radius: 50px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+    }
+
+    .quote-nav-btn {
+      background: none;
+      border: 1.5px solid var(--teal-light);
+      color: var(--teal-deep);
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.4rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition);
+      line-height: 1;
+      vertical-align: middle;
+    }
+
+    .quote-nav-btn:hover {
+      background: var(--teal-deep);
+      color: var(--white);
+      border-color: var(--teal-deep);
+    }
+
+    .quote-counter {
+      font-size: 0.82rem;
+      color: var(--text-xlight);
+      font-style: italic;
+      display: inline-block;
+      min-width: 60px;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    /* ── PILLARS ── */
+    .pillars-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5rem;
+      margin-top: 3rem;
+    }
+
+    .pillar-card {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      padding: 2.2rem;
+      border: 1px solid var(--teal-light);
+      transition: all var(--transition);
+      cursor: default;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .pillar-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--teal-mid), var(--amber));
+      transform: scaleX(0);
+      transition: transform var(--transition);
+      transform-origin: left;
+    }
+
+    .pillar-card:hover {
+      transform: translateY(-6px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--teal-light);
+    }
+
+    .pillar-card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .pillar-icon {
+      font-size: 2.2rem;
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    .pillar-title {
+      font-family: var(--ff-body);
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--teal-deep);
+      margin-bottom: 0.75rem;
+    }
+
+    .pillar-text {
+      font-size: 0.92rem;
+      color: var(--text-light);
+      line-height: 1.75;
+    }
+
+    /* ── ABOUT TEASER ── */
+    .about-teaser {
+      background: linear-gradient(135deg, var(--teal-deep), var(--teal-dark));
+      color: var(--white);
+    }
+
+    .about-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: center;
+    }
+
+    .about-text .section-title {
+      color: var(--white);
+    }
+
+    .about-text .section-label {
+      color: var(--amber-soft);
+    }
+
+    .about-text .section-label::before {
+      background: var(--amber);
+    }
+
+    .about-text p {
+      color: rgba(255, 255, 255, 0.78);
+      font-size: 1rem;
+      line-height: 1.85;
+      margin-bottom: 1.2rem;
+    }
+
+    .superbman-card {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(168, 216, 208, 0.25);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem;
+      backdrop-filter: blur(8px);
+    }
+
+    .superbman-card h3 {
+      font-family: var(--ff-display);
+      font-size: 1.5rem;
+      font-style: italic;
+      color: var(--amber-soft);
+      margin-bottom: 1.5rem;
+    }
+
+    .superbman-item {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      align-items: flex-start;
+    }
+
+    .superbman-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--amber);
+      flex-shrink: 0;
+      margin-top: 0.55rem;
+    }
+
+    .superbman-item p {
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.75);
+      line-height: 1.7;
+    }
+
+    /* ── COMING SOON PILLARS ── */
+    .coming-soon {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-top: 2rem;
+    }
+
+    .coming-tag {
+      background: var(--teal-ghost);
+      color: var(--teal-deep);
+      padding: 0.5rem 1.2rem;
+      border-radius: 50px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      border: 1.5px dashed var(--teal-light);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .coming-tag .soon {
+      font-size: 0.7rem;
+      color: var(--text-xlight);
+    }
+
+    /* ── BLOG SECTION ── */
+    .blog-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-top: 2.5rem;
+    }
+
+    .blog-card {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      transition: all var(--transition);
+      cursor: pointer;
+      border: 1px solid rgba(168, 216, 208, 0.3);
+    }
+
+    .blog-card:hover {
+      transform: translateY(-6px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .blog-card-top {
+      height: 8px;
+      background: linear-gradient(90deg, var(--teal-mid), var(--amber));
+    }
+
+    .blog-card-body {
+      padding: 1.8rem;
+    }
+
+    .blog-tag {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--teal-mid);
+      margin-bottom: 0.75rem;
+      display: block;
+    }
+
+    .blog-card h3 {
+      font-family: var(--ff-display);
+      font-size: 1.15rem;
+      color: var(--charcoal);
+      line-height: 1.4;
+      margin-bottom: 0.75rem;
+    }
+
+    .blog-card p {
+      font-size: 0.88rem;
+      color: var(--text-light);
+      line-height: 1.7;
+    }
+
+    .blog-card-footer {
+      padding: 1rem 1.8rem;
+      border-top: 1px solid var(--teal-ghost);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .blog-read {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--teal-mid);
+      text-decoration: none;
+    }
+
+    /* ── NEWSLETTER ── */
+    .newsletter {
+      background: var(--amber-pale);
+    }
+
+    .newsletter-inner {
+      max-width: 600px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .newsletter-form {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 2rem;
+      background: var(--white);
+      border-radius: 50px;
+      padding: 0.4rem 0.4rem 0.4rem 1.5rem;
+      box-shadow: var(--shadow);
+    }
+
+    .newsletter-form input {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-family: var(--ff-body);
+      font-size: 0.95rem;
+      color: var(--charcoal);
+      background: transparent;
+    }
+
+    .newsletter-form input::placeholder {
+      color: var(--text-xlight);
+    }
+
+    .newsletter-form button {
+      background: var(--teal-deep);
+      color: var(--white);
+      border: none;
+      border-radius: 50px;
+      padding: 0.75rem 1.75rem;
+      font-family: var(--ff-body);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background var(--transition);
+      white-space: nowrap;
+    }
+
+    .newsletter-form button:hover {
+      background: var(--teal-dark);
+    }
+
+    .newsletter-note {
+      font-size: 0.8rem;
+      color: var(--text-xlight);
+      margin-top: 1rem;
+    }
+
+    /* ── CONTAGIOUS SECTION ── */
+    .contagious {
+      text-align: center;
+      padding: 80px 5%;
+      background: linear-gradient(135deg, var(--teal-dark) 0%, var(--teal-deep) 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .contagious::before {
+      content: '';
+      position: absolute;
+      top: -30%;
+      right: -8%;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(232, 160, 32, 0.10) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .contagious blockquote {
+      font-family: var(--ff-display);
+      font-size: clamp(1.4rem, 2.5vw, 2.1rem);
+      font-style: italic;
+      color: var(--white);
+      max-width: 740px;
+      margin: 0 auto 2rem;
+      line-height: 1.55;
+      position: relative;
+    }
+
+    .contagious p {
+      font-size: 1rem;
+      color: rgba(255, 255, 255, 0.78);
+      max-width: 580px;
+      margin: 0 auto 2.5rem;
+      line-height: 1.85;
+      position: relative;
+    }
+
+    /* ── ABOUT PAGE ── */
+    .about-hero {
+      background: linear-gradient(135deg, var(--teal-dark), var(--teal-deep));
+      padding: 140px 5% 80px;
+      text-align: center;
+      color: var(--white);
+    }
+
+    .about-hero h1 {
+      font-family: var(--ff-display);
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      margin-bottom: 1rem;
+    }
+
+    .about-hero p {
+      font-size: 1.1rem;
+      color: rgba(255, 255, 255, 0.7);
+      max-width: 560px;
+      margin: 0 auto;
+    }
+
+    .story-section {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 80px 5%;
+    }
+
+    .story-section p {
+      font-size: 1.05rem;
+      color: var(--text-mid);
+      line-height: 1.9;
+      margin-bottom: 1.5rem;
+    }
+
+    .story-pullquote {
+      border-left: 5px solid var(--amber);
+      padding: 1.5rem 2rem;
+      background: var(--teal-ghost);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      margin: 2.5rem 0;
+    }
+
+    .story-pullquote p {
+      font-family: var(--ff-display);
+      font-style: italic;
+      font-size: 1.2rem;
+      color: var(--teal-deep);
+      margin: 0;
+      line-height: 1.6;
+    }
+
+    .story-signature {
+      font-style: italic;
+      color: var(--teal-mid) !important;
+      font-weight: 500;
+    }
+
+    .values-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.25rem;
+      margin-top: 2.5rem;
+    }
+
+    .value-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 1.75rem;
+      border-left: 4px solid var(--teal-mid);
+      box-shadow: var(--shadow);
+    }
+
+    .value-card h4 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--teal-deep);
+      margin-bottom: 0.5rem;
+    }
+
+    .value-card p {
+      font-size: 0.9rem;
+      color: var(--text-light);
+      line-height: 1.7;
+    }
+
+    /* ── BLOG PAGE ── */
+    .blog-hero {
+      background: var(--teal-ghost);
+      padding: 140px 5% 60px;
+      text-align: center;
+    }
+
+    .blog-filters {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin: 2rem 0;
+    }
+
+    .filter-btn {
+      padding: 0.5rem 1.25rem;
+      border-radius: 50px;
+      border: 1.5px solid var(--teal-light);
+      background: var(--white);
+      font-family: var(--ff-body);
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-mid);
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+
+    .filter-btn:hover,
+    .filter-btn.active {
+      background: var(--teal-deep);
+      color: var(--white);
+      border-color: var(--teal-deep);
+    }
+
+    .submit-banner {
+      background: linear-gradient(135deg, var(--teal-deep), var(--teal-mid));
+      border-radius: var(--radius-lg);
+      padding: 2.5rem 3rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 2rem;
+      margin: 3rem 0;
+    }
+
+    .submit-banner h3 {
+      font-family: var(--ff-display);
+      font-size: 1.4rem;
+      color: var(--white);
+      margin-bottom: 0.5rem;
+    }
+
+    .submit-banner p {
+      color: rgba(255, 255, 255, 0.75);
+      font-size: 0.92rem;
+    }
+
+    /* ── YOUTUBE PAGE ── */
+    .youtube-hero {
+      background: var(--charcoal);
+      padding: 140px 5% 60px;
+      text-align: center;
+      color: var(--white);
+    }
+
+    .youtube-hero h1 {
+      font-family: var(--ff-display);
+      font-size: clamp(2rem, 4vw, 3rem);
+      color: var(--white);
+      margin-bottom: 1rem;
+    }
+
+    .youtube-hero p {
+      color: rgba(255, 255, 255, 0.65);
+      max-width: 520px;
+      margin: 0 auto 2rem;
+    }
+
+    .video-categories {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.25rem;
+      margin-top: 2.5rem;
+    }
+
+    .video-cat {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 1.75rem;
+      text-align: center;
+      border: 1px solid var(--teal-light);
+      transition: all var(--transition);
+    }
+
+    .video-cat:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .video-cat-icon {
+      font-size: 2rem;
+      margin-bottom: 0.75rem;
+      display: block;
+    }
+
+    .video-cat h4 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--teal-deep);
+      margin-bottom: 0.5rem;
+    }
+
+    .video-cat p {
+      font-size: 0.84rem;
+      color: var(--text-light);
+      line-height: 1.6;
+    }
+
+    .embed-placeholder {
+      background: var(--charcoal);
+      border-radius: var(--radius-lg);
+      height: 360px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 3rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .embed-placeholder::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(26, 107, 107, 0.3), rgba(45, 155, 138, 0.1));
+    }
+
+    .play-btn {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: var(--amber);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 1;
+      cursor: pointer;
+      transition: transform var(--transition), box-shadow var(--transition);
+    }
+
+    .play-btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 0 40px rgba(232, 160, 32, 0.5);
+    }
+
+    .play-btn svg {
+      width: 32px;
+      height: 32px;
+      fill: var(--charcoal);
+      margin-left: 4px;
+    }
+
+    /* ── CONTACT PAGE ── */
+    .contact-hero {
+      background: var(--teal-ghost);
+      padding: 140px 5% 60px;
+    }
+
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 60px 5%;
+    }
+
+    .contact-info h3 {
+      font-family: var(--ff-display);
+      font-size: 1.6rem;
+      color: var(--teal-deep);
+      margin-bottom: 1rem;
+    }
+
+    .contact-info p {
+      font-size: 0.97rem;
+      color: var(--text-mid);
+      line-height: 1.85;
+      margin-bottom: 1.5rem;
+    }
+
+    .contact-links {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    .contact-link {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem 1.25rem;
+      background: var(--white);
+      border-radius: var(--radius);
+      border: 1px solid var(--teal-light);
+      text-decoration: none;
+      color: var(--text-mid);
+      transition: all var(--transition);
+    }
+
+    .contact-link:hover {
+      border-color: var(--teal-mid);
+      transform: translateX(4px);
+    }
+
+    .contact-link-icon {
+      font-size: 1.2rem;
+    }
+
+    .contact-link-text {
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .contact-form {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--teal-deep);
+      margin-bottom: 0.5rem;
+      letter-spacing: 0.03em;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 0.85rem 1rem;
+      border: 1.5px solid var(--teal-light);
+      border-radius: var(--radius);
+      font-family: var(--ff-body);
+      font-size: 0.92rem;
+      color: var(--charcoal);
+      background: var(--ivory);
+      transition: border-color var(--transition);
+      outline: none;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      border-color: var(--teal-mid);
+      background: var(--white);
+    }
+
+    .form-group textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .form-group input::placeholder,
+    .form-group textarea::placeholder {
+      color: var(--text-xlight);
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--charcoal);
+      color: rgba(255, 255, 255, 0.65);
+      padding: 60px 5% 30px;
+    }
+
+    .footer-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 3rem;
+      margin-bottom: 3rem;
+    }
+
+    .footer-brand h3 {
+      font-family: var(--ff-body);
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+    }
+
+    .footer-brand h3 .lets {
+      color: var(--teal-mid);
+      font-weight: 300;
+    }
+
+    .footer-brand h3 .think {
+      color: var(--white);
+      font-weight: 700;
+    }
+
+    .footer-brand h3 .pos {
+      color: var(--amber);
+      font-weight: 300;
+    }
+
+    .footer-brand p {
+      font-size: 0.88rem;
+      line-height: 1.75;
+      max-width: 260px;
+    }
+
+    .footer-tagline {
+      font-style: italic;
+      color: var(--teal-light) !important;
+      font-size: 0.82rem !important;
+      margin-top: 0.5rem;
+    }
+
+    .footer-col h4 {
+      color: var(--white);
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 1.25rem;
+    }
+
+    .footer-col ul {
+      list-style: none;
+    }
+
+    .footer-col ul li {
+      margin-bottom: 0.6rem;
+    }
+
+    .footer-col ul a {
+      color: rgba(255, 255, 255, 0.55);
+      font-size: 0.88rem;
+      text-decoration: none;
+      transition: color var(--transition);
+    }
+
+    .footer-col ul a:hover {
+      color: var(--amber);
+    }
+
+    .footer-col ul .coming {
+      color: rgba(255, 255, 255, 0.25);
+      font-size: 0.82rem;
+      font-style: italic;
+    }
+
+    .footer-bottom {
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1200px;
+      margin: 0 auto;
+      font-size: 0.82rem;
+    }
+
+    .footer-bottom span {
+      color: var(--amber-soft);
+    }
+
+    /* ── ANIMATIONS ── */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .fade-in.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .stagger-1 {
+      transition-delay: 0.1s;
+    }
+
+    .stagger-2 {
+      transition-delay: 0.2s;
+    }
+
+    .stagger-3 {
+      transition-delay: 0.3s;
+    }
+
+    .stagger-4 {
+      transition-delay: 0.4s;
+    }
+
+    /* ── UTILITIES ── */
+    .text-center {
+      text-align: center;
+    }
+
+    .mt-4 {
+      margin-top: 2rem;
+    }
+
+    .gap-section {
+      background: var(--ivory);
+      padding: 80px 5%;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+
+      .hero-inner,
+      .about-inner,
+      .contact-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-symbol {
+        display: none;
+      }
+
+      .footer-inner {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .submit-banner {
+        flex-direction: column;
+        text-align: center;
+      }
+    }
+
+    @media (max-width: 600px) {
+      nav {
+        padding: 0 4%;
+      }
+
+      .nav-links {
+        gap: 1rem;
+      }
+
+      .nav-links li:not(:last-child) {
+        display: none;
+      }
+
+      section {
+        padding: 60px 4%;
+      }
+
+      .footer-inner {
+        grid-template-columns: 1fr;
+      }
+
+      .newsletter-form {
+        flex-direction: column;
+        border-radius: var(--radius);
+        padding: 1rem;
+      }
+
+      .newsletter-form button {
+        border-radius: var(--radius);
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ══ NAVIGATION ══ -->
+  <nav id="navbar">
+    <a class="nav-logo" href="#" onclick="showPage('home')">
+      <span class="nav-emblem"><svg width="54" height="54" viewBox="0 0 54 54" fill="none"
+          xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <circle cx="27" cy="27" r="26" stroke="rgba(168,216,208,0.3)" stroke-width="1" />
+          <circle cx="27" cy="27" r="20" stroke="rgba(168,216,208,0.42)" stroke-width="1" />
+          <circle cx="27" cy="27" r="14" stroke="rgba(168,216,208,0.55)" stroke-width="1" />
+          <circle cx="27" cy="27" r="11.5" fill="url(#nG)" />
+          <circle cx="27" cy="27" r="8.5" fill="#2D9B8A" />
+          <rect x="22" y="6" width="2.8" height="10" rx="1.4" fill="#E8A020" />
+          <rect x="25.6" y="3" width="2.8" height="14" rx="1.4" fill="#E8A020" />
+          <rect x="29.2" y="6" width="2.8" height="10" rx="1.4" fill="#E8A020" />
+          <path d="M17.5 31.5 Q27 25 36.5 31.5" stroke="#E8A020" stroke-width="3" fill="none" stroke-linecap="round" />
+          <path d="M20.5 34.5 Q27 29.5 33.5 34.5" stroke="#E8A020" stroke-width="2.5" fill="none" stroke-linecap="round"
+            opacity="0.8" />
+          <path d="M23.5 37 Q27 34 30.5 37" stroke="#E8A020" stroke-width="2" fill="none" stroke-linecap="round"
+            opacity="0.6" />
+          <circle cx="27" cy="27" r="3.2" fill="rgba(255,248,236,0.92)" />
+          <defs>
+            <radialGradient id="nG" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#2D9B8A" />
+              <stop offset="100%" stop-color="#1A6B6B" />
+            </radialGradient>
+          </defs>
+        </svg></span>
+      <span class="nav-wordmark"><span class="lets">lets</span><span class="think">think</span><span
+          class="pos">positive</span></span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#" onclick="showPage('home')">Home</a></li>
+      <li><a href="#" onclick="showPage('about')">About</a></li>
+      <li><a href="#" onclick="showPage('blog')">Blog</a></li>
+      <li><a href="#" onclick="showPage('youtube')">YouTube</a></li>
+      <li><a href="#" onclick="showPage('contact')" class="nav-cta">Contact Us</a></li>
+    </ul>
+  </nav>
+
+  <!-- ══════════════════════════════════ -->
+  <!-- PAGE: HOME                         -->
+  <!-- ══════════════════════════════════ -->
+  <div id="page-home" class="page active">
+
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-inner">
+        <div class="hero-content">
+          <div class="hero-eyebrow">where every thought begins with hope</div>
+          <h1>You don't need a cape to <em>change the world.</em></h1>
+          <p class="hero-sub">You just need to change one thought. And then another. Welcome to a space built by someone
+            who has been through the hard days — and found a way through.</p>
+          <div class="hero-actions">
+            <a href="#" class="btn-primary" onclick="showPage('about')">Meet Tapas ↗</a>
+            <a href="#" class="btn-outline" onclick="showPage('blog')">Read the Blog</a>
+          </div>
+        </div>
+        <div class="hero-symbol">
+          <div class="symbol-rings">
+            <div class="ring"></div>
+            <div class="ring"></div>
+            <div class="ring"></div>
+            <div class="symbol-strokes">
+              <div class="stroke"></div>
+              <div class="stroke"></div>
+              <div class="stroke"></div>
+            </div>
+            <div class="symbol-core">
+              <div class="symbol-inner">
+                <div class="symbol-arcs">
+                  <div class="arc"></div>
+                  <div class="arc"></div>
+                  <div class="arc"></div>
+                </div>
+                <div class="symbol-dot"></div>
+              </div>
+            </div>
+          </div>
+          <p class="hero-tagline">— where every thought begins with hope —</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- DAILY QUOTE -->
+    <section class="quote-section">
+      <div class="section-inner text-center">
+        <div class="section-label" style="justify-content:center">Today's Thought</div>
+        <h2 class="section-title">A little something for your day &#9728;&#65039;</h2>
+        <div class="quote-card" id="daily-quote-card">
+          <p class="quote-text" id="q-text"></p>
+          <p class="quote-author" id="q-author"></p>
+          <span class="quote-category" id="q-cat"></span>
+        </div>
+        <div style="margin-top:1.5rem;display:flex;align-items:center;justify-content:center;gap:0.75rem">
+          <button class="quote-nav-btn" onclick="moveQuote(-1)" aria-label="Previous quote">&#8249;</button>
+          <span class="quote-counter" id="q-counter"></span>
+          <button class="quote-nav-btn" onclick="moveQuote(1)" aria-label="Next quote">&#8250;</button>
+        </div>
+        <p style="font-size:0.83rem;color:var(--text-xlight);margin-top:0.75rem">A fresh thought every day &#8212; or
+          explore them all. &#9728;&#65039;</p>
+      </div>
+    </section>
+
+    <!-- ABOUT TEASER -->
+    <section class="about-teaser">
+      <div class="section-inner about-inner">
+        <div class="about-text">
+          <div class="section-label">Meet Our Founder</div>
+          <h2 class="section-title">The mind behind <em>this</em>. &#128075;</h2>
+          <p>Tapas Pattanaik is an IT professional, a mindset explorer, and someone who once spent a long time looking
+            for a Superman &#8212; before realising the world needs something better.</p>
+          <p>Not a superhero. A <strong style="color:var(--amber-soft)">SuperbMan</strong>. Someone who listens,
+            understands, walks alongside others, and believes that one conversation &#8212; one thought &#8212; can
+            quietly change the direction of a life.</p>
+          <p>That belief is why this community exists.</p>
+          <a href="#" class="btn-primary" onclick="showPage('about')" style="margin-top:1rem;display:inline-flex">Our
+            Story &#8594;</a>
+        </div>
+        <div class="superbman-card fade-in">
+          <h3>What is a SuperbMan?</h3>
+          <div class="superbman-item">
+            <div class="superbman-dot"></div>
+            <p>Listens — really listens — without rushing to fix</p>
+          </div>
+          <div class="superbman-item">
+            <div class="superbman-dot"></div>
+            <p>Refuses to stay down on the hard days</p>
+          </div>
+          <div class="superbman-item">
+            <div class="superbman-dot"></div>
+            <p>Knows that controlling your thoughts is the greatest discipline</p>
+          </div>
+          <div class="superbman-item">
+            <div class="superbman-dot"></div>
+            <p>Makes others feel seen, heard, and less alone</p>
+          </div>
+          <div class="superbman-item">
+            <div class="superbman-dot"></div>
+            <p>Passes it on. Always.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 PILLARS -->
+    <section class="gap-section">
+      <div class="section-inner">
+        <div class="section-label">What We Do</div>
+        <h2 class="section-title">Four ways we <em>grow together</em></h2>
+        <p class="section-sub">Whether you're a student finding your feet, a professional navigating pressure, or
+          someone who just needs to feel heard — there's a place for you here.</p>
+
+        <div class="pillars-grid">
+          <div class="pillar-card fade-in stagger-1">
+            <span class="pillar-icon">🧠</span>
+            <h3 class="pillar-title">Mental Wellness & Mindset</h3>
+            <p class="pillar-text">Your thoughts are the most powerful thing you own. We help you understand them,
+              challenge them, and gently retrain them — so they work for you, not against you.</p>
+          </div>
+          <div class="pillar-card fade-in stagger-2">
+            <span class="pillar-icon">💼</span>
+            <h3 class="pillar-title">Career & Professional Growth</h3>
+            <p class="pillar-text">Your mindset at work is your most important qualification. We bring clarity,
+              confidence, and purpose into your professional journey.</p>
+          </div>
+          <div class="pillar-card fade-in stagger-3">
+            <span class="pillar-icon">🌱</span>
+            <h3 class="pillar-title">Life Coaching & Habits</h3>
+            <p class="pillar-text">Big change lives in small, repeated choices. We help you build the habits that
+              compound into a life you actually want to be living.</p>
+          </div>
+          <div class="pillar-card fade-in stagger-4">
+            <span class="pillar-icon">🎓</span>
+            <h3 class="pillar-title">Student Motivation</h3>
+            <p class="pillar-text">Students are not the future — they are the present. And they deserve someone who
+              takes their inner world as seriously as their exam results.</p>
+          </div>
+        </div>
+
+        <div style="margin-top:2.5rem">
+          <p style="font-size:0.9rem;color:var(--text-light);margin-bottom:1rem">Also coming soon:</p>
+          <div class="coming-soon">
+            <span class="coming-tag">🧘 Yoga <span class="soon">— coming soon</span></span>
+            <span class="coming-tag">🥗 Positive Eating <span class="soon">— coming soon</span></span>
+            <span class="coming-tag">⚡ Habits Lab <span class="soon">— coming soon</span></span>
+            <span class="coming-tag">👴 Wisdom Coaching <span class="soon">— coming soon</span></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BLOG TEASER -->
+    <section style="padding:80px 5%;background:var(--teal-ghost)">
+      <div class="section-inner">
+        <div class="section-label">From the Blog</div>
+        <h2 class="section-title">Fresh thoughts, <em>straight from the heart</em></h2>
+        <div class="blog-grid">
+          <div class="blog-card fade-in stagger-1">
+            <div class="blog-card-top"></div>
+            <div class="blog-card-body">
+              <span class="blog-tag">Mindset</span>
+              <h3>The Day I Stopped Looking for Superman</h3>
+              <p>As a kid, I wanted to be saved by a superhero. As an adult, I realised the world doesn't need more
+                heroes — it needs more people who will sit down and truly listen.</p>
+            </div>
+            <div class="blog-card-footer">
+              <a class="blog-read" href="#">Read more →</a>
+              <span style="font-size:0.78rem;color:var(--text-xlight)">By Tapas</span>
+            </div>
+          </div>
+          <div class="blog-card fade-in stagger-2">
+            <div class="blog-card-top"></div>
+            <div class="blog-card-body">
+              <span class="blog-tag">Wellness</span>
+              <h3>What Gandhi's 3 Monkeys Taught Me About Modern Life</h3>
+              <p>I grew up with those three monkeys on the wall. I used to think it was simple. Then life happened — and
+                I understood it completely differently.</p>
+            </div>
+            <div class="blog-card-footer">
+              <a class="blog-read" href="#">Read more →</a>
+              <span style="font-size:0.78rem;color:var(--text-xlight)">By Tapas</span>
+            </div>
+          </div>
+          <div class="blog-card fade-in stagger-3">
+            <div class="blog-card-top"></div>
+            <div class="blog-card-body">
+              <span class="blog-tag">Student Life</span>
+              <h3>You Are Not Behind. You Are Exactly Where You Need to Be.</h3>
+              <p>Somewhere right now, a student is comparing their chapter 1 to someone else's chapter 20. This post is
+                for them.</p>
+            </div>
+            <div class="blog-card-footer">
+              <a class="blog-read" href="#">Read more →</a>
+              <span style="font-size:0.78rem;color:var(--text-xlight)">By Tapas</span>
+            </div>
+          </div>
+        </div>
+        <div style="text-align:center;margin-top:2.5rem">
+          <a href="#" class="btn-primary" onclick="showPage('blog')">Read All Posts →</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTAGIOUS -->
+    <section class="contagious">
+      <blockquote>"Let's make this contagious — not the doubt, not the fear, but this: the quiet decision to keep
+        going."</blockquote>
+      <p>Mahatma Gandhi spoke of three monkeys — see no evil, hear no evil, speak no evil. In today's world, we cannot
+        always control what surrounds us. But we can always control what we hold inside us. That is the idea at the
+        heart of everything we do here.</p>
+      <a href="#" class="btn-primary" onclick="showPage('contact')">Join the Movement →</a>
+    </section>
+
+    <!-- NEWSLETTER -->
+    <section class="newsletter">
+      <div class="newsletter-inner text-center">
+        <div class="section-label" style="justify-content:center">Stay Connected</div>
+        <h2 class="section-title">One thought a day. <em>That's all it takes.</em></h2>
+        <p style="color:var(--text-light);margin-bottom:0">Sign up and every morning you'll receive one daily quote
+          delivered quietly to your inbox. No noise. No spam. Just one thought to carry with you into your day.</p>
+        <div class="newsletter-form">
+          <input type="text" placeholder="Your first name">
+          <input type="email" placeholder="Your email address" style="margin-left:0.5rem">
+          <button>Subscribe ☀️</button>
+        </div>
+        <p class="newsletter-note">Join readers from across India and the world. Unsubscribe anytime.</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- ══════════════════════════════════ -->
+  <!-- PAGE: ABOUT                        -->
+  <!-- ══════════════════════════════════ -->
+  <div id="page-about" class="page">
+    <div class="about-hero">
+      <div class="section-label" style="justify-content:center;color:var(--amber-soft)">Our Story
+      </div>
+      <h1>From a Dream to a <em>Movement</em></h1>
+      <p>This is not a corporate mission statement. It is a real story &#8212; about real struggles, real discoveries,
+        and a collective decision to hold the door open for others.</p>
+    </div>
+
+    <div class="story-section">
+      <p
+        style="font-size:1.15rem;color:var(--teal-deep);font-family:var(--ff-display);font-style:italic;margin-bottom:2rem">
+        Our founder once wanted to be Superman.</p>
+      <p>Not metaphorically &#8212; as a small kid, Tapas Pattanaik genuinely believed the answer to the world&#8217;s
+        problems was a superhero. Someone with the power to fix everything, save everyone, and make the bad things stop.
+      </p>
+      <p>It took time &#8212; and some genuinely hard seasons of life &#8212; to understand something important.
+        Superman is a fantasy. A beautiful one, but a fantasy all the same.</p>
+
+      <div class="story-pullquote">
+        <p>What the world actually needs is something far more human. It needs SuperbMen and SuperbWomen &#8212; people
+          who
+          cannot fly or stop bullets, but who can sit with someone in their pain and not flinch.</p>
+      </div>
+
+      <p>Growing up watching Mahatma Gandhi&#8217;s three monkeys &#8212; see no evil, hear no evil, speak no evil
+        &#8212; the lesson seemed simple. As life unfolded across a demanding corporate IT career, personal struggles,
+        and the constant noise of modern living, the meaning deepened into something far greater.</p>
+      <p>We live in a world where bad news travels faster than kindness. You cannot simply
+        close your eyes and ears to all of it. But you can &#8212; with practice, with intention, with the right
+        community
+        around you &#8212; learn to control your response to it.</p>
+
+      <div class="story-pullquote">
+        <p>And that starts with your thoughts.</p>
+      </div>
+
+      <p>Tapas spent years in the corporate IT world &#8212; high-pressure meetings, moments of self-doubt, and
+        late-night conversations with friends who had nowhere else to turn. On both sides &#8212; the one needing help,
+        and the one offering it &#8212; a deep truth emerged.</p>
+      <p>The quality of a life is almost entirely determined by the quality of thinking. Not circumstances. Not salary.
+        Not job title. Thinking.</p>
+
+      <div class="story-pullquote">
+        <p>letsthinkpositive.com is the platform we wish had existed when we needed it most.</p>
+      </div>
+
+      <p>We are not here as gurus. We are here as fellow travellers &#8212; a growing community with an uncommon,
+        stubborn, beautiful belief that positivity, practised together, can genuinely change the world. Let&#8217;s make
+        this contagious. It starts with us. It starts with you.</p>
+      <p class="story-signature">&#8212; The letsthinkpositive.com team</p>
+    </div>
+
+    <section style="background:var(--teal-ghost);padding:60px 5%">
+      <div class="section-inner">
+        <div class="section-label">Our Values</div>
+        <h2 class="section-title">Our <em>SuperbMan</em> Philosophy</h2>
+        <div class="values-grid">
+          <div class="value-card">
+            <h4>🎧 Listens First</h4>
+            <p>Really listens — without thinking about what to say next. People often feel better simply because someone
+              heard them.</p>
+          </div>
+          <div class="value-card">
+            <h4>💪 Gets Back Up</h4>
+            <p>Does not pretend the hard days aren't hard. They just refuse to stay down. Resilience is a practice, not
+              a personality trait.</p>
+          </div>
+          <div class="value-card">
+            <h4>🧠 Controls the Inner World</h4>
+            <p>Understands that controlling your thoughts is not weakness — it is the most courageous discipline there
+              is.</p>
+          </div>
+          <div class="value-card">
+            <h4>🤝 Makes Others Feel Seen</h4>
+            <p>Makes the people around them feel heard, valued, and less alone. That is true leadership — and true
+              kindness.</p>
+          </div>
+          <div class="value-card">
+            <h4>🌱 Starts From Within</h4>
+            <p>Every movement, every change, every better world starts from one person deciding to think differently.
+            </p>
+          </div>
+          <div class="value-card">
+            <h4>🌊 Passes It On</h4>
+            <p>Shares what they learn. Opens the door for the next person. Makes positivity contagious — one ripple at a
+              time.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section style="padding:80px 5%;text-align:center;background:var(--ivory)">
+      <div class="section-inner">
+        <div class="section-label" style="justify-content:center">Coming Soon</div>
+        <h2 class="section-title">Wisdom has <em>no retirement age</em></h2>
+        <p class="section-sub" style="margin:0 auto 2rem">One of the most exciting things we're building towards is a
+          space for our elders — wise, experienced souls who have lived through more than most of us can imagine — to
+          give back as coaches and guides.</p>
+        <a href="#" class="btn-primary" onclick="showPage('contact')">Express Your Interest →</a>
+      </div>
+    </section>
+  </div>
+
+  <!-- ══════════════════════════════════ -->
+  <!-- PAGE: BLOG                         -->
+  <!-- ══════════════════════════════════ -->
+  <div id="page-blog" class="page">
+    <div class="blog-hero">
+      <div class="section-inner text-center">
+        <div class="section-label" style="justify-content:center">The Community's Voice</div>
+        <h1 class="section-title" style="font-family:var(--ff-display)">Real words from <em>real lives</em></h1>
+        <p class="section-sub" style="margin:0 auto">Every piece here comes from a real human being who has something
+          genuine to say — stories, lessons, and small ideas that grew into something worth sharing out loud.</p>
+        <div class="blog-filters">
+          <button class="filter-btn active">All</button>
+          <button class="filter-btn">Mindset</button>
+          <button class="filter-btn">Wellness</button>
+          <button class="filter-btn">Career</button>
+          <button class="filter-btn">Student Life</button>
+          <button class="filter-btn">Habits</button>
+          <button class="filter-btn">Yoga 🧘</button>
+          <button class="filter-btn">Positive Eating 🥗</button>
+        </div>
+      </div>
+    </div>
+
+    <section style="padding:60px 5%">
+      <div class="section-inner">
+        <div class="submit-banner">
+          <div>
+            <h3>Your story deserves to be heard 📝</h3>
+            <p>Have a lesson, a turning point, or a thought that could help someone? Write it. We'd love to read it.</p>
+          </div>
+          <a href="#" class="btn-primary" style="flex-shrink:0;white-space:nowrap" onclick="showPage('contact')">Submit
+            Your Post →</a>
+        </div>
+
+        <div class="blog-grid">
+          <div class="blog-card">
+            <div class="blog-card-top"></div>
+            <div class="blog-card-body"><span class="blog-tag">Mindset</span>
+              <h3>The Day I Stopped Looking for Superman</h3>
+              <p>As a kid, I wanted to be saved by a superhero. As an adult, I realised the world needs people who will
+                truly listen.</p>
+            </div>
+            <div class="blog-card-footer"><a class="blog-read" href="#">Read more →</a><span
+                style="font-size:0.78rem;color:var(--text-xlight)">By Tapas</span></div>
+          </div>
+          <div class="blog-card">
+            <div class="blog-card-top"></div>
+            <div class="blog-card-body"><span class="blog-tag">Wellness</span>
+              <h3>What Gandhi's 3 Monkeys Taught Me About Modern Life</h3>
+              <p>I grew up with those three monkeys on the wall. Then life happened — and I understood it completely
+                differently.</p>
+            </div>
+            <div class="blog-card-footer"><a class="blog-read" href="#">Read more →</a><span
+                style="font-size:0.78rem;color:var(--text-xlight)">By Tapas</span></div>
+          </div>
+          <div class="blog-card">
+            <div class="blog-card-top"></div>
+            <div class="blog-card-body"><span class="blog-tag">Student Life</span>
+              <h3>You Are Not Behind. You Are Exactly Where You Need to Be.</h3>
+              <p>Somewhere a student is comparing their chapter 1 to someone else's chapter 20. This post is for them.
+              </p>
+            </div>
+            <div class="blog-card-footer"><a class="blog-read" href="#">Read more →</a><span
+                style="font-size:0.78rem;color:var(--text-xlight)">By Tapas</span></div>
+          </div>
+          <div class="blog-card">
+            <div class="blog-card-top"></div>
+            <div class="blog-card-body"><span class="blog-tag">Career</span>
+              <h3>They Can Take Your Job. But Not This.</h3>
+              <p>The difference between those who rebuild and those who fall apart was never the circumstances. It was
+                always the thinking.</p>
+            </div>
+            <div class="blog-card-footer"><a class="blog-read" href="#">Read more →</a><span
+                style="font-size:0.78rem;color:var(--text-xlight)">By Tapas</span></div>
+          </div>
+          <div class="blog-card">
+            <div class="blog-card-top"></div>
+            <div class="blog-card-body"><span class="blog-tag">Habits</span>
+              <h3>I Changed One Thing Every Morning. Six Months Later, Everything Was Different.</h3>
+              <p>Not 5am wake-ups. Not cold showers. Just three minutes that quietly rewired how I face every day.</p>
+            </div>
+            <div class="blog-card-footer"><a class="blog-read" href="#">Read more →</a><span
+                style="font-size:0.78rem;color:var(--text-xlight)">By Tapas</span></div>
+          </div>
+          <div class="blog-card" style="border:2px dashed var(--teal-light);background:var(--teal-ghost)">
+            <div class="blog-card-top" style="background:var(--teal-light)"></div>
+            <div class="blog-card-body" style="text-align:center;padding:2.5rem 1.8rem"><span
+                style="font-size:2rem">✍️</span>
+              <h3 style="font-family:var(--ff-body);font-size:1rem;margin-top:0.75rem;color:var(--teal-deep)">Your story
+                could live right here</h3>
+              <p>We welcome community posts. If it's genuine and comes from the heart, it has a home on this blog.</p>
+            </div>
+            <div class="blog-card-footer" style="justify-content:center"><a class="blog-read" href="#"
+                onclick="showPage('contact')">Submit your post →</a></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ══════════════════════════════════ -->
+  <!-- PAGE: YOUTUBE                      -->
+  <!-- ══════════════════════════════════ -->
+  <div id="page-youtube" class="page">
+    <div class="youtube-hero">
+      <div class="section-label" style="justify-content:center;color:var(--amber-soft)">Conversations Worth Watching
+      </div>
+      <h1>Real talk. <em style="color:var(--amber-soft)">No scripts.</em></h1>
+      <p>Some things are better said out loud. This channel is a conversation — between Tapas and you, and everyone in
+        this community with something real to say.</p>
+      <a href="#" class="btn-primary">Subscribe on YouTube →</a>
+    </div>
+
+    <section style="padding:80px 5%">
+      <div class="section-inner">
+        <div class="embed-placeholder">
+          <div class="play-btn">
+            <svg viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          </div>
+        </div>
+        <p style="text-align:center;margin-top:1rem;font-size:0.85rem;color:var(--text-xlight)">Embed your YouTube
+          channel or featured playlist here</p>
+
+        <div style="margin-top:4rem">
+          <div class="section-label">What You'll Find</div>
+          <h2 class="section-title">Five kinds of <em>conversations</em></h2>
+          <div class="video-categories">
+            <div class="video-cat"><span class="video-cat-icon">🧠</span>
+              <h4>Mindset Conversations</h4>
+              <p>Real talk about thoughts, habits, and the invisible things that shape every visible outcome.</p>
+            </div>
+            <div class="video-cat"><span class="video-cat-icon">💼</span>
+              <h4>Career & Corporate Life</h4>
+              <p>From the IT professional who has lived through that pressure — and found a way to stay grounded.</p>
+            </div>
+            <div class="video-cat"><span class="video-cat-icon">🎓</span>
+              <h4>For Students</h4>
+              <p>Straight talk for the generation figuring everything out at once. No lectures. Just genuine guidance.
+              </p>
+            </div>
+            <div class="video-cat"><span class="video-cat-icon">🌟</span>
+              <h4>SuperbMan Stories</h4>
+              <p>Real people sharing real turning points — and the lessons they want to pass on.</p>
+            </div>
+            <div class="video-cat"><span class="video-cat-icon">☀️</span>
+              <h4>Daily Thought — Short Form</h4>
+              <p>60-90 second videos. One thought. Something to carry with you into your day.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ══════════════════════════════════ -->
+  <!-- PAGE: CONTACT                      -->
+  <!-- ══════════════════════════════════ -->
+  <div id="page-contact" class="page">
+    <div class="contact-hero" style="padding:140px 5% 60px">
+      <div class="section-inner">
+        <div class="section-label">We'd Love to Hear From You</div>
+        <h1 class="section-title" style="font-family:var(--ff-display)">The door is <em>always open.</em> 🤝</h1>
+        <p class="section-sub">There's a real person on the other side of this form. We read every message and reply to
+          every one — personally, warmly, without a templated response.</p>
+      </div>
+    </div>
+
+    <div class="contact-grid">
+      <div class="contact-info">
+        <div class="story-pullquote" style="margin-bottom:2rem">
+          <p>Remember — someone who listened to you is someone who cared. We care.</p>
+        </div>
+        <h3>Other ways to reach us</h3>
+        <p>We're active across these platforms. Pick the one that feels most natural to you.</p>
+        <div class="contact-links">
+          <a href="#" class="contact-link"><span class="contact-link-icon">📧</span><span
+              class="contact-link-text"><span class="__cf_email__"
+                data-cfemail="debdb1b0b0bbbdaa9eb2bbaaadaab6b7b0b5aeb1adb7aab7a8bbf0bdb1b3">[email&#160;protected]</span></span></a>
+          <a href="#" class="contact-link"><span class="contact-link-icon">▶️</span><span
+              class="contact-link-text">YouTube — letsthinkpositive</span></a>
+          <a href="#" class="contact-link"><span class="contact-link-icon">📷</span><span
+              class="contact-link-text">Instagram — @letsthinkpositive</span></a>
+          <a href="#" class="contact-link"><span class="contact-link-icon">💼</span><span
+              class="contact-link-text">LinkedIn — Tapas Pattanaik</span></a>
+        </div>
+        <p style="margin-top:1.5rem;font-size:0.85rem;color:var(--text-xlight)">Response time: 24-48 hours for messages.
+          Up to 5 working days for blog submissions.</p>
+      </div>
+
+      <div class="contact-form">
+        <h3 style="font-family:var(--ff-display);font-size:1.5rem;color:var(--teal-deep);margin-bottom:1.5rem">Send us a
+          message</h3>
+        <div class="form-group">
+          <label>Your name</label>
+          <input type="text" placeholder="What should we call you?">
+        </div>
+        <div class="form-group">
+          <label>Your email address</label>
+          <input type="email" placeholder="We'll reply here — promise">
+        </div>
+        <div class="form-group">
+          <label>What's on your mind?</label>
+          <select>
+            <option value="">A story to share, a question, just saying hi...</option>
+            <option>I want to submit a blog post</option>
+            <option>I'm interested in coaching</option>
+            <option>I want to be a community coach (elderly coaches)</option>
+            <option>General question or feedback</option>
+            <option>Just saying hello 👋</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Your message</label>
+          <textarea placeholder="Write freely — there's no wrong thing to say here"></textarea>
+        </div>
+        <button class="btn-primary" style="width:100%;justify-content:center;font-size:1rem;padding:1rem">Send it
+          →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ FOOTER ══ -->
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <h3><span class="lets">lets</span><span class="think">think</span><span class="pos">positive</span></h3>
+        <p>A space built by someone who has been through the hard days, found a way through, and now wants to walk
+          beside you on yours.</p>
+        <p class="footer-tagline">— where every thought begins with hope —</p>
+      </div>
+      <div class="footer-col">
+        <h4>Pages</h4>
+        <ul>
+          <li><a href="#" onclick="showPage('home')">Home</a></li>
+          <li><a href="#" onclick="showPage('about')">About Tapas</a></li>
+          <li><a href="#" onclick="showPage('blog')">Blog</a></li>
+          <li><a href="#" onclick="showPage('youtube')">YouTube</a></li>
+          <li><a href="#" onclick="showPage('contact')">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Topics</h4>
+        <ul>
+          <li><a href="#">Mindset</a></li>
+          <li><a href="#">Career Growth</a></li>
+          <li><a href="#">Habits</a></li>
+          <li><a href="#">Student Life</a></li>
+          <li><span class="coming">Yoga — soon</span></li>
+          <li><span class="coming">Positive Eating — soon</span></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Connect</h4>
+        <ul>
+          <li><a href="#">YouTube</a></li>
+          <li><a href="#">Instagram</a></li>
+          <li><a href="#">LinkedIn</a></li>
+          <li><a href="#">Newsletter</a></li>
+          <li><a href="#">Daily Quote</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 letsthinkpositive.com — <em>Tapas Pattanaik</em></span>
+      <span style="color:rgba(255,255,255,0.4);font-size:0.8rem">Privacy Policy · Disclaimer</span>
+    </div>
+  </footer>
+
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+  <script>
+    // ── QUOTES ──
+    var QUOTES = [
+      { text: "The root of every action is a thought. Tend to your roots.", author: "— Tapas Pattanaik", category: "Mindset" },
+      { text: "You don't need a cape to change the world. You just need to change one thought.", author: "— Tapas Pattanaik", category: "Inspiration" },
+      { text: "A SuperbMan doesn't save the world. A SuperbMan listens — and that's often enough.", author: "— Tapas Pattanaik", category: "Connection" },
+      { text: "Control your inner world, and the outer world changes with you.", author: "— Tapas Pattanaik", category: "Mindset" },
+      { text: "Positivity practised together is the most contagious force on earth.", author: "— Tapas Pattanaik", category: "Community" },
+      { text: "The hard days are not the end. They are the training ground.", author: "— Tapas Pattanaik", category: "Resilience" },
+      { text: "Every small positive thought is the beginning of something much bigger.", author: "— Tapas Pattanaik", category: "Growth" },
+      { text: "Be the change you wish to see in the world.", author: "— Mahatma Gandhi", category: "Wisdom" },
+      { text: "It always seems impossible until it's done.", author: "— Nelson Mandela", category: "Courage" },
+      { text: "Happiness is not something ready-made. It comes from your own actions.", author: "— Dalai Lama", category: "Wellbeing" },
+      { text: "In the middle of difficulty lies opportunity.", author: "— Albert Einstein", category: "Resilience" },
+      { text: "You are never too old to set another goal or to dream a new dream.", author: "— C.S. Lewis", category: "Inspiration" },
+      { text: "The secret of getting ahead is getting started.", author: "— Mark Twain", category: "Habits" },
+      { text: "First, think. Then dream. Then dare. Then do.", author: "— Walt Disney", category: "Growth" }
+    ];
+    var qIndex = Math.floor(Date.now() / 86400000) % QUOTES.length;
+    function renderQuote() {
+      var q = QUOTES[qIndex];
+      var card = document.getElementById('daily-quote-card');
+      if (!card) return;
+      card.style.opacity = '0';
+      setTimeout(function () {
+        document.getElementById('q-text').textContent = q.text;
+        document.getElementById('q-author').textContent = q.author;
+        document.getElementById('q-cat').textContent = q.category;
+        document.getElementById('q-counter').textContent = (qIndex + 1) + ' / ' + QUOTES.length;
+        card.style.opacity = '1';
+      }, 200);
+    }
+    window.moveQuote = function (dir) {
+      qIndex = (qIndex + dir + QUOTES.length) % QUOTES.length;
+      renderQuote();
+    };
+    document.addEventListener('DOMContentLoaded', function () {
+      var card = document.getElementById('daily-quote-card');
+      if (card) { card.style.transition = 'opacity 0.35s ease'; }
+      renderQuote();
+    });
+    if (document.readyState !== 'loading') { renderQuote(); }
+
+    // ── PAGE NAVIGATION ──
+    function showPage(pageId) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      const target = document.getElementById('page-' + pageId);
+      if (target) { target.classList.add('active'); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+      observeFadeIns();
+    }
+
+    // ── FILTER BUTTONS ──
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+
+    // ── FADE IN ON SCROLL ──
+    function observeFadeIns() {
+      const els = document.querySelectorAll('.fade-in');
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+      }, { threshold: 0.1 });
+      els.forEach(el => { el.classList.remove('visible'); observer.observe(el); });
+      setTimeout(() => els.forEach(el => { if (!el.classList.contains('visible')) el.classList.add('visible'); }), 800);
+    }
+
+    // ── NAVBAR SCROLL ──
+    window.addEventListener

@@ -1,0 +1,56 @@
+version: '3.8'
+services:
+  db:
+    image: mysql:8.0
+    container_name: ltp_db
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - ltp_network
+
+  wordpress:
+    image: wordpress:6.2-php8.1-apache
+    container_name: ltp_wp
+    depends_on:
+      - db
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_USER: ${MYSQL_USER}
+      WORDPRESS_DB_PASSWORD: ${MYSQL_PASSWORD}
+      WORDPRESS_DB_NAME: ${MYSQL_DATABASE}
+    ports:
+      - "${WP_PORT}:80"
+    volumes:
+      - ./wp-theme/letsthinkpositive:/var/www/html/wp-content/themes/letsthinkpositive:cached
+    networks:
+      - ltp_network
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: ltp_phpmyadmin
+    depends_on:
+      - db
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    restart: unless-stopped
+    networks:
+      - ltp_network
+
+volumes:
+  db_data:
+
+networks:
+  ltp_network:
+    driver: bridge
