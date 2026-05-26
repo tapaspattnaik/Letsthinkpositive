@@ -24,6 +24,41 @@ export interface ContactPayload {
   message: string
 }
 
+export async function sendWelcomeEmail({ email, name }: { email: string; name: string }) {
+  return transporter.sendMail({
+    from:    `"letsthinkpositive.com" <${process.env.SMTP_USER}>`,
+    to:      email,
+    subject: `Welcome to letsthinkpositive — your daily thought starts tomorrow ☀️`,
+    html: `
+      <div style="font-family:sans-serif;max-width:600px;color:#2E4A4A">
+        <h2 style="color:#1A6B6B;border-bottom:2px solid #E8A020;padding-bottom:8px">
+          Hello ${name} 🌿
+        </h2>
+        <p style="font-size:1.05rem;line-height:1.8">
+          Welcome to <strong>letsthinkpositive.com</strong> — where every thought begins with hope.
+        </p>
+        <p style="line-height:1.8">
+          Starting tomorrow morning, you'll receive one carefully chosen thought delivered quietly to your inbox.
+          No noise. No spam. Just one idea to carry with you into your day.
+        </p>
+        <blockquote style="border-left:4px solid #E8A020;padding:12px 20px;background:#EEF7F6;border-radius:0 8px 8px 0;margin:24px 0">
+          <em style="color:#1A6B6B;font-size:1.1rem">"Positivity practised together is the most contagious force on earth."</em><br/>
+          <span style="font-size:0.85rem;color:#4A6565">— Tapas Pattanaik</span>
+        </blockquote>
+        <p style="line-height:1.8">
+          While you wait — explore the site. The <a href="${process.env.NEXT_PUBLIC_SITE_URL}/advisor" style="color:#2D9B8A">Bit Advisor</a> is ready to listen,
+          the <a href="${process.env.NEXT_PUBLIC_SITE_URL}/journal" style="color:#2D9B8A">Gratitude Journal</a> is open, and the
+          <a href="${process.env.NEXT_PUBLIC_SITE_URL}/sounds" style="color:#2D9B8A">Keep Calm Sounds</a> are there whenever you need a moment of peace.
+        </p>
+        <p style="color:#7A9898;font-size:0.85rem;margin-top:24px">
+          You can unsubscribe at any time by replying to any email with "unsubscribe".<br/>
+          — Tapas &amp; the letsthinkpositive team
+        </p>
+      </div>
+    `,
+  })
+}
+
 export async function sendContactEmail(data: ContactPayload) {
   return transporter.sendMail({
     from:    `"letsthinkpositive.com" <${process.env.SMTP_USER}>`,

@@ -3,14 +3,30 @@
 import { useState } from 'react'
 
 export function Newsletter() {
-  const [email, setEmail] = useState('')
-  const [name,  setName]  = useState('')
-  const [done,  setDone]  = useState(false)
+  const [email,   setEmail]   = useState('')
+  const [name,    setName]    = useState('')
+  const [done,    setDone]    = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error,   setError]   = useState('')
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    // TODO: wire to email API
-    setDone(true)
+    setLoading(true)
+    setError('')
+    try {
+      const res = await fetch('/api/newsletter', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ email, name: name.trim() || undefined }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Something went wrong')
+      setDone(true)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -31,20 +47,27 @@ export function Newsletter() {
             🌱 Welcome aboard! Your first thought arrives tomorrow morning.
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="mt-8 bg-white rounded-full flex gap-2 p-1.5 pl-5 shadow-card">
-            <input
-              type="text" placeholder="Your first name" value={name} onChange={e => setName(e.target.value)}
-              className="flex-1 border-none outline-none font-body text-[0.95rem] text-charcoal bg-transparent placeholder:text-text-xlight"
-            />
-            <input
-              type="email" placeholder="Your email address" required value={email} onChange={e => setEmail(e.target.value)}
-              className="flex-1 border-none outline-none font-body text-[0.95rem] text-charcoal bg-transparent placeholder:text-text-xlight"
-            />
-            <button type="submit"
-              className="bg-teal-deep text-white rounded-full px-6 py-3 font-body font-semibold text-[0.9rem] whitespace-nowrap hover:bg-teal-dark transition-colors">
-              Subscribe ☀️
-            </button>
-          </form>
+          <>
+            <form onSubmit={handleSubmit} className="mt-8 bg-white rounded-full flex gap-2 p-1.5 pl-5 shadow-card">
+              <input
+                type="text" placeholder="Your first name" value={name} onChange={e => setName(e.target.value)}
+                disabled={loading}
+                className="flex-1 border-none outline-none font-body text-[0.95rem] text-charcoal bg-transparent placeholder:text-text-xlight disabled:opacity-60"
+              />
+              <input
+                type="email" placeholder="Your email address" required value={email} onChange={e => setEmail(e.target.value)}
+                disabled={loading}
+                className="flex-1 border-none outline-none font-body text-[0.95rem] text-charcoal bg-transparent placeholder:text-text-xlight disabled:opacity-60"
+              />
+              <button type="submit" disabled={loading}
+                className="bg-teal-deep text-white rounded-full px-6 py-3 font-body font-semibold text-[0.9rem] whitespace-nowrap hover:bg-teal-dark transition-colors disabled:opacity-70 disabled:cursor-not-allowed">
+                {loading ? 'Subscribing…' : 'Subscribe ☀️'}
+              </button>
+            </form>
+            {error && (
+              <p className="mt-3 text-[0.85rem] text-red-500">{error}</p>
+            )}
+          </>
         )}
 
         <p className="text-[0.8rem] text-text-xlight mt-4">Join readers from across India and the world. Unsubscribe anytime.</p>
