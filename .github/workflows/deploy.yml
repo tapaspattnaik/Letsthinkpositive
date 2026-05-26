@@ -8,6 +8,10 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    # Expose secrets as job-level env vars so they're accessible in `if:` conditions
+    env:
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -32,7 +36,7 @@ jobs:
         run: npm run build
 
       - name: Deploy via SSH
-        if: ${{ secrets.SSH_HOST != '' }}
+        if: env.SSH_HOST != ''
         uses: appleboy/ssh-action@v1.0.3
         with:
           host:     ${{ secrets.SSH_HOST }}
