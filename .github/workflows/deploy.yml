@@ -32,12 +32,13 @@ jobs:
         run: npm run build
 
       - name: Deploy via SSH
+        if: ${{ secrets.SSH_HOST != '' }}
         uses: appleboy/ssh-action@v1.0.3
         with:
           host:     ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASS }}
-          port:     ${{ secrets.SSH_PORT }}
+          port:     ${{ secrets.SSH_PORT || '22' }}
           script: |
             cd ${{ secrets.APP_DIR }}
             git pull origin main
