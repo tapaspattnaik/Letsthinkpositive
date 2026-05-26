@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --teal-dark:   #0F4040;
+  --teal-deep:   #1A6B6B;
+  --teal-mid:    #2D9B8A;
+  --teal-light:  #A8D8D0;
+  --teal-ghost:  #EEF7F6;
+  --amber:       #E8A020;
+  --amber-soft:  #F5C96A;
+  --amber-pale:  #FFF8EC;
+  --ivory:       #F8F8F4;
+  --charcoal:    #1C2B2B;
+  --radius:      12px;
+  --radius-lg:   24px;
+  --shadow:      0 4px 24px rgba(26,107,107,0.10);
+  --shadow-lg:   0 12px 48px rgba(26,107,107,0.15);
+  --transition:  0.3s cubic-bezier(0.4,0,0.2,1);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--ivory);
+  color: var(--charcoal);
+  line-height: 1.7;
+  overflow-x: hidden;
+}
+
+/* Section label line decoration */
+.section-label::before {
+  content: '';
+  display: inline-block;
+  width: 24px;
+  height: 2px;
+  background: var(--amber);
+  border-radius: 2px;
+  margin-right: 0.75rem;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+/* Fade-in scroll animation */
+.fade-in {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.fade-in.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
