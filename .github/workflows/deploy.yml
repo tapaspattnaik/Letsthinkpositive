@@ -1,16 +1,14 @@
-name: Deploy to Hostinger
+name: Build & Verify
 
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
-
-    # Expose secrets as job-level env vars so they're accessible in `if:` conditions
-    env:
-      SSH_HOST: ${{ secrets.SSH_HOST }}
 
     steps:
       - name: Checkout repository
@@ -30,23 +28,7 @@ jobs:
 
       - name: Build Next.js app
         env:
-          TOGETHER_API_KEY: ${{ secrets.TOGETHER_API_KEY }}
-          NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL || 'https://letsthinkpositive.com' }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL || 'mysql://placeholder:placeholder@localhost:3306/placeholder' }}
+          TOGETHER_API_KEY:    ${{ secrets.TOGETHER_API_KEY }}
+          NEXT_PUBLIC_SITE_URL: https://letsthinkpositive.com
+          DATABASE_URL:        mysql://placeholder:placeholder@localhost:3306/placeholder
         run: npm run build
-
-      - name: Deploy via SSH
-        if: env.SSH_HOST != ''
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host:     ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          password: ${{ secrets.SSH_PASS }}
-          port:     ${{ secrets.SSH_PORT || '22' }}
-          script: |
-            cd ${{ secrets.APP_DIR }}
-            git pull origin main
-            npm install --production
-            npx prisma generate
-            npx prisma migrate deploy
-            pm2 restart letsthinkpositive || pm2 start server.js --name letsthinkpositive
