@@ -27,8 +27,8 @@ jobs:
       - name: Build Next.js app
         env:
           TOGETHER_API_KEY: ${{ secrets.TOGETHER_API_KEY }}
-          NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL || 'https://letsthinkpositive.com' }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'mysql://placeholder:placeholder@localhost:3306/placeholder' }}
         run: npm run build
 
       - name: Deploy via SSH

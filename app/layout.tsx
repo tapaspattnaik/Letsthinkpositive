@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     template: '%s | letsthinkpositive',
   },
   description: 'A space for mental wellness, gratitude, calm sounds, and AI-guided positivity. Built by Tapas Pattanaik.',
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://letsthinkpositive.com'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://letsthinkpositive.com'),
   openGraph: {
     siteName: 'letsthinkpositive',
     locale:   'en_IN',
