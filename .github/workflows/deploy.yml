@@ -60,6 +60,8 @@ jobs:
             npx prisma generate
             echo "==> Running database migrations..."
             npx prisma migrate deploy
+            echo "==> Seeding badges..."
+            npx prisma db seed || true
             echo "==> Restarting app..."
             pm2 restart letsthinkpositive || pm2 start server.js --name letsthinkpositive
             echo "==> Done ✓"

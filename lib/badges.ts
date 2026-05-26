@@ -4,90 +4,68 @@ export interface BadgeDef {
   description: string
   icon:        string
   tier:        'bronze' | 'silver' | 'gold' | 'platinum'
-  challenge?:  string   // challengeSlug that awards this badge
+  challenge?:  string   // matches challenge id in challenges page
+  totalDays?:  number   // days needed to complete
 }
 
 export const BADGES: BadgeDef[] = [
-  // ── Challenge badges ─────────────────────────────────────────────────
+  // ── Challenge badges — slugs match challenge ids in /challenges ───────
   {
-    slug:        'movement-7',
-    name:        '7-Day Mover',
-    description: 'Completed the 7 Days of Gentle Movement challenge.',
-    icon:        '🏃',
-    tier:        'bronze',
-    challenge:   'gentle-movement-7',
+    slug: 'movement-7', name: '7-Day Mover',
+    description: 'Completed 7 Days of Gentle Movement.',
+    icon: '🏃', tier: 'bronze', challenge: 'movement-7', totalDays: 7,
   },
   {
-    slug:        'mindfulness-7',
-    name:        'Morning Mind',
+    slug: 'mindfulness-7', name: 'Morning Mind',
     description: 'Completed the 7-Day Morning Mindfulness challenge.',
-    icon:        '🧘',
-    tier:        'bronze',
-    challenge:   'morning-mindfulness-7',
+    icon: '🧘', tier: 'bronze', challenge: 'mindfulness-7', totalDays: 7,
   },
   {
-    slug:        'gratitude-14',
-    name:        'Grateful Heart',
-    description: 'Completed the 14-Day Gratitude Journaling challenge.',
-    icon:        '📓',
-    tier:        'bronze',
-    challenge:   'gratitude-journaling-14',
+    slug: 'journal-14', name: 'Grateful Heart',
+    description: 'Completed 14 Days of Gratitude Journaling.',
+    icon: '📓', tier: 'bronze', challenge: 'journal-14', totalDays: 14,
   },
   {
-    slug:        'affirmation-21',
-    name:        'I Am Enough',
-    description: 'Completed the 21-Day Affirmation Practice challenge.',
-    icon:        '✨',
-    tier:        'silver',
-    challenge:   'affirmation-21',
+    slug: 'affirmations-21', name: 'I Am Enough',
+    description: 'Completed the 21-Day Affirmation Practice.',
+    icon: '✨', tier: 'silver', challenge: 'affirmations-21', totalDays: 21,
   },
   {
-    slug:        'sleep-21',
-    name:        'Deep Sleeper',
+    slug: 'sleep-21', name: 'Deep Sleeper',
     description: 'Completed the 21-Day Sleep Reset challenge.',
-    icon:        '🌙',
-    tier:        'silver',
-    challenge:   'sleep-reset-21',
+    icon: '🌙', tier: 'silver', challenge: 'sleep-21', totalDays: 21,
   },
   {
-    slug:        'gratitude-30',
-    name:        'Gratitude Master',
+    slug: 'gratitude-30', name: 'Gratitude Master',
     description: 'Completed the 30-Day Gratitude Challenge — a full month of thankfulness.',
-    icon:        '🌟',
-    tier:        'gold',
-    challenge:   'gratitude-30',
+    icon: '🌟', tier: 'gold', challenge: 'gratitude-30', totalDays: 30,
   },
-
   // ── Community & profile badges ────────────────────────────────────────
   {
-    slug:        'first-post',
-    name:        'Story Sharer',
-    description: 'Published your first community post.',
-    icon:        '💬',
-    tier:        'bronze',
+    slug: 'first-post', name: 'Story Sharer',
+    description: 'Published your first community story.',
+    icon: '💬', tier: 'bronze',
   },
   {
-    slug:        'early-adopter',
-    name:        'Early Believer',
+    slug: 'early-adopter', name: 'Early Believer',
     description: 'One of the first 100 members to join letsthinkpositive.',
-    icon:        '🌱',
-    tier:        'gold',
+    icon: '🌱', tier: 'gold',
   },
   {
-    slug:        'streak-7',
-    name:        'Week Warrior',
-    description: 'Logged in 7 days in a row.',
-    icon:        '🔥',
-    tier:        'bronze',
+    slug: 'streak-7', name: 'Week Warrior',
+    description: 'Checked in 7 days in a row.',
+    icon: '🔥', tier: 'bronze',
   },
   {
-    slug:        'streak-30',
-    name:        'Unstoppable',
-    description: 'Logged in 30 days in a row. You showed up every single day.',
-    icon:        '💪',
-    tier:        'platinum',
+    slug: 'streak-30', name: 'Unstoppable',
+    description: 'Showed up every day for 30 days straight.',
+    icon: '💪', tier: 'platinum',
   },
 ]
+
+export const BADGE_BY_CHALLENGE: Record<string, BadgeDef> = Object.fromEntries(
+  BADGES.filter(b => b.challenge).map(b => [b.challenge!, b])
+)
 
 export const TIER_STYLES: Record<string, { bg: string; border: string; text: string; label: string }> = {
   bronze:   { bg: 'bg-[#f5e6d3]', border: 'border-[#c8854a]', text: 'text-[#8B4513]', label: 'Bronze'   },
