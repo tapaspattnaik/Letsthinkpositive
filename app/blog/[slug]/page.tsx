@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { getPost, getAllPostSlugs } from '@/lib/posts'
+import { BlogInteractions } from '@/components/blog/BlogInteractions'
 
 export async function generateStaticParams() {
   return getAllPostSlugs().map(slug => ({ slug }))
@@ -55,6 +56,11 @@ export default async function PostPage({ params }: { params: { slug: string } })
           dangerouslySetInnerHTML={{ __html: post.contentHtml }}
         />
       </article>
+
+      {/* Like, Comment, Share */}
+      <div className="max-w-[760px] mx-auto px-[5%] pb-10">
+        <BlogInteractions slug={params.slug} title={post.title} />
+      </div>
 
       {/* Footer CTA */}
       <section className="bg-teal-ghost py-14 px-[5%]">

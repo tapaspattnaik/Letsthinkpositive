@@ -17,20 +17,6 @@ model Subscriber {
   @@map("subscribers")
 }
 
-model CommunityPost {
-  id        Int      @id @default(autoincrement())
-  title     String   @db.VarChar(200)
-  body      String   @db.Text
-  author    String   @db.VarChar(100) @default("Anonymous")
-  tags      String   @db.VarChar(500) @default("")
-  approved  Boolean  @default(false)
-  createdAt DateTime @default(now())
-  userId    Int?
-  user      User?    @relation(fields: [userId], references: [id])
-
-  @@map("community_posts")
-}
-
 model User {
   id        Int      @id @default(autoincrement())
   name      String   @db.VarChar(100)
@@ -43,9 +29,15 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  badges    UserBadge[]
-  progress  ChallengeProgress[]
-  posts     CommunityPost[]
+  badges          UserBadge[]
+  progress        ChallengeProgress[]
+  posts           CommunityPost[]
+  groupMemberships GroupMember[]
+  groupPosts      GroupPost[]
+  postLikes       PostLike[]
+  postComments    PostComment[]
+  blogLikes       BlogLike[]
+  blogComments    BlogComment[]
 
   @@map("users")
 }
@@ -89,4 +81,120 @@ model ChallengeProgress {
 
   @@unique([userId, challengeSlug])
   @@map("challenge_progress")
+}
+
+model CommunityPost {
+  id        Int      @id @default(autoincrement())
+  title     String   @db.VarChar(200)
+  body      String   @db.Text
+  author    String   @db.VarChar(100) @default("Anonymous")
+  tags      String   @db.VarChar(500) @default("")
+  approved  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  userId    Int?
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@map("community_posts")
+}
+
+// ── Circles (closed groups) ───────────────────────────────────────────────
+
+model Circle {
+  id          Int       @id @default(autoincrement())
+  slug        String    @unique @db.VarChar(100)
+  name        String    @db.VarChar(100)
+  description String    @db.Text
+  icon        String    @db.VarChar(10) @default("🌿")
+  color       String    @db.VarChar(50) @default("from-teal-deep to-teal-dark")
+  isPrivate   Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+
+  members     GroupMember[]
+  posts       GroupPost[]
+
+  @@map("circles")
+}
+
+model GroupMember {
+  id        Int      @id @default(autoincrement())
+  circleId  Int
+  userId    Int
+  role      String   @db.VarChar(20) @default("member")
+  joinedAt  DateTime @default(now())
+
+  circle    Circle   @relation(fields: [circleId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([circleId, userId])
+  @@map("group_members")
+}
+
+model GroupPost {
+  id        Int      @id @default(autoincrement())
+  circleId  Int
+  userId    Int
+  body      String   @db.Text
+  createdAt DateTime @default(now())
+
+  circle    Circle       @relation(fields: [circleId], references: [id])
+  user      User         @relation(fields: [userId], references: [id])
+  likes     PostLike[]
+  comments  PostComment[]
+
+  @@map("group_posts")
+}
+
+model PostLike {
+  id        Int       @id @default(autoincrement())
+  postId    Int
+  userId    Int
+  createdAt DateTime  @default(now())
+
+  post      GroupPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@unique([postId, userId])
+  @@map("post_likes")
+}
+
+model PostComment {
+  id        Int       @id @default(autoincrement())
+  postId    Int
+  userId    Int
+  body      String    @db.Text
+  createdAt DateTime  @default(now())
+
+  post      GroupPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@map("post_comments")
+}
+
+// ── Blog interactions ─────────────────────────────────────────────────────
+
+model BlogLike {
+  id        Int      @id @default(autoincrement())
+  slug      String   @db.VarChar(200)
+  userId    Int?
+  ipHash    String?  @db.VarChar(64)
+  createdAt DateTime @default(now())
+
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@unique([slug, userId])
+  @@map("blog_likes")
+}
+
+model BlogComment {
+  id        Int      @id @default(autoincrement())
+  slug      String   @db.VarChar(200)
+  userId    Int?
+  author    String   @db.VarChar(100)
+  body      String   @db.Text
+  approved  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@map("blog_comments")
 }

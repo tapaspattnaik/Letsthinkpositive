@@ -40,6 +40,7 @@ const NAV_GROUPS: NavGroup[] = [
     icon: '💛',
     items: [
       { href: '/community', label: 'Community', desc: 'Stories & sharing',        icon: '💬' },
+      { href: '/circles',   label: 'Circles',   desc: 'Private group spaces',     icon: '🔒' },
       { href: '/about',     label: 'About',     desc: 'Our mission & story',      icon: '🌱' },
     ],
   },
