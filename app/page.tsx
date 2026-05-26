@@ -2,7 +2,9 @@ import { Hero }             from '@/components/home/Hero'
 import { QuoteSection }     from '@/components/home/QuoteSection'
 import { SuperbManSection } from '@/components/home/SuperbManSection'
 import { Pillars }          from '@/components/home/Pillars'
+import { WellnessPillars }  from '@/components/home/WellnessPillars'
 import { FeatureCards }     from '@/components/home/FeatureCards'
+import { PromoPanel }       from '@/components/home/PromoPanel'
 import { BlogTeaser }       from '@/components/home/BlogTeaser'
 import { Newsletter }       from '@/components/home/Newsletter'
 import Link from 'next/link'
@@ -12,7 +14,9 @@ export default function HomePage() {
     <>
       <Hero />
       <QuoteSection />
+      <WellnessPillars />
       <FeatureCards />
+      <PromoPanel />
       <SuperbManSection />
       <Pillars />
       <BlogTeaser />

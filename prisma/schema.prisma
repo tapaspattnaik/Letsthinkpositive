@@ -16,3 +16,15 @@ model Subscriber {
 
   @@map("subscribers")
 }
+
+model CommunityPost {
+  id        Int      @id @default(autoincrement())
+  title     String   @db.VarChar(200)
+  body      String   @db.Text
+  author    String   @db.VarChar(100) @default("Anonymous")
+  tags      String   @db.VarChar(500) @default("")
+  approved  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("community_posts")
+}
