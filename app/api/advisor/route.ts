@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     const stream = await together.chat.completions.create({
       model:       'meta-llama/Llama-3.3-70B-Instruct-Turbo',
       messages:    [{ role: 'system', content: systemPrompt }, ...messages],
-      max_tokens:  1024,
+      max_tokens:  280,
       temperature: 0.7,
       stream:      true,
     })

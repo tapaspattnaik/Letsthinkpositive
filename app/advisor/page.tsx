@@ -24,9 +24,11 @@ export default function AdvisorPage() {
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef  = useRef<HTMLTextAreaElement>(null)
 
+  // Only scroll when a new message is added — NOT on every streaming token
+  const msgCount = messages.length
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+  }, [msgCount])
 
   async function send(text?: string) {
     const content = (text ?? input).trim()
@@ -91,7 +93,7 @@ export default function AdvisorPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-teal-ghost to-ivory flex flex-col">
+    <div className="h-screen overflow-hidden pt-[72px] bg-gradient-to-b from-teal-ghost to-ivory flex flex-col">
       {/* Header */}
       <div className="bg-white border-b border-teal-light px-[5%] py-4 flex items-center gap-4">
         <LtpLogo size={36} />
