@@ -11,6 +11,7 @@ const features = [
   { href: '/vision-board', icon: '⭐', title: 'Vision Board',       text: 'Create a visual map of your intentions and goals. Revisit it daily to stay grounded in your purpose.', color: 'from-teal-mid to-teal-dark' },
   { href: '/community',    icon: '💛', title: 'Community',          text: 'Real stories from real people. Share what\'s working, what\'s hard, and what\'s helping.', color: 'from-amber to-[#D4880A]' },
   { href: '/kids',         icon: '🌈', title: 'Kids Zone',          text: 'Fun, gentle activities to help children build calm, kindness, and gratitude — one smile at a time.', color: 'from-teal-deep to-teal-mid' },
+  { href: '/drawing',      icon: '✏️', title: 'Positive Drawing',   text: 'Zentangle, mandala, ZenDoodle and more — meditative art styles that calm the mind with every stroke.', color: 'from-teal-mid to-teal-dark' },
   { href: '/advisor',      icon: '🤖', title: 'Bit Advisor',        text: 'A compassionate AI companion that listens, analyses your mood, offers wisdom, and guides you.', color: 'from-teal-dark to-teal-deep' },
 ]
 

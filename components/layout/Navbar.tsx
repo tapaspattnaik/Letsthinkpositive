@@ -30,6 +30,7 @@ const NAV_GROUPS: NavGroup[] = [
       { href: '/challenges',   label: 'Challenges',    desc: '30-day programmes',       icon: '🏆' },
       { href: '/vision-board', label: 'Vision Board',  desc: 'Visualise your goals',    icon: '⭐' },
       { href: '/kids',         label: 'Kids Zone',     desc: 'For little learners',     icon: '🌈' },
+      { href: '/drawing',      label: 'Positive Drawing', desc: 'Zentangle, mandala & more', icon: '✏️' },
     ],
   },
   {
