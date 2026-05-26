@@ -32,38 +32,51 @@ export function Hero() {
 
         {/* Animated symbol */}
         <div className="hidden md:flex flex-col items-center justify-center">
-          <div className="relative w-[320px] h-[320px] flex items-center justify-center">
-            {/* Rings */}
-            {[100, 78, 58].map((size, i) => (
-              <div
-                key={i}
-                className="absolute rounded-full border border-teal-light/30 animate-pulse-ring"
-                style={{
-                  width: `${size}%`, height: `${size}%`,
-                  animationDelay: `${i * 0.6}s`,
-                  borderColor: `rgba(168,216,208,${0.2 + i * 0.1})`,
-                }}
-              />
-            ))}
+          <div className="relative w-[380px] h-[380px] flex items-center justify-center">
+            {/* Rings — outer rotates CW, mid CCW, inner CW; dashed so rotation is visible */}
+            {(['animate-ring-outer', 'animate-ring-mid', 'animate-ring-inner'] as const).map((cls, i) => {
+              const size = [100, 78, 58][i]
+              const color = [
+                'rgba(168,216,208,0.55)',
+                'rgba(45,155,138,0.65)',
+                'rgba(45,155,138,0.80)',
+              ][i]
+              const thickness = ['border-2', 'border-2', 'border-[3px]'][i]
+              return (
+                <div
+                  key={i}
+                  className={`absolute rounded-full border-dashed ${thickness} ${cls}`}
+                  style={{ width: `${size}%`, height: `${size}%`, borderColor: color }}
+                />
+              )
+            })}
 
-            {/* Signal strokes */}
-            <div className="absolute flex gap-1.5 items-end" style={{ bottom: 'calc(50% + 64px)', left: '50%', transform: 'translateX(-50%)' }}>
-              {[52, 76, 52].map((h, i) => (
-                <div key={i} className="w-[3px] rounded-full bg-amber animate-stroke-glow" style={{ height: `${h}px`, animationDelay: `${i * 0.3}s` }} />
+            {/* Signal bars — independent scaleY waves, origin at bottom */}
+            <div className="absolute flex gap-2.5 items-end" style={{ bottom: 'calc(50% + 76px)', left: '50%', transform: 'translateX(-50%)' }}>
+              {(['animate-bar-1', 'animate-bar-2', 'animate-bar-3'] as const).map((cls, i) => (
+                <div
+                  key={i}
+                  className={`w-[5px] rounded-full bg-amber ${cls}`}
+                  style={{ height: `${[56, 84, 56][i]}px`, transformOrigin: 'bottom' }}
+                />
               ))}
             </div>
 
-            {/* Core */}
-            <div className="w-[130px] h-[130px] rounded-full bg-gradient-to-br from-teal-mid to-teal-deep flex items-center justify-center relative z-10 shadow-[0_0_60px_rgba(45,155,138,0.4)]">
-              <div className="w-[94px] h-[94px] rounded-full bg-teal-mid flex items-center justify-center">
-                {/* Arcs */}
-                <div className="absolute flex flex-col gap-1.5 items-center" style={{ bottom: 'calc(50% - 18px)' }}>
-                  {[48, 32, 18].map((w, i) => (
-                    <div key={i} className="border-[3px] border-amber border-b-0 rounded-t-[50px] animate-arc-glow"
-                      style={{ width: `${w}px`, height: `${w / 2}px`, animationDelay: `${i * 0.4}s`, opacity: 1 - i * 0.25 }} />
+            {/* Core — breathing glow */}
+            <div className="w-[150px] h-[150px] rounded-full bg-gradient-to-br from-teal-mid to-teal-deep flex items-center justify-center relative z-10 animate-core-breathe">
+              {/* Inner orb — lags behind core breathe */}
+              <div className="w-[108px] h-[108px] rounded-full bg-teal-mid flex items-center justify-center animate-orb-breathe">
+                {/* Arc cascade — outer fires first (delay 0), ripples inward */}
+                <div className="absolute flex flex-col gap-2 items-center" style={{ bottom: 'calc(50% - 20px)' }}>
+                  {[56, 38, 22].map((w, i) => (
+                    <div
+                      key={i}
+                      className="border-[3px] border-amber border-b-0 rounded-t-[50px] animate-arc-fire"
+                      style={{ width: `${w}px`, height: `${w / 2}px`, animationDelay: `${i * 0.6}s` }}
+                    />
                   ))}
                 </div>
-                <div className="w-3.5 h-3.5 rounded-full bg-amber-pale/90" />
+                <div className="w-4 h-4 rounded-full bg-amber-pale" />
               </div>
             </div>
           </div>
