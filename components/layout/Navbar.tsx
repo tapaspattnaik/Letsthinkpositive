@@ -94,38 +94,43 @@ export function Navbar() {
             </Link>
           </li>
 
-          {/* Dropdown groups */}
+          {/* Dropdown groups — open on hover */}
           {NAV_GROUPS.map(group => (
-            <li key={group.label} className="relative">
+            <li
+              key={group.label}
+              className="relative"
+              onMouseEnter={() => setOpenGroup(group.label)}
+              onMouseLeave={() => setOpenGroup(null)}
+            >
               <button
-                onClick={() => setOpenGroup(openGroup === group.label ? null : group.label)}
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-[0.87rem] font-medium transition-colors
-                  ${isGroupActive(group) ? 'text-teal-deep bg-teal-ghost' : 'text-text-mid hover:text-teal-deep hover:bg-teal-ghost'}`}>
+                  ${isGroupActive(group) || openGroup === group.label ? 'text-teal-deep bg-teal-ghost' : 'text-text-mid hover:text-teal-deep hover:bg-teal-ghost'}`}>
                 {group.label}
                 <span className={`text-[0.6rem] transition-transform duration-200 ${openGroup === group.label ? 'rotate-180' : ''}`}>▼</span>
               </button>
 
-              {openGroup === group.label && (
-                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-[280px] bg-white border border-teal-light rounded-[20px] shadow-lift p-2 z-50">
-                  {group.items.map(item => (
-                    <Link key={item.href} href={item.href}
-                      onClick={() => setOpenGroup(null)}
-                      className={`flex items-center gap-3 px-4 py-3 rounded-[14px] no-underline transition-all group
-                        ${pathname === item.href || pathname.startsWith(item.href + '/')
-                          ? 'bg-teal-ghost text-teal-deep'
-                          : 'text-text-mid hover:bg-teal-ghost hover:text-teal-deep'}`}>
-                      <span className="text-[1.3rem] flex-shrink-0">{item.icon}</span>
-                      <div>
-                        <p className="font-semibold text-[0.88rem] leading-none mb-0.5">{item.label}</p>
-                        {item.desc && <p className="text-[0.75rem] text-text-xlight group-hover:text-teal-mid transition-colors">{item.desc}</p>}
-                      </div>
-                      {(pathname === item.href || pathname.startsWith(item.href + '/')) && (
-                        <span className="ml-auto w-1.5 h-1.5 rounded-full bg-amber flex-shrink-0" />
-                      )}
-                    </Link>
-                  ))}
-                </div>
-              )}
+              {/* Dropdown panel — animated with opacity + translateY */}
+              <div className={`absolute top-full left-1/2 -translate-x-1/2 mt-1 w-[280px] bg-white border border-teal-light rounded-[20px] shadow-lift p-2 z-50
+                transition-all duration-200 origin-top
+                ${openGroup === group.label ? 'opacity-100 scale-y-100 translate-y-0 pointer-events-auto' : 'opacity-0 scale-y-95 -translate-y-1 pointer-events-none'}`}>
+                {group.items.map(item => (
+                  <Link key={item.href} href={item.href}
+                    onClick={() => setOpenGroup(null)}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-[14px] no-underline transition-all group
+                      ${pathname === item.href || pathname.startsWith(item.href + '/')
+                        ? 'bg-teal-ghost text-teal-deep'
+                        : 'text-text-mid hover:bg-teal-ghost hover:text-teal-deep'}`}>
+                    <span className="text-[1.3rem] flex-shrink-0">{item.icon}</span>
+                    <div>
+                      <p className="font-semibold text-[0.88rem] leading-none mb-0.5">{item.label}</p>
+                      {item.desc && <p className="text-[0.75rem] text-text-xlight group-hover:text-teal-mid transition-colors">{item.desc}</p>}
+                    </div>
+                    {(pathname === item.href || pathname.startsWith(item.href + '/')) && (
+                      <span className="ml-auto w-1.5 h-1.5 rounded-full bg-amber flex-shrink-0" />
+                    )}
+                  </Link>
+                ))}
+              </div>
             </li>
           ))}
 
