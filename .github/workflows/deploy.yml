@@ -1,4 +1,4 @@
-name: Build & Verify
+name: Build & Deploy
 
 on:
   push:
@@ -28,7 +28,36 @@ jobs:
 
       - name: Build Next.js app
         env:
-          TOGETHER_API_KEY:    ${{ secrets.TOGETHER_API_KEY }}
+          TOGETHER_API_KEY:     ${{ secrets.TOGETHER_API_KEY }}
           NEXT_PUBLIC_SITE_URL: https://letsthinkpositive.com
-          DATABASE_URL:        mysql://placeholder:placeholder@localhost:3306/placeholder
+          DATABASE_URL:         mysql://placeholder:placeholder@localhost:3306/placeholder
         run: npm run build
+
+  deploy:
+    # Only deploy on push to main (not on pull requests)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy via SSH key
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host:    ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key:     ${{ secrets.SSH_KEY }}
+          port:    ${{ secrets.SSH_PORT || '65002' }}
+          script: |
+            set -e
+            cd ${{ secrets.APP_DIR }}
+            echo "==> Pulling latest code..."
+            git pull origin main
+            echo "==> Installing production dependencies..."
+            npm install --production
+            echo "==> Generating Prisma client..."
+            npx prisma generate
+            echo "==> Running database migrations..."
+            npx prisma migrate deploy
+            echo "==> Restarting app..."
+            pm2 restart letsthinkpositive || pm2 start server.js --name letsthinkpositive
+            echo "==> Done ✓"
