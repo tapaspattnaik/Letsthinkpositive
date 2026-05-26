@@ -3,6 +3,8 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
+import { useSession, signOut } from 'next-auth/react'
+import Image from 'next/image'
 import { LtpLogo } from '@/components/ui/LtpLogo'
 
 interface NavItem  { href: string; label: string; desc?: string; icon?: string }
@@ -47,6 +49,7 @@ const FLAT_LINKS: NavItem[] = [{ href: '/', label: 'Home' }]
 
 export function Navbar() {
   const pathname    = usePathname()
+  const { data: session } = useSession()
   const [open, setOpen]         = useState(false)
   const [openGroup, setOpenGroup] = useState<string | null>(null)
   const [mobileGroup, setMobileGroup] = useState<string | null>(null)
@@ -139,6 +142,44 @@ export function Navbar() {
               className="ml-2 bg-teal-deep text-white text-[0.82rem] font-medium px-4 py-2 rounded-full no-underline hover:bg-teal-dark transition-colors">
               Contact Us
             </Link>
+          </li>
+
+          {/* Auth button */}
+          <li>
+            {session ? (
+              <div className="relative ml-1" onMouseEnter={() => setOpenGroup('__user')} onMouseLeave={() => setOpenGroup(null)}>
+                <button className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full border border-teal-light hover:border-teal-mid transition-colors">
+                  <div className="w-7 h-7 rounded-full overflow-hidden bg-teal-ghost flex items-center justify-center flex-shrink-0">
+                    {session.user?.image
+                      ? <Image src={session.user.image} alt="avatar" width={28} height={28} className="object-cover" />
+                      : <span className="text-[0.8rem]">🌿</span>}
+                  </div>
+                  <span className="text-[0.82rem] font-medium text-teal-deep max-w-[80px] truncate">{session.user?.name?.split(' ')[0]}</span>
+                </button>
+                <div className={`absolute top-full right-0 mt-1 w-[180px] bg-white border border-teal-light rounded-[16px] shadow-lift p-1.5 z-50
+                  transition-all duration-200 origin-top-right
+                  ${openGroup === '__user' ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 pointer-events-none'}`}>
+                  <Link href="/profile" onClick={() => setOpenGroup(null)}
+                    className="flex items-center gap-2 px-3 py-2.5 rounded-[10px] text-[0.85rem] text-text-mid hover:bg-teal-ghost hover:text-teal-deep no-underline transition-all">
+                    👤 My Profile
+                  </Link>
+                  <Link href="/challenges" onClick={() => setOpenGroup(null)}
+                    className="flex items-center gap-2 px-3 py-2.5 rounded-[10px] text-[0.85rem] text-text-mid hover:bg-teal-ghost hover:text-teal-deep no-underline transition-all">
+                    🏆 My Challenges
+                  </Link>
+                  <hr className="border-teal-light my-1" />
+                  <button onClick={() => signOut({ callbackUrl: '/' })}
+                    className="w-full text-left flex items-center gap-2 px-3 py-2.5 rounded-[10px] text-[0.85rem] text-text-mid hover:bg-red-50 hover:text-red-500 transition-all">
+                    🚪 Sign out
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <Link href="/login"
+                className="ml-1 border border-teal-mid text-teal-deep text-[0.82rem] font-medium px-4 py-2 rounded-full no-underline hover:bg-teal-ghost transition-colors">
+                Sign in
+              </Link>
+            )}
           </li>
         </ul>
 
