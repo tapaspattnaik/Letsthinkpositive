@@ -1,9 +1,8 @@
 'use client'
 
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { LtpLogo } from '@/components/ui/LtpLogo'
-
-interface Message { role: 'user' | 'assistant'; content: string }
+import { useBitChat } from '@/hooks/useBitChat'
 
 const MOODS = [
   { label: 'Low',      emoji: '😔', color: 'hover:bg-blue-50  hover:border-blue-300  hover:text-blue-600'  },
@@ -14,105 +13,53 @@ const MOODS = [
 ]
 
 const STARTERS = [
-  { text: "I'm feeling overwhelmed today",          icon: '🌊' },
-  { text: "Guide me through a short meditation",    icon: '🧘' },
-  { text: "I need perspective on a tough situation",icon: '🔍' },
-  { text: "Share wisdom about letting go",           icon: '🍃' },
-  { text: "Help me find things to be grateful for", icon: '✨' },
+  { text: "I'm feeling overwhelmed today",            icon: '🌊' },
+  { text: "Guide me through a short meditation",      icon: '🧘' },
+  { text: "I need perspective on a tough situation",  icon: '🔍' },
+  { text: "Share wisdom about letting go",            icon: '🍃' },
+  { text: "Help me find things to be grateful for",  icon: '✨' },
 ]
 
 export default function AdvisorPage() {
-  const [messages,  setMessages]  = useState<Message[]>([])
-  const [input,     setInput]     = useState('')
-  const [mood,      setMood]      = useState('')
-  const [streaming, setStreaming] = useState(false)
-  const [started,   setStarted]  = useState(false)
-  const bottomRef  = useRef<HTMLDivElement>(null)
-  const inputRef   = useRef<HTMLTextAreaElement>(null)
-  const chatRef    = useRef<HTMLDivElement>(null)
+  const [input,   setInput]   = useState('')
+  const [started, setStarted] = useState(false)
+  const bottomRef = useRef<HTMLDivElement>(null)
+  const inputRef  = useRef<HTMLTextAreaElement>(null)
+
+  const { messages, mood, setMood, streaming, send } = useBitChat()
 
   const msgCount = messages.length
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (msgCount > 0) setStarted(true)
   }, [msgCount])
 
-  // Auto-resize textarea
-  function handleInput(e: React.ChangeEvent<HTMLTextAreaElement>) {
+  async function handleSend(text?: string) {
+    const content = (text ?? input).trim()
+    if (!content) return
+    setInput('')
+    if (inputRef.current) inputRef.current.style.height = 'auto'
+    await send(content)
+  }
+
+  function handleKey(e: React.KeyboardEvent) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() }
+  }
+
+  function autoResize(e: React.ChangeEvent<HTMLTextAreaElement>) {
     setInput(e.target.value)
     e.target.style.height = 'auto'
     e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'
-  }
-
-  const send = useCallback(async (text?: string) => {
-    const content = (text ?? input).trim()
-    if (!content || streaming) return
-    setInput('')
-    if (inputRef.current) inputRef.current.style.height = 'auto'
-    const userMsg: Message = { role: 'user', content }
-    setMessages(prev => [...prev, userMsg])
-    setStreaming(true)
-    setStarted(true)
-
-    const all = [...messages, userMsg]
-    setMessages(prev => [...prev, { role: 'assistant', content: '' }])
-
-    try {
-      const res = await fetch('/api/advisor', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: all, mood }),
-      })
-      if (!res.body) throw new Error('No stream')
-      const reader  = res.body.getReader()
-      const decoder = new TextDecoder()
-      let accumulated = ''
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        for (const line of decoder.decode(value, { stream: true }).split('\n')) {
-          if (line.startsWith('data: ')) {
-            const d = line.slice(6)
-            if (d === '[DONE]') break
-            try {
-              const { text } = JSON.parse(d)
-              accumulated += text
-              setMessages(prev => {
-                const u = [...prev]
-                u[u.length - 1] = { role: 'assistant', content: accumulated }
-                return u
-              })
-            } catch { /* skip */ }
-          }
-        }
-      }
-    } catch {
-      setMessages(prev => {
-        const u = [...prev]
-        u[u.length - 1] = { role: 'assistant', content: "I'm here. Something went a little sideways on my end — want to try again?" }
-        return u
-      })
-    } finally {
-      setStreaming(false)
-      inputRef.current?.focus()
-    }
-  }, [input, streaming, messages, mood])
-
-  function handleKey(e: React.KeyboardEvent) {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() }
   }
 
   const selectedMood = MOODS.find(m => m.label === mood)
 
   return (
     <div className="h-screen overflow-hidden flex flex-col pt-[72px] bg-gradient-to-br from-teal-ghost via-ivory to-white">
-
-      {/* ─── Two-panel layout ──────────────────────────────── */}
       <div className="flex flex-1 overflow-hidden max-w-6xl w-full mx-auto px-4 md:px-6 py-4 gap-4">
 
-        {/* ── LEFT SIDEBAR ─────────────────────────────────── */}
+        {/* ── Sidebar ─────────────────────────────── */}
         <aside className="hidden md:flex flex-col w-[260px] flex-shrink-0 gap-4">
-
-          {/* Bit avatar card */}
           <div className="bg-white rounded-[22px] border border-teal-light p-5 flex items-center gap-3 shadow-card">
             <div className="relative">
               <LtpLogo size={44} />
@@ -124,17 +71,13 @@ export default function AdvisorPage() {
             </div>
           </div>
 
-          {/* Mood selector */}
           <div className="bg-white rounded-[22px] border border-teal-light p-5 shadow-card">
             <p className="text-[0.72rem] font-bold tracking-widest uppercase text-text-xlight mb-3">How are you feeling?</p>
             <div className="space-y-1.5">
               {MOODS.map(m => (
-                <button key={m.label}
-                  onClick={() => setMood(mood === m.label ? '' : m.label)}
+                <button key={m.label} onClick={() => setMood(mood === m.label ? '' : m.label)}
                   className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-[12px] border text-[0.85rem] font-medium transition-all text-left
-                    ${mood === m.label
-                      ? 'bg-teal-deep text-white border-teal-deep'
-                      : `border-teal-light text-text-mid bg-teal-ghost/30 ${m.color}`}`}>
+                    ${mood === m.label ? 'bg-teal-deep text-white border-teal-deep' : `border-teal-light text-text-mid bg-teal-ghost/30 ${m.color}`}`}>
                   <span className="text-[1rem]">{m.emoji}</span>
                   {m.label}
                   {mood === m.label && <span className="ml-auto text-[0.7rem] opacity-70">✓</span>}
@@ -143,14 +86,11 @@ export default function AdvisorPage() {
             </div>
           </div>
 
-          {/* Quick starters */}
           <div className="bg-white rounded-[22px] border border-teal-light p-5 shadow-card flex-1">
             <p className="text-[0.72rem] font-bold tracking-widest uppercase text-text-xlight mb-3">Try asking…</p>
             <div className="space-y-1.5">
               {STARTERS.map(s => (
-                <button key={s.text}
-                  onClick={() => send(s.text)}
-                  disabled={streaming}
+                <button key={s.text} onClick={() => handleSend(s.text)} disabled={streaming}
                   className="w-full flex items-start gap-2.5 px-3 py-2.5 rounded-[12px] border border-teal-light text-left text-[0.8rem] text-text-mid hover:bg-teal-ghost hover:text-teal-deep hover:border-teal-mid transition-all disabled:opacity-50">
                   <span className="text-[0.9rem] flex-shrink-0 mt-0.5">{s.icon}</span>
                   <span className="leading-[1.5]">{s.text}</span>
@@ -160,9 +100,8 @@ export default function AdvisorPage() {
           </div>
         </aside>
 
-        {/* ── MAIN CHAT ─────────────────────────────────────── */}
+        {/* ── Chat panel ──────────────────────────── */}
         <div className="flex-1 flex flex-col overflow-hidden bg-white rounded-[24px] border border-teal-light shadow-card">
-
           {/* Chat header */}
           <div className="flex items-center gap-3 px-5 py-3.5 border-b border-teal-light flex-shrink-0">
             <div className="relative md:hidden">
@@ -176,12 +115,9 @@ export default function AdvisorPage() {
                 Compassionate AI companion
               </p>
             </div>
-            {/* Mobile mood quick-pick */}
             <div className="md:hidden ml-auto flex gap-1">
               {MOODS.map(m => (
-                <button key={m.label}
-                  onClick={() => setMood(mood === m.label ? '' : m.label)}
-                  title={m.label}
+                <button key={m.label} onClick={() => setMood(mood === m.label ? '' : m.label)} title={m.label}
                   className={`text-[1rem] p-1 rounded-full transition-all ${mood === m.label ? 'bg-teal-deep' : 'hover:bg-teal-ghost'}`}>
                   {m.emoji}
                 </button>
@@ -190,8 +126,7 @@ export default function AdvisorPage() {
           </div>
 
           {/* Messages */}
-          <div ref={chatRef} className="flex-1 overflow-y-auto px-4 md:px-6 py-5 space-y-4">
-            {/* Welcome / empty state */}
+          <div className="flex-1 overflow-y-auto px-4 md:px-6 py-5 space-y-4">
             {!started && (
               <div className="flex flex-col items-center justify-center h-full text-center py-6">
                 <LtpLogo size={52} />
@@ -199,11 +134,9 @@ export default function AdvisorPage() {
                 <p className="text-text-mid text-[0.9rem] leading-[1.8] max-w-[360px]">
                   A calm, compassionate companion here to listen and offer guidance. What&apos;s on your mind today?
                 </p>
-                {/* Mobile starters */}
                 <div className="md:hidden mt-5 flex flex-col gap-2 w-full max-w-[340px]">
                   {STARTERS.map(s => (
-                    <button key={s.text}
-                      onClick={() => send(s.text)}
+                    <button key={s.text} onClick={() => handleSend(s.text)}
                       className="flex items-center gap-2.5 px-4 py-2.5 rounded-full border border-teal-light text-[0.83rem] text-text-mid hover:bg-teal-ghost hover:text-teal-deep hover:border-teal-mid transition-all text-left">
                       <span>{s.icon}</span>{s.text}
                     </button>
@@ -223,15 +156,11 @@ export default function AdvisorPage() {
                   </div>
                 )}
                 <div className={`max-w-[78%] px-4 py-3 text-[0.9rem] leading-[1.8] rounded-[18px] ${
-                  m.role === 'user'
-                    ? 'bg-teal-deep text-white rounded-tr-sm'
-                    : 'bg-teal-ghost text-text-mid rounded-tl-sm'
+                  m.role === 'user' ? 'bg-teal-deep text-white rounded-tr-sm' : 'bg-teal-ghost text-text-mid rounded-tl-sm'
                 }`}>
                   {m.content || (streaming && i === messages.length - 1
                     ? <span className="inline-flex gap-1 items-center h-[1.2em]">
-                        {[0,150,300].map(d => (
-                          <span key={d} className="w-1.5 h-1.5 rounded-full bg-teal-mid animate-bounce" style={{ animationDelay: `${d}ms` }} />
-                        ))}
+                        {[0,150,300].map(d => <span key={d} className="w-1.5 h-1.5 rounded-full bg-teal-mid animate-bounce" style={{ animationDelay: `${d}ms` }} />)}
                       </span>
                     : '')}
                 </div>
@@ -240,23 +169,16 @@ export default function AdvisorPage() {
             <div ref={bottomRef} />
           </div>
 
-          {/* Input bar */}
+          {/* Input */}
           <div className="flex-shrink-0 border-t border-teal-light px-4 md:px-5 py-3.5">
             <div className="flex items-end gap-2.5">
-              <textarea
-                ref={inputRef}
-                value={input}
-                onChange={handleInput}
-                onKeyDown={handleKey}
+              <textarea ref={inputRef} value={input} onChange={autoResize} onKeyDown={handleKey}
                 placeholder="Share what's on your mind…  (Enter to send, Shift+Enter for new line)"
                 rows={1}
                 className="flex-1 border border-teal-light rounded-[16px] px-4 py-2.5 text-[0.9rem] text-charcoal bg-ivory outline-none focus:border-teal-mid transition-colors resize-none placeholder:text-text-xlight leading-[1.6]"
                 style={{ maxHeight: '120px' }}
               />
-              <button
-                onClick={() => send()}
-                disabled={!input.trim() || streaming}
-                aria-label="Send message"
+              <button onClick={() => handleSend()} disabled={!input.trim() || streaming} aria-label="Send"
                 className="flex-shrink-0 w-10 h-10 rounded-full bg-teal-deep text-white flex items-center justify-center hover:bg-teal-dark disabled:opacity-40 transition-all">
                 {streaming
                   ? <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
@@ -264,7 +186,7 @@ export default function AdvisorPage() {
                 }
               </button>
             </div>
-            <p className="text-[0.7rem] text-text-xlight mt-2 text-center">
+            <p className="text-center text-[0.7rem] text-text-xlight mt-2">
               Bit is an AI companion, not a therapist. For serious concerns please seek professional support.
             </p>
           </div>

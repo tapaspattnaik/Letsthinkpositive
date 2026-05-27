@@ -36,7 +36,7 @@ export default function BlogSubmitPage() {
   const [imagePreviews, setImagePreviews] = useState<string[]>([])
   const [mode,        setMode]        = useState<'file' | 'text'>('file')
   const [submitting,  setSubmitting]  = useState(false)
-  const [result,      setResult]      = useState<{ success?: string; error?: string } | null>(null)
+  const [result,      setResult]      = useState<{ success?: string; error?: string; flagged?: boolean; issues?: string[] } | null>(null)
   const [dragOver,    setDragOver]    = useState(false)
   const fileInputRef  = useRef<HTMLInputElement>(null)
   const imgInputRef   = useRef<HTMLInputElement>(null)
@@ -82,8 +82,9 @@ export default function BlogSubmitPage() {
     try {
       const res  = await fetch('/api/blog/submit', { method: 'POST', body: fd })
       const data = await res.json()
-      if (res.ok) setResult({ success: data.message })
-      else        setResult({ error: data.error })
+      if (res.ok)            setResult({ success: data.message })
+      else if (res.status === 422) setResult({ flagged: true, issues: data.issues, error: data.message })
+      else                   setResult({ error: data.error })
     } finally {
       setSubmitting(false)
     }
@@ -268,7 +269,20 @@ export default function BlogSubmitPage() {
             </div>
           </div>
 
-          {result?.error && (
+          {result?.flagged && (
+            <div className="bg-amber/10 border border-amber rounded-[16px] px-5 py-4 space-y-2">
+              <p className="font-semibold text-[0.9rem] text-charcoal flex items-center gap-2">🚨 Post flagged by AI moderation</p>
+              <p className="text-[0.85rem] text-text-mid">{result.error}</p>
+              {result.issues && result.issues.length > 0 && (
+                <ul className="text-[0.82rem] text-red-600 list-disc list-inside space-y-0.5">
+                  {result.issues.map((issue, i) => <li key={i}>{issue}</li>)}
+                </ul>
+              )}
+              <p className="text-[0.78rem] text-text-xlight">Please revise your post and try again. If you believe this is an error, contact us.</p>
+            </div>
+          )}
+
+          {!result?.flagged && result?.error && (
             <div className="bg-red-50 border border-red-200 rounded-[12px] px-4 py-3 text-red-600 text-[0.87rem]">
               {result.error}
             </div>

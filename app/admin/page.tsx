@@ -1,267 +1,206 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
+import { useState, useEffect, useCallback } from 'react'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 
-const ADMIN_PIN = process.env.NEXT_PUBLIC_ADMIN_PIN ?? '1234'
-
-const PAGES = [
-  { id: 'home',         label: 'Home Page',        icon: '🏠' },
-  { id: 'library',      label: 'Library',           icon: '📚' },
-  { id: 'blog',         label: 'Blog',              icon: '✍️' },
-  { id: 'challenges',   label: 'Challenges',        icon: '🏆' },
-  { id: 'meditation',   label: 'Meditation',        icon: '🧘' },
-  { id: 'feed',         label: 'Daily Feed',        icon: '📰' },
-  { id: 'community',    label: 'Community',         icon: '💬' },
-  { id: 'coach',        label: 'Calm Coach',        icon: '🌿' },
-  { id: 'kids',         label: 'Kids Zone',         icon: '🌈' },
-  { id: 'vision-board', label: 'Vision Board',      icon: '⭐' },
-  { id: 'journal',      label: 'Gratitude Journal', icon: '📓' },
-  { id: 'sounds',       label: 'Calm Sounds',       icon: '🎧' },
-  { id: 'advisor',      label: 'Bit Advisor',       icon: '✨' },
-]
-
-const HERO_FIELDS = ['title', 'subtitle', 'cta_primary', 'cta_secondary']
-
-interface Settings {
-  enabledPages:    Record<string, boolean>
-  announcement:    string
-  announcementOn:  boolean
-  featuredArticle: string
-  featuredChallenge: string
-  heroOverrides:   Record<string, string>
-  publishDate:     string
+interface Report {
+  id: number; postType: string; postId: number; reason: string; details?: string
+  status: string; adminNote?: string; createdAt: string; resolvedAt?: string
+  postSnippet: string; postAuthor: string; postDeleted: boolean
+  reporter: { id: number; name: string; email: string; avatarUrl?: string }
 }
 
-const DEFAULT_SETTINGS: Settings = {
-  enabledPages:     Object.fromEntries(PAGES.map(p => [p.id, true])),
-  announcement:     'New! Guided Sleep Stories — Drift off to a tranquil night\'s sleep with our latest audio collection.',
-  announcementOn:   true,
-  featuredArticle:  '5-minute-morning-mindfulness-meditation',
-  featuredChallenge:'gratitude-30',
-  heroOverrides:    {},
-  publishDate:      '',
+function timeAgo(iso: string) {
+  const d = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000)
+  if (d === 0) return 'Today'
+  if (d === 1) return 'Yesterday'
+  if (d  < 7)  return `${d}d ago`
+  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 }
 
 export default function AdminPage() {
-  const [pin, setPin]         = useState('')
-  const [authed, setAuthed]   = useState(false)
-  const [pinError, setPinError] = useState(false)
-  const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS)
-  const [saved, setSaved]     = useState(false)
-  const [activeTab, setActiveTab] = useState<'pages' | 'content' | 'hero'>('pages')
+  const { data: session, status } = useSession()
+  const router = useRouter()
+  const [reports,     setReports]     = useState<Report[]>([])
+  const [filter,      setFilter]      = useState<'pending' | 'resolved' | 'all'>('pending')
+  const [loading,     setLoading]     = useState(true)
+  const [activeId,    setActiveId]    = useState<number | null>(null)
+  const [adminNote,   setAdminNote]   = useState('')
+  const [submitting,  setSubmitting]  = useState(false)
+  const [toast,       setToast]       = useState('')
+
+  const load = useCallback(async (f: string) => {
+    setLoading(true)
+    const res  = await fetch(`/api/admin/reports?status=${f}`)
+    if (res.status === 403) { router.push('/'); return }
+    const data = await res.json()
+    setReports(Array.isArray(data) ? data : [])
+    setLoading(false)
+  }, [router])
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('ltp_admin_settings')
-      if (stored) setSettings(JSON.parse(stored))
-    } catch { /* ignore */ }
-  }, [])
+    if (status === 'loading') return
+    if (!session) { router.push('/login'); return }
+    load(filter)
+  }, [status, session, filter, load, router])
 
-  function checkPin() {
-    if (pin === ADMIN_PIN) { setAuthed(true); setPinError(false) }
-    else { setPinError(true); setPin('') }
+  async function resolve(reportId: number, action: 'remove' | 'keep' | 'dismiss') {
+    if (!adminNote.trim() && action !== 'dismiss') {
+      setToast('Please add a note for the reporter before resolving.')
+      setTimeout(() => setToast(''), 3000)
+      return
+    }
+    setSubmitting(true)
+    const res = await fetch(`/api/admin/reports/${reportId}`, {
+      method:  'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ adminNote, action }),
+    })
+    if (res.ok) {
+      setToast(action === 'remove' ? '✓ Post removed & reporter notified' : '✓ Report resolved & reporter notified')
+      setActiveId(null); setAdminNote('')
+      setTimeout(() => { setToast(''); load(filter) }, 2000)
+    }
+    setSubmitting(false)
   }
 
-  function save() {
-    localStorage.setItem('ltp_admin_settings', JSON.stringify(settings))
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2500)
-  }
+  if (status === 'loading' || loading) return (
+    <div className="min-h-screen flex items-center justify-center pt-[72px]">
+      <div className="flex gap-1.5">{[0,1,2].map(i => <span key={i} className="w-2 h-2 rounded-full bg-teal-mid animate-bounce" style={{ animationDelay: `${i*150}ms` }} />)}</div>
+    </div>
+  )
 
-  function togglePage(id: string) {
-    setSettings(s => ({ ...s, enabledPages: { ...s.enabledPages, [id]: !s.enabledPages[id] } }))
-  }
-
-  if (!authed) {
-    return (
-      <section className="min-h-screen bg-ivory flex items-center justify-center px-[5%]">
-        <div className="w-full max-w-sm bg-white border border-teal-light rounded-[28px] p-10 text-center shadow-lift">
-          <div className="text-[3rem] mb-4">🔐</div>
-          <h1 className="font-display text-[1.5rem] text-charcoal font-semibold mb-2">Admin Access</h1>
-          <p className="text-text-light text-[0.88rem] mb-6">Enter your admin PIN to continue.</p>
-          <input
-            type="password" value={pin} onChange={e => setPin(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && checkPin()}
-            placeholder="Enter PIN"
-            className="w-full px-4 py-3 bg-ivory border border-teal-light rounded-[14px] text-center text-[1.1rem] tracking-[0.3em] outline-none focus:border-teal-mid transition-colors mb-3" />
-          {pinError && <p className="text-red-500 text-[0.82rem] mb-3">Incorrect PIN. Please try again.</p>}
-          <button onClick={checkPin}
-            className="w-full bg-teal-deep text-white py-3 rounded-full font-semibold hover:bg-teal-dark transition-colors">
-            Enter
-          </button>
-          <p className="text-text-xlight text-[0.72rem] mt-4">Set PIN via NEXT_PUBLIC_ADMIN_PIN in .env (default: 1234)</p>
-        </div>
-      </section>
-    )
-  }
+  const activeReport = reports.find(r => r.id === activeId)
 
   return (
-    <>
-      {/* Header */}
-      <section className="bg-gradient-to-br from-teal-deep to-teal-dark py-14 px-[5%] text-white">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div>
-            <div className="text-amber-soft text-[0.75rem] font-semibold tracking-[0.18em] uppercase mb-2">Admin Panel</div>
-            <h1 className="font-display text-[2rem] font-bold">Site Settings</h1>
-          </div>
-          <div className="flex gap-3">
-            <button onClick={save}
-              className={`px-6 py-2.5 rounded-full font-semibold text-[0.9rem] transition-all ${
-                saved ? 'bg-green-500 text-white' : 'bg-amber text-charcoal hover:bg-amber-soft'
-              }`}>
-              {saved ? '✓ Saved' : 'Save Changes'}
-            </button>
-            <button onClick={() => setAuthed(false)}
-              className="px-6 py-2.5 rounded-full border border-white/30 text-white text-[0.9rem] hover:bg-white/10 transition-colors">
-              Log Out
-            </button>
-          </div>
+    <div className="min-h-screen bg-gradient-to-b from-teal-ghost to-ivory pt-[72px]">
+      {toast && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-teal-deep text-white px-6 py-3 rounded-full shadow-lift text-[0.88rem] font-semibold pointer-events-none">
+          {toast}
         </div>
-      </section>
+      )}
 
-      <div className="max-w-6xl mx-auto py-10 px-[5%]">
-        {/* Tabs */}
-        <div className="flex gap-2 mb-8 border-b border-teal-light pb-4">
-          {(['pages', 'content', 'hero'] as const).map(tab => (
-            <button key={tab} onClick={() => setActiveTab(tab)}
-              className={`px-5 py-2 rounded-full text-[0.88rem] font-medium capitalize transition-all ${
-                activeTab === tab ? 'bg-teal-deep text-white' : 'text-text-mid hover:bg-teal-ghost'
-              }`}>
-              {tab === 'pages' ? '📄 Pages' : tab === 'content' ? '📝 Content' : '🖼️ Hero'}
-            </button>
-          ))}
-        </div>
-
-        {/* Pages Tab */}
-        {activeTab === 'pages' && (
+      <div className="bg-white border-b border-teal-light px-[5%] py-5 sticky top-[72px] z-40">
+        <div className="max-w-5xl mx-auto flex items-center justify-between gap-4 flex-wrap">
           <div>
-            <h2 className="font-display text-[1.15rem] text-charcoal font-semibold mb-2">Page Visibility</h2>
-            <p className="text-text-light text-[0.88rem] mb-6">Toggle sections on or off. Changes are stored locally for reference.</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {PAGES.map(page => (
-                <div key={page.id}
-                  className={`flex items-center justify-between p-5 rounded-[18px] border transition-all ${
-                    settings.enabledPages[page.id] ? 'bg-white border-teal-light' : 'bg-ivory border-teal-light/50 opacity-60'
-                  }`}>
-                  <div className="flex items-center gap-3">
-                    <span className="text-[1.5rem]">{page.icon}</span>
-                    <div>
-                      <p className="font-medium text-[0.92rem] text-charcoal">{page.label}</p>
-                      <Link href={`/${page.id === 'home' ? '' : page.id}`} target="_blank"
-                        className="text-[0.72rem] text-teal-mid hover:underline">
-                        /{page.id === 'home' ? '' : page.id}
-                      </Link>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => togglePage(page.id)}
-                    className={`relative w-11 h-6 rounded-full transition-colors ${
-                      settings.enabledPages[page.id] ? 'bg-teal-mid' : 'bg-gray-200'
-                    }`}>
-                    <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-                      settings.enabledPages[page.id] ? 'translate-x-5' : 'translate-x-0'
-                    }`} />
-                  </button>
-                </div>
-              ))}
-            </div>
+            <h1 className="font-display font-bold text-[1.2rem] text-charcoal">Admin · Content Reports</h1>
+            <p className="text-[0.75rem] text-text-xlight mt-0.5">Review flagged posts and respond to reporters</p>
           </div>
-        )}
-
-        {/* Content Tab */}
-        {activeTab === 'content' && (
-          <div className="space-y-8">
-            {/* Announcement */}
-            <div className="bg-white border border-teal-light rounded-[24px] p-8">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-display text-[1.1rem] text-charcoal font-semibold">📢 Site Announcement</h3>
-                <button
-                  onClick={() => setSettings(s => ({ ...s, announcementOn: !s.announcementOn }))}
-                  className={`relative w-11 h-6 rounded-full transition-colors ${settings.announcementOn ? 'bg-teal-mid' : 'bg-gray-200'}`}>
-                  <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${settings.announcementOn ? 'translate-x-5' : 'translate-x-0'}`} />
-                </button>
-              </div>
-              <textarea rows={3} value={settings.announcement}
-                onChange={e => setSettings(s => ({ ...s, announcement: e.target.value }))}
-                className="w-full px-4 py-3 bg-ivory border border-teal-light rounded-[14px] text-[0.9rem] outline-none focus:border-teal-mid transition-colors resize-none" />
-            </div>
-
-            {/* Featured selections */}
-            <div className="bg-white border border-teal-light rounded-[24px] p-8">
-              <h3 className="font-display text-[1.1rem] text-charcoal font-semibold mb-5">⭐ Featured Items</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div>
-                  <label className="block text-[0.82rem] font-semibold text-text-mid mb-1.5">Featured Library Article (slug)</label>
-                  <input value={settings.featuredArticle}
-                    onChange={e => setSettings(s => ({ ...s, featuredArticle: e.target.value }))}
-                    placeholder="article-slug"
-                    className="w-full px-4 py-3 bg-ivory border border-teal-light rounded-[14px] text-[0.88rem] outline-none focus:border-teal-mid transition-colors" />
-                </div>
-                <div>
-                  <label className="block text-[0.82rem] font-semibold text-text-mid mb-1.5">Featured Challenge (id)</label>
-                  <input value={settings.featuredChallenge}
-                    onChange={e => setSettings(s => ({ ...s, featuredChallenge: e.target.value }))}
-                    placeholder="challenge-id"
-                    className="w-full px-4 py-3 bg-ivory border border-teal-light rounded-[14px] text-[0.88rem] outline-none focus:border-teal-mid transition-colors" />
-                </div>
-              </div>
-            </div>
-
-            {/* Schedule */}
-            <div className="bg-white border border-teal-light rounded-[24px] p-8">
-              <h3 className="font-display text-[1.1rem] text-charcoal font-semibold mb-4">📅 Content Scheduling</h3>
-              <p className="text-text-light text-[0.85rem] mb-4">Set a publish date for upcoming content releases.</p>
-              <div>
-                <label className="block text-[0.82rem] font-semibold text-text-mid mb-1.5">Next scheduled publish</label>
-                <input type="datetime-local" value={settings.publishDate}
-                  onChange={e => setSettings(s => ({ ...s, publishDate: e.target.value }))}
-                  className="px-4 py-3 bg-ivory border border-teal-light rounded-[14px] text-[0.88rem] outline-none focus:border-teal-mid transition-colors" />
-              </div>
-            </div>
+          <div className="flex gap-2">
+            {(['pending', 'resolved', 'all'] as const).map(f => (
+              <button key={f} onClick={() => setFilter(f)}
+                className={`px-4 py-1.5 rounded-full text-[0.8rem] font-semibold capitalize transition-all
+                  ${filter === f ? 'bg-teal-deep text-white' : 'border border-teal-light text-text-mid hover:bg-teal-ghost'}`}>
+                {f}
+              </button>
+            ))}
           </div>
-        )}
-
-        {/* Hero Tab */}
-        {activeTab === 'hero' && (
-          <div>
-            <h2 className="font-display text-[1.15rem] text-charcoal font-semibold mb-2">Hero Text Overrides</h2>
-            <p className="text-text-light text-[0.88rem] mb-6">Override default hero text for any page. Leave blank to use the page default.</p>
-            <div className="space-y-6">
-              {PAGES.slice(0, 6).map(page => (
-                <div key={page.id} className="bg-white border border-teal-light rounded-[20px] p-6">
-                  <h3 className="font-medium text-charcoal mb-4">{page.icon} {page.label}</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {HERO_FIELDS.map(field => (
-                      <div key={field}>
-                        <label className="block text-[0.78rem] text-text-xlight mb-1 capitalize">{field.replace('_', ' ')}</label>
-                        <input
-                          value={settings.heroOverrides[`${page.id}_${field}`] ?? ''}
-                          onChange={e => setSettings(s => ({
-                            ...s,
-                            heroOverrides: { ...s.heroOverrides, [`${page.id}_${field}`]: e.target.value }
-                          }))}
-                          placeholder={`Default ${field.replace('_', ' ')}`}
-                          className="w-full px-3 py-2 bg-ivory border border-teal-light rounded-[10px] text-[0.85rem] outline-none focus:border-teal-mid transition-colors" />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Save bar */}
-        <div className="mt-10 flex justify-end">
-          <button onClick={save}
-            className={`px-8 py-3.5 rounded-full font-semibold text-[0.95rem] transition-all ${
-              saved ? 'bg-green-500 text-white' : 'bg-teal-deep text-white hover:bg-teal-dark'
-            }`}>
-            {saved ? '✓ Changes Saved' : 'Save All Changes'}
-          </button>
         </div>
       </div>
-    </>
+
+      <div className="max-w-5xl mx-auto px-[5%] py-8">
+        {reports.length === 0 ? (
+          <div className="text-center py-20">
+            <p className="text-[3rem] mb-4">✅</p>
+            <p className="text-text-mid font-semibold">No {filter} reports</p>
+            <p className="text-text-xlight text-[0.85rem] mt-1">Community is looking healthy!</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {reports.map(r => (
+              <div key={r.id} className={`bg-white rounded-[20px] border overflow-hidden transition-all
+                ${r.status === 'pending' ? 'border-amber/60 shadow-card' : 'border-teal-light'}`}>
+
+                <div className="flex items-start gap-4 p-5">
+                  <div className="w-9 h-9 rounded-full bg-teal-ghost flex items-center justify-center flex-shrink-0 overflow-hidden">
+                    {r.reporter.avatarUrl
+                      ? <Image src={r.reporter.avatarUrl} alt={r.reporter.name} width={36} height={36} className="object-cover" />
+                      : <span className="text-[0.8rem]">🌿</span>}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                      <span className={`text-[0.65rem] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide
+                        ${r.status === 'pending' ? 'bg-amber/20 text-amber-700' : 'bg-teal-ghost text-teal-deep'}`}>
+                        {r.status}
+                      </span>
+                      <span className="text-[0.65rem] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full uppercase tracking-wide">
+                        {r.postType.replace('_', ' ')}
+                      </span>
+                      {r.postDeleted && (
+                        <span className="text-[0.65rem] bg-red-50 text-red-500 px-2 py-0.5 rounded-full">Post already deleted</span>
+                      )}
+                    </div>
+
+                    <p className="text-[0.82rem] text-text-mid mb-1">
+                      <strong className="text-charcoal">{r.reporter.name}</strong>
+                      <span className="text-text-xlight"> · {r.reporter.email} · {timeAgo(r.createdAt)}</span>
+                    </p>
+                    <p className="text-[0.85rem] font-semibold text-red-500 mb-1">⚑ {r.reason}</p>
+                    {r.details && <p className="text-[0.8rem] text-text-mid italic mb-2">&ldquo;{r.details}&rdquo;</p>}
+
+                    {r.postSnippet && !r.postDeleted && (
+                      <div className="bg-teal-ghost/50 rounded-[10px] px-3 py-2 mt-2">
+                        <p className="text-[0.73rem] text-text-xlight mb-0.5">Reported post by <strong>{r.postAuthor}</strong>:</p>
+                        <p className="text-[0.8rem] text-text-mid line-clamp-3">{r.postSnippet}</p>
+                      </div>
+                    )}
+
+                    {r.adminNote && r.status === 'resolved' && (
+                      <div className="border-l-4 border-teal-mid bg-teal-ghost/30 px-3 py-2 mt-3 rounded-r-[8px]">
+                        <p className="text-[0.72rem] text-text-xlight mb-0.5">Admin response sent to reporter:</p>
+                        <p className="text-[0.82rem] text-teal-deep italic">{r.adminNote}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {r.status === 'pending' && (
+                    <button onClick={() => { setActiveId(activeId === r.id ? null : r.id); setAdminNote('') }}
+                      className="flex-shrink-0 bg-teal-deep text-white px-4 py-2 rounded-full text-[0.8rem] font-semibold hover:bg-teal-dark transition-colors">
+                      {activeId === r.id ? 'Cancel' : 'Review →'}
+                    </button>
+                  )}
+                </div>
+
+                {/* Action panel */}
+                {activeId === r.id && activeReport && (
+                  <div className="border-t border-teal-light px-5 py-5 bg-teal-ghost/10 space-y-4">
+                    <div>
+                      <label className="block text-[0.78rem] font-semibold text-charcoal mb-1.5">
+                        Message to reporter <span className="text-text-xlight font-normal">(will be emailed to them — required for Remove/Keep)</span>
+                      </label>
+                      <textarea value={adminNote} onChange={e => setAdminNote(e.target.value)}
+                        placeholder='e.g. "We reviewed this post and removed it as it violated our community guidelines." or "We reviewed this and found it does not violate our guidelines — the post remains live."'
+                        rows={3}
+                        className="w-full border border-teal-light rounded-[12px] px-4 py-2.5 text-[0.85rem] outline-none focus:border-teal-mid bg-white resize-none" />
+                    </div>
+
+                    <div className="flex gap-3 flex-wrap">
+                      <button onClick={() => resolve(r.id, 'remove')} disabled={submitting || r.postDeleted}
+                        className="bg-red-500 text-white px-5 py-2.5 rounded-full text-[0.85rem] font-semibold hover:bg-red-600 disabled:opacity-50 transition-colors flex items-center gap-2">
+                        🗑️ Remove post &amp; notify reporter
+                      </button>
+                      <button onClick={() => resolve(r.id, 'keep')} disabled={submitting}
+                        className="bg-teal-deep text-white px-5 py-2.5 rounded-full text-[0.85rem] font-semibold hover:bg-teal-dark disabled:opacity-50 transition-colors flex items-center gap-2">
+                        ✓ Keep post &amp; notify reporter
+                      </button>
+                      <button onClick={() => resolve(r.id, 'dismiss')} disabled={submitting}
+                        className="border border-teal-light text-text-mid px-5 py-2.5 rounded-full text-[0.85rem] font-semibold hover:bg-teal-ghost disabled:opacity-50 transition-colors">
+                        Dismiss silently
+                      </button>
+                    </div>
+                    <p className="text-[0.72rem] text-text-xlight leading-[1.6]">
+                      The reporter&apos;s email address will receive your message automatically. All actions are logged.
+                    </p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
   )
 }

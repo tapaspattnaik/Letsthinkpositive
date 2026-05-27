@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
+import { ReportButton } from '@/components/ReportButton'
 
 interface CommentType { id: number; body: string; createdAt: string; user: { id: number; name: string; avatarUrl?: string } }
 interface Post {
@@ -217,6 +218,7 @@ export default function CirclePage({ params }: { params: { slug: string } }) {
                     className="flex items-center gap-1.5 text-[0.82rem] font-semibold text-text-xlight hover:text-teal-deep transition-colors">
                     💬 {post.commentCount}
                   </button>
+                  <ReportButton postType="circle" postId={post.id} compact />
                 </div>
 
                 {/* Comments */}

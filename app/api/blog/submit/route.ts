@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/db'
+import { moderateContent } from '@/lib/contentModeration'
 import path from 'path'
 import fs from 'fs/promises'
 import crypto from 'crypto'
@@ -92,6 +93,16 @@ export async function POST(req: NextRequest) {
         .join('\n')
     } else {
       return NextResponse.json({ error: 'Please upload a file or paste your content.' }, { status: 400 })
+    }
+
+    // ── AI content moderation ────────────────────────────────
+    const modResult = await moderateContent(title, body)
+    if (!modResult.safe) {
+      return NextResponse.json({
+        flagged: true,
+        issues:  modResult.issues,
+        message: modResult.message || 'Your post was flagged for review. Please revise before resubmitting.',
+      }, { status: 422 })
     }
 
     // ── Save images ───────────────────────────────────────────

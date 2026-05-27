@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { ReportButton } from '@/components/ReportButton'
 
 interface Post {
   id: number; title: string; body: string; author: string
@@ -47,10 +48,13 @@ function PostCard({ post, liked, onLike }: { post: Post; liked: boolean; onLike:
           </span>
           <span>· {dateStr}</span>
         </div>
-        <button onClick={onLike}
-          className={`flex items-center gap-1 transition-colors ${liked ? 'text-red-400' : 'hover:text-red-400'}`}>
-          {liked ? '❤️' : '🤍'} {(post._likes ?? 0) + (liked ? 1 : 0)}
-        </button>
+        <div className="flex items-center gap-3">
+          <button onClick={onLike}
+            className={`flex items-center gap-1 transition-colors ${liked ? 'text-red-400' : 'hover:text-red-400'}`}>
+            {liked ? '❤️' : '🤍'} {(post._likes ?? 0) + (liked ? 1 : 0)}
+          </button>
+          <ReportButton postType="community" postId={post.id} compact />
+        </div>
       </div>
     </div>
   )

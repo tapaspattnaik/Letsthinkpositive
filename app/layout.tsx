@@ -3,6 +3,7 @@ import { Playfair_Display, DM_Sans, DM_Serif_Display } from 'next/font/google'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { SessionProvider } from '@/components/layout/SessionProvider'
+import { BitWidget } from '@/components/BitWidget'
 import './globals.css'
 
 const playfair = Playfair_Display({
@@ -49,6 +50,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             {children}
           </main>
           <Footer />
+          <BitWidget />
         </SessionProvider>
       </body>
     </html>
