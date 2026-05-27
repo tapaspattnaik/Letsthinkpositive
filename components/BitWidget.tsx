@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { LtpLogo } from '@/components/ui/LtpLogo'
 import { useBitChat } from '@/hooks/useBitChat'
-import Link from 'next/link'
 
 const MOODS = [
   { label: 'Low',      emoji: '😔' },
@@ -95,16 +94,10 @@ export function BitWidget() {
             <p className="text-white font-semibold text-[0.87rem] leading-none">Bit</p>
             <p className="text-white/60 text-[0.68rem]">AI companion · always here</p>
           </div>
-          <div className="flex items-center gap-1.5">
-            <Link href="/advisor" title="Full page"
-              className="text-white/60 hover:text-white text-[0.7rem] px-2 py-1 rounded-full border border-white/20 hover:border-white/50 no-underline transition-colors">
-              ⛶ Expand
-            </Link>
-            <button onClick={toggle}
-              className="text-white/60 hover:text-white w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors text-[0.9rem]">
-              ✕
-            </button>
-          </div>
+          <button onClick={toggle}
+            className="text-white/60 hover:text-white w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors text-[0.9rem]">
+            ✕
+          </button>
         </div>
 
         {/* Mood bar */}

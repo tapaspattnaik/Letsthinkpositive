@@ -10,7 +10,6 @@ const pages = [
 const features = [
   { href: '/journal', label: 'Gratitude Journal' },
   { href: '/sounds',  label: 'Keep Calm Sounds'  },
-  { href: '/advisor', label: 'Bit Advisor (AI)'  },
 ]
 
 const topics = [

@@ -27,7 +27,6 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: '/journal',      label: 'Journal',       desc: 'Gratitude journaling',    icon: '📓' },
       { href: '/coach',        label: 'Calm Coach',    desc: 'AI wellness guide',       icon: '🌿' },
-      { href: '/advisor',      label: 'Bit Advisor',   desc: 'AI companion',            icon: '🤖' },
       { href: '/meditation',   label: 'Meditation',    desc: 'Guided sessions',         icon: '🧘' },
       { href: '/sounds',       label: 'Calm Sounds',   desc: 'Ambient sound mixer',     icon: '🎧' },
       { href: '/challenges',   label: 'Challenges',    desc: '30-day programmes',       icon: '🏆' },
