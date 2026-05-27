@@ -41,6 +41,7 @@ model User {
   blogComments     BlogComment[]
   blogSubmissions  UserBlogPost[]
   reports          PostReport[]
+  notifications    Notification[]
 
   @@map("users")
 }
@@ -219,6 +220,22 @@ model PostReport {
   reporter    User      @relation(fields: [reporterId], references: [id])
 
   @@map("post_reports")
+}
+
+// ── Notifications ────────────────────────────────────────────────────────
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  type      String   @db.VarChar(50)   // like | comment | blog_approved | blog_rejected | report_resolved | circle_post
+  message   String   @db.VarChar(500)
+  link      String?  @db.VarChar(500)
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
 }
 
 // ── User-submitted blog posts ─────────────────────────────────────────────

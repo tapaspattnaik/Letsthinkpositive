@@ -18,10 +18,27 @@ interface BadgeEntry {
   earnedAt: string
   badge: { slug: string; name: string; description: string; icon: string; tier: string }
 }
+interface ProgressEntry {
+  id: number; challengeSlug: string; completedDays: string
+  startedAt: string; completedAt: string | null
+}
+interface Circle {
+  id: number; slug: string; name: string; icon: string; isMember: boolean
+}
 interface UserProfile {
   id: number; name: string; email: string; phone?: string; bio?: string
   interests: string; avatarUrl?: string; createdAt: string
   badges: BadgeEntry[]
+  progress: ProgressEntry[]
+}
+
+const CHALLENGE_META: Record<string, { icon: string; title: string; totalDays: number }> = {
+  'gratitude-30':    { icon: '🍂', title: '30-Day Gratitude',          totalDays: 30 },
+  'mindfulness-7':   { icon: '🧘', title: '7-Day Mindfulness',          totalDays: 7  },
+  'movement-7':      { icon: '👣', title: '7 Days of Movement',         totalDays: 7  },
+  'sleep-21':        { icon: '🌙', title: '21-Day Sleep Reset',         totalDays: 21 },
+  'affirmations-21': { icon: '⭐', title: '21-Day Affirmations',        totalDays: 21 },
+  'journal-14':      { icon: '📓', title: '14-Day Gratitude Journaling', totalDays: 14 },
 }
 
 export default function ProfilePage() {
@@ -29,6 +46,7 @@ export default function ProfilePage() {
   const router = useRouter()
 
   const [profile,  setProfile]  = useState<UserProfile | null>(null)
+  const [circles,  setCircles]  = useState<Circle[]>([])
   const [editing,  setEditing]  = useState(false)
   const [form,     setForm]     = useState({ name: '', phone: '', bio: '' })
   const [selected, setSelected] = useState<string[]>([])
@@ -47,6 +65,9 @@ export default function ProfilePage() {
       setProfile(data)
       setForm({ name: data.name, phone: data.phone ?? '', bio: data.bio ?? '' })
       setSelected(data.interests ? data.interests.split(',').filter(Boolean) : [])
+    })
+    fetch('/api/circles').then(r => r.json()).then(data => {
+      if (Array.isArray(data)) setCircles(data.filter((c: Circle) => c.isMember))
     })
   }, [status])
 
@@ -208,10 +229,10 @@ export default function ProfilePage() {
         {/* ── Quick links ──────────────────────────────────────────── */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
           {[
-            { href: '/journal',    icon: '📓', label: 'My Journal' },
-            { href: '/challenges', icon: '🏆', label: 'Challenges' },
-            { href: '/community',  icon: '💛', label: 'Community'  },
-            { href: '/advisor',    icon: '🤖', label: 'Bit Advisor' },
+            { href: '/journal',       icon: '📓', label: 'My Journal'    },
+            { href: '/challenges',    icon: '🏆', label: 'Challenges'    },
+            { href: '/community',     icon: '💛', label: 'Community'     },
+            { href: '/notifications', icon: '🔔', label: 'Notifications' },
           ].map(({ href, icon, label }) => (
             <Link key={href} href={href}
               className="bg-white border border-teal-light rounded-[18px] p-4 text-center no-underline hover:border-teal-mid hover:shadow-lift transition-all group">
@@ -220,6 +241,83 @@ export default function ProfilePage() {
             </Link>
           ))}
         </div>
+
+        {/* ── My Circles ───────────────────────────────────────────── */}
+        <div className="bg-white rounded-[28px] p-8 shadow-lift border border-teal-light mb-6">
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <h2 className="font-display text-[1.25rem] font-bold text-charcoal mb-0.5">My Circles</h2>
+              <p className="text-[0.82rem] text-text-xlight">Private groups you&apos;ve joined.</p>
+            </div>
+            <Link href="/circles" className="text-[0.8rem] text-teal-mid hover:text-teal-deep font-semibold no-underline transition-colors">
+              Browse all →
+            </Link>
+          </div>
+          {circles.length === 0 ? (
+            <div className="text-center py-7">
+              <p className="text-[2rem] mb-2">🔒</p>
+              <p className="text-text-mid text-[0.9rem] mb-4">You haven&apos;t joined any circles yet.</p>
+              <Link href="/circles" className="inline-block bg-teal-deep text-white px-6 py-2.5 rounded-full text-[0.85rem] font-semibold no-underline hover:bg-teal-dark transition-colors">
+                Find a Circle →
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {circles.map(c => (
+                <Link key={c.id} href={`/circles/${c.slug}`}
+                  className="flex items-center gap-3 bg-teal-ghost/30 hover:bg-teal-ghost border border-teal-light hover:border-teal-mid rounded-[16px] px-4 py-3 no-underline transition-all group">
+                  <span className="text-[1.6rem] flex-shrink-0">{c.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-[0.88rem] text-charcoal group-hover:text-teal-deep transition-colors truncate">{c.name}</p>
+                    <p className="text-[0.72rem] text-teal-mid font-medium">✓ Member</p>
+                  </div>
+                  <span className="text-text-xlight text-[0.75rem] flex-shrink-0">Enter →</span>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* ── My Active Challenges ─────────────────────────────────── */}
+        {profile.progress.length > 0 && (
+          <div className="bg-white rounded-[28px] p-8 shadow-lift border border-teal-light mb-6">
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h2 className="font-display text-[1.25rem] font-bold text-charcoal mb-0.5">Active Challenges</h2>
+                <p className="text-[0.82rem] text-text-xlight">Your ongoing wellness journeys.</p>
+              </div>
+              <Link href="/challenges" className="text-[0.8rem] text-teal-mid hover:text-teal-deep font-semibold no-underline transition-colors">
+                All challenges →
+              </Link>
+            </div>
+            <div className="space-y-3">
+              {profile.progress.map(p => {
+                const meta = CHALLENGE_META[p.challengeSlug]
+                if (!meta) return null
+                const days    = JSON.parse(p.completedDays) as string[]
+                const pct     = Math.round((days.length / meta.totalDays) * 100)
+                const isDone  = !!p.completedAt
+                return (
+                  <div key={p.id} className="flex items-center gap-4 bg-teal-ghost/20 rounded-[16px] px-4 py-3">
+                    <span className="text-[1.6rem] flex-shrink-0">{meta.icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2 mb-1.5">
+                        <p className="font-semibold text-[0.88rem] text-charcoal truncate">{meta.title}</p>
+                        {isDone
+                          ? <span className="text-[0.7rem] font-bold text-teal-deep bg-teal-ghost px-2 py-0.5 rounded-full flex-shrink-0">Complete 🎉</span>
+                          : <span className="text-[0.72rem] text-text-xlight flex-shrink-0">{days.length}/{meta.totalDays} days</span>
+                        }
+                      </div>
+                      <div className="w-full h-1.5 bg-white rounded-full overflow-hidden">
+                        <div className="h-full bg-teal-mid rounded-full transition-all duration-500" style={{ width: `${isDone ? 100 : pct}%` }} />
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Sign out */}
         <div className="text-center">

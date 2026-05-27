@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import Image from 'next/image'
 import { LtpLogo } from '@/components/ui/LtpLogo'
+import { NotificationBell } from '@/components/NotificationBell'
 
 interface NavItem  { href: string; label: string; desc?: string; icon?: string }
 interface NavGroup { label: string; icon: string; items: NavItem[] }
@@ -145,6 +146,11 @@ export function Navbar() {
             </Link>
           </li>
 
+          {/* Notification bell — desktop */}
+          <li>
+            <NotificationBell />
+          </li>
+
           {/* Auth button */}
           <li>
             {session ? (
@@ -184,15 +190,18 @@ export function Navbar() {
           </li>
         </ul>
 
-        {/* Mobile hamburger */}
+        {/* Mobile — notification bell + hamburger */}
+        <div className="lg:hidden flex items-center gap-1">
+        <NotificationBell />
         <button
           onClick={() => setOpen(o => !o)}
           aria-label={open ? 'Close menu' : 'Open menu'}
-          className="lg:hidden flex flex-col justify-center items-center w-10 h-10 gap-[5px] rounded-lg hover:bg-teal-ghost transition-colors">
+          className="flex flex-col justify-center items-center w-10 h-10 gap-[5px] rounded-lg hover:bg-teal-ghost transition-colors">
           <span className={`block w-6 h-0.5 bg-teal-deep rounded transition-all duration-300 ${open ? 'rotate-45 translate-y-[7px]' : ''}`} />
           <span className={`block w-6 h-0.5 bg-teal-deep rounded transition-all duration-300 ${open ? 'opacity-0' : ''}`} />
           <span className={`block w-6 h-0.5 bg-teal-deep rounded transition-all duration-300 ${open ? '-rotate-45 -translate-y-[7px]' : ''}`} />
         </button>
+        </div>
       </nav>
 
       {/* Mobile drawer */}

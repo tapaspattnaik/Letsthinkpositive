@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import nodemailer from 'nodemailer'
+import { createNotification } from '@/lib/notifications'
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? process.env.SMTP_USER ?? ''
 
@@ -88,6 +89,14 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const actionLabel = action === 'remove' ? 'removed' : action === 'keep' ? 'kept' : 'reviewed'
   if (report.reporter.email && adminNote) {
     await sendReporterEmail(report.reporter.email, report.reporter.name, adminNote, actionLabel)
+  }
+
+  // ── In-app notification for reporter ─────────────────────
+  if (action !== 'dismiss' && adminNote) {
+    const notifMsg = action === 'remove'
+      ? `Your report was reviewed — the post has been removed. "${adminNote.slice(0, 100)}"`
+      : `Your report was reviewed — the post was kept. "${adminNote.slice(0, 100)}"`
+    await createNotification(report.reporterId, 'report_resolved', notifMsg)
   }
 
   return NextResponse.json({ message: 'Report resolved.' })
