@@ -32,14 +32,33 @@ Categories you can support:
 
 Remember: You are a wellness guide, not a therapist. If someone expresses crisis-level distress, gently encourage them to reach out to a professional or helpline.`
 
+const encoder = new TextEncoder()
+function fallbackSSE(msg: string) {
+  return new Response(
+    new ReadableStream({
+      start(c) {
+        c.enqueue(encoder.encode(`data: ${JSON.stringify({ text: msg })}\n\n`))
+        c.enqueue(encoder.encode('data: [DONE]\n\n'))
+        c.close()
+      },
+    }),
+    { headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' } }
+  )
+}
+
 export async function POST(req: NextRequest) {
+  const apiKey = process.env.TOGETHER_API_KEY ?? ''
+  if (!apiKey) {
+    return fallbackSSE("The Calm Coach isn't configured yet — TOGETHER_API_KEY is missing from the server environment.")
+  }
+
   try {
     const { messages } = await req.json()
     if (!messages?.length) {
       return new Response('Messages required', { status: 400 })
     }
 
-    const together = new Together({ apiKey: process.env.TOGETHER_API_KEY ?? '' })
+    const together = new Together({ apiKey })
 
     const stream = await together.chat.completions.create({
       model:       'meta-llama/Llama-3.3-70B-Instruct-Turbo',
@@ -72,6 +91,10 @@ export async function POST(req: NextRequest) {
     })
   } catch (err) {
     console.error('Coach API error:', err)
-    return new Response('Error processing request', { status: 500 })
+    const msg = err instanceof Error ? err.message : String(err)
+    const friendly = msg.includes('429') || msg.includes('rate')
+      ? "We're a little busy right now — please try again in a moment. 💙"
+      : "I'm sorry, I couldn't connect just now. Please try again in a moment. 🌿"
+    return fallbackSSE(friendly)
   }
 }
