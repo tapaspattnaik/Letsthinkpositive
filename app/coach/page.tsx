@@ -33,9 +33,17 @@ export default function CoachPage() {
   const inputRef    = useRef<HTMLTextAreaElement>(null)
   const hasMessages = messages.length > 0
 
-  // Auto-scroll when new content arrives
+  // Lock body scroll so footer can't be reached (chat is full-viewport)
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = '' }
+  }, [])
+
+  // Auto-scroll only when messages exist (avoids jumping to footer on load)
+  useEffect(() => {
+    if (messages.length > 0) {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
   }, [messages])
 
   const send = useCallback(async (text: string) => {
