@@ -76,7 +76,7 @@ export function Footer() {
       </div>
 
       <div className="border-t border-white/10 pt-5 flex flex-col sm:flex-row justify-between items-center gap-2 max-w-6xl mx-auto">
-        <span className="text-[0.8rem]">© 2025 letsthinkpositive.com — <em className="text-amber-soft">Tapas Pattanaik</em></span>
+        <span className="text-[0.8rem]">© 2026 letsthinkpositive.com — <em className="text-amber-soft">Tapas Pattanaik</em></span>
         <span className="text-white/35 text-[0.78rem]">Privacy Policy · Disclaimer</span>
       </div>
     </footer>

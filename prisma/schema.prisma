@@ -21,7 +21,8 @@ model User {
   id        Int      @id @default(autoincrement())
   name      String   @db.VarChar(100)
   email     String   @unique @db.VarChar(255)
-  password  String   @db.VarChar(255)
+  password  String?  @db.VarChar(255)
+  googleId  String?  @unique @db.VarChar(255)
   phone     String?  @db.VarChar(20)
   bio       String?  @db.Text
   interests String   @db.VarChar(500) @default("")
@@ -29,15 +30,16 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  badges          UserBadge[]
-  progress        ChallengeProgress[]
-  posts           CommunityPost[]
+  badges           UserBadge[]
+  progress         ChallengeProgress[]
+  posts            CommunityPost[]
   groupMemberships GroupMember[]
-  groupPosts      GroupPost[]
-  postLikes       PostLike[]
-  postComments    PostComment[]
-  blogLikes       BlogLike[]
-  blogComments    BlogComment[]
+  groupPosts       GroupPost[]
+  postLikes        PostLike[]
+  postComments     PostComment[]
+  blogLikes        BlogLike[]
+  blogComments     BlogComment[]
+  blogSubmissions  UserBlogPost[]
 
   @@map("users")
 }
@@ -197,4 +199,25 @@ model BlogComment {
   user      User?    @relation(fields: [userId], references: [id])
 
   @@map("blog_comments")
+}
+
+// ── User-submitted blog posts ─────────────────────────────────────────────
+
+model UserBlogPost {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  title       String   @db.VarChar(300)
+  slug        String?  @unique @db.VarChar(320)
+  excerpt     String?  @db.VarChar(500)
+  body        String   @db.LongText
+  category    String   @db.VarChar(100)
+  subCategory String?  @db.VarChar(100)
+  images      String   @db.Text @default("[]")  // JSON array of image URLs
+  status      String   @db.VarChar(20) @default("pending") // pending | approved | rejected
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@map("user_blog_posts")
 }

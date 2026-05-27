@@ -15,9 +15,10 @@ const NAV_GROUPS: NavGroup[] = [
     label: 'Read',
     icon: '📖',
     items: [
-      { href: '/blog',      label: 'Blog',       desc: 'Stories & insights',       icon: '✍️' },
-      { href: '/library',   label: 'Library',    desc: 'Wellness articles',        icon: '📚' },
-      { href: '/feed',      label: 'Daily Feed', desc: 'Quotes & inspiration',     icon: '✨' },
+      { href: '/blog',       label: 'Blog',       desc: 'Stories & insights',       icon: '✍️' },
+      { href: '/good-news',  label: 'Good News',  desc: 'Uplifting stories globally', icon: '🌍' },
+      { href: '/library',    label: 'Library',    desc: 'Wellness articles',        icon: '📚' },
+      { href: '/feed',       label: 'Daily Feed', desc: 'Quotes & inspiration',     icon: '✨' },
     ],
   },
   {

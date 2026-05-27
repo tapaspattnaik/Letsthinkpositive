@@ -46,7 +46,7 @@ export default function BlogPage() {
               <h3 className="font-display text-[1.4rem] text-white mb-1">Your story deserves to be heard 📝</h3>
               <p className="text-white/75 text-[0.92rem]">Have a lesson, a turning point, or a thought that could help someone? Write it.</p>
             </div>
-            <Link href="/contact"
+            <Link href="/blog/submit"
               className="flex-shrink-0 bg-amber text-charcoal px-6 py-3 rounded-full font-semibold text-[0.92rem] no-underline hover:bg-amber-soft transition-colors whitespace-nowrap">
               Submit Your Post →
             </Link>
@@ -79,7 +79,7 @@ export default function BlogPage() {
                 <p className="text-[0.86rem] text-text-light leading-[1.7]">We welcome community posts. If it&apos;s genuine and comes from the heart, it has a home on this blog.</p>
               </div>
               <div className="px-7 py-4 border-t border-teal-light/50 flex justify-center">
-                <Link href="/contact" className="text-[0.82rem] font-semibold text-teal-mid no-underline hover:text-teal-deep transition-colors">
+                <Link href="/blog/submit" className="text-[0.82rem] font-semibold text-teal-mid no-underline hover:text-teal-deep transition-colors">
                   Submit your post →
                 </Link>
               </div>
