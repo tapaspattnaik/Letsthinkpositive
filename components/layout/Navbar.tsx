@@ -55,7 +55,16 @@ export function Navbar() {
   const [open, setOpen]         = useState(false)
   const [openGroup, setOpenGroup] = useState<string | null>(null)
   const [mobileGroup, setMobileGroup] = useState<string | null>(null)
-  const navRef = useRef<HTMLElement>(null)
+  const navRef      = useRef<HTMLElement>(null)
+  const closeTimer  = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  function openDropdown(label: string) {
+    if (closeTimer.current) clearTimeout(closeTimer.current)
+    setOpenGroup(label)
+  }
+  function scheduleClose() {
+    closeTimer.current = setTimeout(() => setOpenGroup(null), 150)
+  }
 
   useEffect(() => { setOpen(false); setOpenGroup(null) }, [pathname])
 
@@ -104,8 +113,8 @@ export function Navbar() {
             <li
               key={group.label}
               className="relative"
-              onMouseEnter={() => setOpenGroup(group.label)}
-              onMouseLeave={() => setOpenGroup(null)}
+              onMouseEnter={() => openDropdown(group.label)}
+              onMouseLeave={scheduleClose}
             >
               <button
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-[0.87rem] font-medium transition-colors
@@ -115,9 +124,17 @@ export function Navbar() {
               </button>
 
               {/* Dropdown panel — animated with opacity + translateY */}
-              <div className={`absolute top-full left-1/2 -translate-x-1/2 mt-1 w-[280px] bg-white border border-teal-light rounded-[20px] shadow-lift p-2 z-50
-                transition-all duration-200 origin-top
-                ${openGroup === group.label ? 'opacity-100 scale-y-100 translate-y-0 pointer-events-auto' : 'opacity-0 scale-y-95 -translate-y-1 pointer-events-none'}`}>
+              {/* pt-2 replaces the old mt-1 gap so hover never leaves the <li> */}
+              <div
+                onMouseEnter={() => openDropdown(group.label)}
+                onMouseLeave={scheduleClose}
+                className={`absolute top-full left-1/2 -translate-x-1/2 w-[280px] z-50
+                  transition-all duration-200 origin-top
+                  ${openGroup === group.label ? 'opacity-100 scale-y-100 translate-y-0 pointer-events-auto' : 'opacity-0 scale-y-95 -translate-y-1 pointer-events-none'}`}
+              >
+                {/* invisible bridge + visible card */}
+                <div className="pt-2">
+                <div className="bg-white border border-teal-light rounded-[20px] shadow-lift p-2">
                 {group.items.map(item => (
                   <Link key={item.href} href={item.href}
                     onClick={() => setOpenGroup(null)}
@@ -135,7 +152,9 @@ export function Navbar() {
                     )}
                   </Link>
                 ))}
-              </div>
+                </div>{/* visible card */}
+                </div>{/* pt-2 bridge */}
+              </div>{/* outer animated wrapper */}
             </li>
           ))}
 
@@ -154,7 +173,7 @@ export function Navbar() {
           {/* Auth button */}
           <li>
             {session ? (
-              <div className="relative ml-1" onMouseEnter={() => setOpenGroup('__user')} onMouseLeave={() => setOpenGroup(null)}>
+              <div className="relative ml-1" onMouseEnter={() => openDropdown('__user')} onMouseLeave={scheduleClose}>
                 <button className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full border border-teal-light hover:border-teal-mid transition-colors">
                   <div className="w-7 h-7 rounded-full overflow-hidden bg-teal-ghost flex items-center justify-center flex-shrink-0">
                     {session.user?.image
