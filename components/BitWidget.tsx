@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { LtpLogo } from '@/components/ui/LtpLogo'
 import { useBitChat } from '@/hooks/useBitChat'
 
@@ -23,36 +23,59 @@ export function BitWidget() {
   const [open,   setOpen]   = useState(false)
   const [input,  setInput]  = useState('')
   const [unread, setUnread] = useState(0)
+  const widgetRef  = useRef<HTMLDivElement>(null)
   const bottomRef  = useRef<HTMLDivElement>(null)
   const inputRef   = useRef<HTMLTextAreaElement>(null)
   const prevCount  = useRef(0)
 
   const { messages, mood, setMood, streaming, send } = useBitChat()
 
-  // Scroll to bottom when new messages arrive
+  // ── Close on outside click ──────────────────────────────────
   useEffect(() => {
-    if (open) {
-      bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (!open) return
+    function onMouseDown(e: MouseEvent) {
+      if (widgetRef.current && !widgetRef.current.contains(e.target as Node)) {
+        setOpen(false)
+      }
     }
-    // Count unread while widget is closed
+    document.addEventListener('mousedown', onMouseDown)
+    return () => document.removeEventListener('mousedown', onMouseDown)
+  }, [open])
+
+  // ── Scroll + unread counter ─────────────────────────────────
+  useEffect(() => {
+    if (open) bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
     if (!open && messages.length > prevCount.current) {
       const newMsgs = messages.slice(prevCount.current)
-      const hasAssistant = newMsgs.some(m => m.role === 'assistant' && m.content)
-      if (hasAssistant) setUnread(u => u + 1)
+      if (newMsgs.some(m => m.role === 'assistant' && m.content)) setUnread(u => u + 1)
     }
     prevCount.current = messages.length
   }, [messages, open])
 
-  // Clear unread when opening
-  function toggle() {
-    setOpen(o => !o)
-    setUnread(0)
-    setTimeout(() => {
-      if (!open) {
-        bottomRef.current?.scrollIntoView({ behavior: 'instant' })
-        inputRef.current?.focus()
+  const toggle = useCallback(() => {
+    setOpen(o => {
+      if (!o) {
+        setUnread(0)
+        setTimeout(() => {
+          bottomRef.current?.scrollIntoView({ behavior: 'instant' })
+          inputRef.current?.focus()
+        }, 300)
       }
-    }, 300)
+      return !o
+    })
+  }, [])
+
+  // ── Pop out to standalone window ────────────────────────────
+  function popOut() {
+    const w = 420, h = 640
+    const left = window.screenX + window.outerWidth  - w - 20
+    const top  = window.screenY + window.outerHeight - h - 60
+    window.open(
+      '/bit-chat',
+      'BitChat',
+      `width=${w},height=${h},left=${left},top=${top},resizable=yes,scrollbars=no,toolbar=no,menubar=no,location=no,status=no`
+    )
+    setOpen(false)
   }
 
   async function handleSend(text?: string) {
@@ -74,7 +97,7 @@ export function BitWidget() {
   }
 
   return (
-    <div className="fixed bottom-5 right-5 z-[999] flex flex-col items-end gap-3">
+    <div ref={widgetRef} className="fixed bottom-5 right-5 z-[999] flex flex-col items-end gap-3">
 
       {/* ── Chat panel ───────────────────────────── */}
       <div className={`flex flex-col bg-white rounded-[24px] shadow-[0_8px_40px_rgba(0,0,0,0.18)] border border-teal-light overflow-hidden transition-all duration-300 origin-bottom-right
@@ -94,8 +117,18 @@ export function BitWidget() {
             <p className="text-white font-semibold text-[0.87rem] leading-none">Bit</p>
             <p className="text-white/60 text-[0.68rem]">AI companion · always here</p>
           </div>
+          {/* Pop-out button */}
+          <button onClick={popOut} title="Open in new window"
+            className="text-white/60 hover:text-white w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors flex-shrink-0"
+            aria-label="Pop out to new window">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 14 14" stroke="currentColor" strokeWidth={1.8}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 2H2v10h10V9M8 2h4m0 0v4m0-4L6 8"/>
+            </svg>
+          </button>
+          {/* Close button */}
           <button onClick={toggle}
-            className="text-white/60 hover:text-white w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors text-[0.9rem]">
+            className="text-white/60 hover:text-white w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors text-[0.9rem] flex-shrink-0"
+            aria-label="Close chat">
             ✕
           </button>
         </div>
@@ -157,16 +190,10 @@ export function BitWidget() {
         {/* Input */}
         <div className="flex-shrink-0 border-t border-teal-light px-3 py-2.5 bg-white">
           <div className="flex gap-2 items-end">
-            <textarea
-              ref={inputRef}
-              value={input}
-              onChange={autoResize}
-              onKeyDown={handleKey}
-              placeholder="Message Bit…"
-              rows={1}
+            <textarea ref={inputRef} value={input} onChange={autoResize} onKeyDown={handleKey}
+              placeholder="Message Bit…" rows={1}
               className="flex-1 border border-teal-light rounded-[12px] px-3 py-2 text-[0.82rem] text-charcoal bg-ivory outline-none focus:border-teal-mid transition-colors resize-none placeholder:text-text-xlight leading-[1.5]"
-              style={{ maxHeight: '100px' }}
-            />
+              style={{ maxHeight: '100px' }} />
             <button onClick={() => handleSend()} disabled={!input.trim() || streaming}
               className="flex-shrink-0 w-8 h-8 rounded-full bg-teal-deep text-white flex items-center justify-center hover:bg-teal-dark disabled:opacity-40 transition-all">
               {streaming
@@ -180,22 +207,17 @@ export function BitWidget() {
       </div>
 
       {/* ── Floating toggle button ────────────────── */}
-      <button
-        onClick={toggle}
+      <button onClick={toggle}
         aria-label={open ? 'Close Bit chat' : 'Open Bit chat'}
         className={`relative w-14 h-14 rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.20)] flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95
           ${open ? 'bg-teal-dark' : 'bg-teal-deep'}`}>
-        {/* Pulse ring when closed */}
-        {!open && (
-          <span className="absolute inset-0 rounded-full bg-teal-mid/30 animate-ping" />
-        )}
+        {!open && <span className="absolute inset-0 rounded-full bg-teal-mid/30 animate-ping" />}
         <div className={`transition-transform duration-300 ${open ? 'rotate-90 scale-90' : ''}`}>
           {open
             ? <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 20 20" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 6l8 8M6 14L14 6"/></svg>
             : <LtpLogo size={28} />
           }
         </div>
-        {/* Unread badge */}
         {unread > 0 && !open && (
           <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-amber text-charcoal text-[0.65rem] font-bold flex items-center justify-center">
             {unread}
