@@ -30,8 +30,8 @@ export function Hero() {
           </div>
         </div>
 
-        {/* Animated symbol */}
-        <div className="hidden md:flex flex-col items-center justify-center">
+        {/* Animated symbol — decorative, hidden from assistive technology */}
+        <div className="hidden md:flex flex-col items-center justify-center" aria-hidden="true">
           <div className="relative w-[380px] h-[380px] flex items-center justify-center">
             {/* Rings — outer rotates CW, mid CCW, inner CW; dashed so rotation is visible */}
             {(['animate-ring-outer', 'animate-ring-mid', 'animate-ring-inner'] as const).map((cls, i) => {

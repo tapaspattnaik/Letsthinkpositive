@@ -54,6 +54,7 @@ export default function GoodNewsPage() {
 
   useEffect(() => {
     setPage(1)
+    setArticles([])   // clear stale articles immediately so old category never shows while loading
     fetchNews(category, 1)
   }, [category, fetchNews])
 

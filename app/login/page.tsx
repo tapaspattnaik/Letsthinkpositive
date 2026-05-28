@@ -76,19 +76,26 @@ function LoginForm() {
 
           <form onSubmit={submit} className="space-y-4">
             <div>
-              <label className="block text-[0.8rem] font-semibold text-teal-deep mb-1.5">Email address</label>
-              <input required type="email" value={email} onChange={e => setEmail(e.target.value)}
-                placeholder="you@example.com"
+              <label htmlFor="login-email" className="block text-[0.8rem] font-semibold text-teal-deep mb-1.5">Email address</label>
+              <input id="login-email" required type="email" value={email} onChange={e => setEmail(e.target.value)}
+                placeholder="you@example.com" autoComplete="email"
+                aria-describedby={error ? 'login-error' : undefined}
                 className="w-full border border-teal-light rounded-[14px] px-4 py-2.5 text-[0.93rem] outline-none focus:border-teal-mid transition-colors bg-ivory" />
             </div>
             <div>
-              <label className="block text-[0.8rem] font-semibold text-teal-deep mb-1.5">Password</label>
-              <input required type="password" value={password} onChange={e => setPassword(e.target.value)}
-                placeholder="Your password"
+              <div className="flex items-center justify-between mb-1.5">
+                <label htmlFor="login-password" className="text-[0.8rem] font-semibold text-teal-deep">Password</label>
+                <Link href="/forgot-password" className="text-[0.78rem] text-teal-mid hover:text-teal-deep no-underline transition-colors">
+                  Forgot password?
+                </Link>
+              </div>
+              <input id="login-password" required type="password" value={password} onChange={e => setPassword(e.target.value)}
+                placeholder="Your password" autoComplete="current-password"
+                aria-describedby={error ? 'login-error' : undefined}
                 className="w-full border border-teal-light rounded-[14px] px-4 py-2.5 text-[0.93rem] outline-none focus:border-teal-mid transition-colors bg-ivory" />
             </div>
 
-            {error && <p className="text-red-500 text-[0.85rem] text-center">{error}</p>}
+            {error && <p id="login-error" role="alert" className="text-red-500 text-[0.85rem] text-center">{error}</p>}
 
             <button type="submit" disabled={loading}
               className="w-full bg-teal-deep text-white py-3.5 rounded-full font-semibold text-[0.97rem] hover:bg-teal-dark transition-colors disabled:opacity-60">

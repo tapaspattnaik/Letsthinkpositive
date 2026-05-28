@@ -16,10 +16,12 @@ interface Notification {
 const TYPE_ICONS: Record<string, string> = {
   like:            '❤️',
   comment:         '💬',
+  follow:          '👤',
   blog_approved:   '✅',
   blog_rejected:   '❌',
   report_resolved: '🛡️',
   circle_post:     '🔒',
+  reaction:        '🙏',
 }
 
 function timeAgo(dateStr: string) {
@@ -84,8 +86,10 @@ export function NotificationBell() {
       {/* Bell button */}
       <button
         onClick={() => { setOpen(o => !o); if (!open) fetchNotifications() }}
-        className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-teal-ghost transition-colors"
+        className="relative w-11 h-11 flex items-center justify-center rounded-full hover:bg-teal-ghost transition-colors"
         aria-label={`Notifications${unread > 0 ? ` (${unread} unread)` : ''}`}
+        aria-haspopup="true"
+        aria-expanded={open}
       >
         <svg className="w-[18px] h-[18px] text-text-mid" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
           <path strokeLinecap="round" strokeLinejoin="round"
@@ -152,8 +156,10 @@ export function NotificationBell() {
                 </div>
                 {!n.read && (
                   <button onClick={() => markRead(n.id)}
-                    className="flex-shrink-0 w-2 h-2 rounded-full bg-amber mt-2 hover:bg-amber-soft transition-colors"
-                    aria-label="Mark as read" />
+                    className="flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center -mr-2"
+                    aria-label="Mark as read">
+                    <span className="w-2 h-2 rounded-full bg-amber hover:bg-amber-soft transition-colors block" />
+                  </button>
                 )}
               </div>
             ))

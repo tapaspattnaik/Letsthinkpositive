@@ -12,6 +12,29 @@ interface Report {
   reporter: { id: number; name: string; email: string; avatarUrl?: string }
 }
 
+interface BlogComment {
+  id: number
+  slug: string
+  body: string
+  author: string
+  approved: boolean
+  createdAt: string
+  user?: { id: number; name: string; avatarUrl?: string } | null
+}
+
+type AdminSection = 'reports' | 'comments' | 'story'
+
+interface FeaturedStory {
+  id: number
+  title: string
+  body?: string
+  excerpt?: string
+  author?: string
+  slug?: string
+  createdAt: string
+  user?: { name: string } | null
+}
+
 function timeAgo(iso: string) {
   const d = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000)
   if (d === 0) return 'Today'
@@ -23,6 +46,10 @@ function timeAgo(iso: string) {
 export default function AdminPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
+
+  const [section,     setSection]     = useState<AdminSection>('reports')
+
+  // ── Reports ──────────────────────────────────────────────────────
   const [reports,     setReports]     = useState<Report[]>([])
   const [filter,      setFilter]      = useState<'pending' | 'resolved' | 'all'>('pending')
   const [loading,     setLoading]     = useState(true)
@@ -31,7 +58,32 @@ export default function AdminPage() {
   const [submitting,  setSubmitting]  = useState(false)
   const [toast,       setToast]       = useState('')
 
-  const load = useCallback(async (f: string) => {
+  // ── Blog Comments ─────────────────────────────────────────────────
+  const [comments,    setComments]    = useState<BlogComment[]>([])
+  const [cmtFilter,   setCmtFilter]   = useState<'pending' | 'approved' | 'all'>('pending')
+  const [cmtLoading,  setCmtLoading]  = useState(false)
+  const [cmtPending,  setCmtPending]  = useState(0)
+
+  // ── Story of the Week ────────────────────────────────────────────
+  const [storyLoading,    setStoryLoading]    = useState(false)
+  const [currentStory,    setCurrentStory]    = useState<FeaturedStory | null>(null)
+  const [currentStoryType, setCurrentStoryType] = useState<'community' | 'blog' | null>(null)
+  const [storyPostId,     setStoryPostId]     = useState('')
+  const [storyPostType,   setStoryPostType]   = useState<'community' | 'blog'>('community')
+  const [storyMsg,        setStoryMsg]        = useState('')
+
+  const loadCurrentStory = useCallback(async () => {
+    setStoryLoading(true)
+    try {
+      const res  = await fetch('/api/admin/story-of-week')
+      const data = await res.json()
+      setCurrentStory(data.story ?? null)
+      setCurrentStoryType(data.type ?? null)
+    } catch { /* ignore */ }
+    setStoryLoading(false)
+  }, [])
+
+  const loadReports = useCallback(async (f: string) => {
     setLoading(true)
     const res  = await fetch(`/api/admin/reports?status=${f}`)
     if (res.status === 403) { router.push('/'); return }
@@ -40,11 +92,38 @@ export default function AdminPage() {
     setLoading(false)
   }, [router])
 
+  const loadComments = useCallback(async (f: string) => {
+    setCmtLoading(true)
+    const res  = await fetch(`/api/admin/blog-comments?status=${f}`)
+    if (res.status === 403) { router.push('/'); return }
+    const data = await res.json()
+    setComments(Array.isArray(data) ? data : [])
+    setCmtLoading(false)
+  }, [router])
+
+  // Pending comment count for badge
+  const loadPendingCount = useCallback(async () => {
+    try {
+      const res  = await fetch('/api/admin/blog-comments?status=pending')
+      const data = await res.json()
+      if (Array.isArray(data)) setCmtPending(data.length)
+    } catch { /* ignore */ }
+  }, [])
+
   useEffect(() => {
     if (status === 'loading') return
     if (!session) { router.push('/login'); return }
-    load(filter)
-  }, [status, session, filter, load, router])
+    loadReports(filter)
+    loadPendingCount()
+  }, [status, session, filter, loadReports, loadPendingCount, router])
+
+  useEffect(() => {
+    if (section === 'comments') loadComments(cmtFilter)
+  }, [section, cmtFilter, loadComments])
+
+  useEffect(() => {
+    if (section === 'story') loadCurrentStory()
+  }, [section, loadCurrentStory])
 
   async function resolve(reportId: number, action: 'remove' | 'keep' | 'dismiss') {
     if (!adminNote.trim() && action !== 'dismiss') {
@@ -61,12 +140,48 @@ export default function AdminPage() {
     if (res.ok) {
       setToast(action === 'remove' ? '✓ Post removed & reporter notified' : '✓ Report resolved & reporter notified')
       setActiveId(null); setAdminNote('')
-      setTimeout(() => { setToast(''); load(filter) }, 2000)
+      setTimeout(() => { setToast(''); loadReports(filter) }, 2000)
     }
     setSubmitting(false)
   }
 
-  if (status === 'loading' || loading) return (
+  async function handleComment(id: number, action: 'approve' | 'reject') {
+    const res = await fetch(`/api/admin/blog-comments`, {
+      method:  'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ id, action }),
+    })
+    if (res.ok) {
+      setToast(action === 'approve' ? '✓ Comment approved' : '✓ Comment rejected & deleted')
+      loadComments(cmtFilter)
+      loadPendingCount()
+      setTimeout(() => setToast(''), 2500)
+    }
+  }
+
+  async function featureStory(e: React.FormEvent) {
+    e.preventDefault()
+    if (!storyPostId.trim()) {
+      setStoryMsg('Please enter a post ID.')
+      return
+    }
+    const res = await fetch('/api/admin/story-of-week', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ postId: Number(storyPostId), postType: storyPostType }),
+    })
+    if (res.ok) {
+      setStoryMsg('✓ Story featured for this week!')
+      setStoryPostId('')
+      loadCurrentStory()
+    } else {
+      const err = await res.json()
+      setStoryMsg(`Error: ${err.error ?? 'Something went wrong'}`)
+    }
+    setTimeout(() => setStoryMsg(''), 4000)
+  }
+
+  if (status === 'loading') return (
     <div className="min-h-screen flex items-center justify-center pt-[72px]">
       <div className="flex gap-1.5">{[0,1,2].map(i => <span key={i} className="w-2 h-2 rounded-full bg-teal-mid animate-bounce" style={{ animationDelay: `${i*150}ms` }} />)}</div>
     </div>
@@ -82,124 +197,314 @@ export default function AdminPage() {
         </div>
       )}
 
+      {/* Top bar */}
       <div className="bg-white border-b border-teal-light px-[5%] py-5 sticky top-[72px] z-40">
         <div className="max-w-5xl mx-auto flex items-center justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="font-display font-bold text-[1.2rem] text-charcoal">Admin · Content Reports</h1>
-            <p className="text-[0.75rem] text-text-xlight mt-0.5">Review flagged posts and respond to reporters</p>
+            <h1 className="font-display font-bold text-[1.2rem] text-charcoal">Admin Dashboard</h1>
+            <p className="text-[0.75rem] text-text-xlight mt-0.5">Manage reports, comments and community content</p>
           </div>
+          {/* Section tabs */}
           <div className="flex gap-2">
-            {(['pending', 'resolved', 'all'] as const).map(f => (
-              <button key={f} onClick={() => setFilter(f)}
-                className={`px-4 py-1.5 rounded-full text-[0.8rem] font-semibold capitalize transition-all
-                  ${filter === f ? 'bg-teal-deep text-white' : 'border border-teal-light text-text-mid hover:bg-teal-ghost'}`}>
-                {f}
-              </button>
-            ))}
+            <button onClick={() => setSection('reports')}
+              className={`px-4 py-1.5 rounded-full text-[0.82rem] font-semibold transition-all flex items-center gap-1.5
+                ${section === 'reports' ? 'bg-teal-deep text-white' : 'border border-teal-light text-text-mid hover:bg-teal-ghost'}`}>
+              🚩 Reports
+            </button>
+            <button onClick={() => setSection('comments')}
+              className={`px-4 py-1.5 rounded-full text-[0.82rem] font-semibold transition-all flex items-center gap-1.5
+                ${section === 'comments' ? 'bg-teal-deep text-white' : 'border border-teal-light text-text-mid hover:bg-teal-ghost'}`}>
+              💬 Blog Comments
+              {cmtPending > 0 && (
+                <span className="bg-amber text-charcoal text-[0.65rem] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                  {cmtPending > 9 ? '9+' : cmtPending}
+                </span>
+              )}
+            </button>
+            <button onClick={() => setSection('story')}
+              className={`px-4 py-1.5 rounded-full text-[0.82rem] font-semibold transition-all flex items-center gap-1.5
+                ${section === 'story' ? 'bg-amber text-charcoal' : 'border border-teal-light text-text-mid hover:bg-teal-ghost'}`}>
+              📖 Story of the Week
+            </button>
           </div>
         </div>
       </div>
 
       <div className="max-w-5xl mx-auto px-[5%] py-8">
-        {reports.length === 0 ? (
-          <div className="text-center py-20">
-            <p className="text-[3rem] mb-4">✅</p>
-            <p className="text-text-mid font-semibold">No {filter} reports</p>
-            <p className="text-text-xlight text-[0.85rem] mt-1">Community is looking healthy!</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {reports.map(r => (
-              <div key={r.id} className={`bg-white rounded-[20px] border overflow-hidden transition-all
-                ${r.status === 'pending' ? 'border-amber/60 shadow-card' : 'border-teal-light'}`}>
 
-                <div className="flex items-start gap-4 p-5">
-                  <div className="w-9 h-9 rounded-full bg-teal-ghost flex items-center justify-center flex-shrink-0 overflow-hidden">
-                    {r.reporter.avatarUrl
-                      ? <Image src={r.reporter.avatarUrl} alt={r.reporter.name} width={36} height={36} className="object-cover" />
-                      : <span className="text-[0.8rem]">🌿</span>}
-                  </div>
+        {/* ── Reports section ──────────────────────────────────────── */}
+        {section === 'reports' && (
+          <>
+            {/* Filter */}
+            <div className="flex gap-2 mb-6">
+              {(['pending', 'resolved', 'all'] as const).map(f => (
+                <button key={f} onClick={() => setFilter(f)}
+                  className={`px-4 py-1.5 rounded-full text-[0.8rem] font-semibold capitalize transition-all
+                    ${filter === f ? 'bg-teal-deep text-white' : 'border border-teal-light text-text-mid hover:bg-teal-ghost'}`}>
+                  {f}
+                </button>
+              ))}
+            </div>
 
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                      <span className={`text-[0.65rem] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide
-                        ${r.status === 'pending' ? 'bg-amber/20 text-amber-700' : 'bg-teal-ghost text-teal-deep'}`}>
-                        {r.status}
-                      </span>
-                      <span className="text-[0.65rem] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full uppercase tracking-wide">
-                        {r.postType.replace('_', ' ')}
-                      </span>
-                      {r.postDeleted && (
-                        <span className="text-[0.65rem] bg-red-50 text-red-500 px-2 py-0.5 rounded-full">Post already deleted</span>
+            {loading ? (
+              <div className="flex justify-center py-20">
+                <div className="flex gap-1.5">{[0,1,2].map(i => <span key={i} className="w-2 h-2 rounded-full bg-teal-mid animate-bounce" style={{ animationDelay: `${i*150}ms` }} />)}</div>
+              </div>
+            ) : reports.length === 0 ? (
+              <div className="text-center py-20">
+                <p className="text-[3rem] mb-4">✅</p>
+                <p className="text-text-mid font-semibold">No {filter} reports</p>
+                <p className="text-text-xlight text-[0.85rem] mt-1">Community is looking healthy!</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {reports.map(r => (
+                  <div key={r.id} className={`bg-white rounded-[20px] border overflow-hidden transition-all
+                    ${r.status === 'pending' ? 'border-amber/60 shadow-card' : 'border-teal-light'}`}>
+
+                    <div className="flex items-start gap-4 p-5">
+                      <div className="w-9 h-9 rounded-full bg-teal-ghost flex items-center justify-center flex-shrink-0 overflow-hidden">
+                        {r.reporter.avatarUrl
+                          ? <Image src={r.reporter.avatarUrl} alt={r.reporter.name} width={36} height={36} className="object-cover" />
+                          : <span className="text-[0.8rem]">🌿</span>}
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                          <span className={`text-[0.65rem] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide
+                            ${r.status === 'pending' ? 'bg-amber/20 text-amber-700' : 'bg-teal-ghost text-teal-deep'}`}>
+                            {r.status}
+                          </span>
+                          <span className="text-[0.65rem] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full uppercase tracking-wide">
+                            {r.postType.replace('_', ' ')}
+                          </span>
+                          {r.postDeleted && (
+                            <span className="text-[0.65rem] bg-red-50 text-red-500 px-2 py-0.5 rounded-full">Post already deleted</span>
+                          )}
+                        </div>
+
+                        <p className="text-[0.82rem] text-text-mid mb-1">
+                          <strong className="text-charcoal">{r.reporter.name}</strong>
+                          <span className="text-text-xlight"> · {r.reporter.email} · {timeAgo(r.createdAt)}</span>
+                        </p>
+                        <p className="text-[0.85rem] font-semibold text-red-500 mb-1">⚑ {r.reason}</p>
+                        {r.details && <p className="text-[0.8rem] text-text-mid italic mb-2">&ldquo;{r.details}&rdquo;</p>}
+
+                        {r.postSnippet && !r.postDeleted && (
+                          <div className="bg-teal-ghost/50 rounded-[10px] px-3 py-2 mt-2">
+                            <p className="text-[0.73rem] text-text-xlight mb-0.5">Reported post by <strong>{r.postAuthor}</strong>:</p>
+                            <p className="text-[0.8rem] text-text-mid line-clamp-3">{r.postSnippet}</p>
+                          </div>
+                        )}
+
+                        {r.adminNote && r.status === 'resolved' && (
+                          <div className="border-l-4 border-teal-mid bg-teal-ghost/30 px-3 py-2 mt-3 rounded-r-[8px]">
+                            <p className="text-[0.72rem] text-text-xlight mb-0.5">Admin response sent to reporter:</p>
+                            <p className="text-[0.82rem] text-teal-deep italic">{r.adminNote}</p>
+                          </div>
+                        )}
+                      </div>
+
+                      {r.status === 'pending' && (
+                        <button onClick={() => { setActiveId(activeId === r.id ? null : r.id); setAdminNote('') }}
+                          className="flex-shrink-0 bg-teal-deep text-white px-4 py-2 rounded-full text-[0.8rem] font-semibold hover:bg-teal-dark transition-colors">
+                          {activeId === r.id ? 'Cancel' : 'Review →'}
+                        </button>
                       )}
                     </div>
 
-                    <p className="text-[0.82rem] text-text-mid mb-1">
-                      <strong className="text-charcoal">{r.reporter.name}</strong>
-                      <span className="text-text-xlight"> · {r.reporter.email} · {timeAgo(r.createdAt)}</span>
-                    </p>
-                    <p className="text-[0.85rem] font-semibold text-red-500 mb-1">⚑ {r.reason}</p>
-                    {r.details && <p className="text-[0.8rem] text-text-mid italic mb-2">&ldquo;{r.details}&rdquo;</p>}
+                    {/* Action panel */}
+                    {activeId === r.id && activeReport && (
+                      <div className="border-t border-teal-light px-5 py-5 bg-teal-ghost/10 space-y-4">
+                        <div>
+                          <label className="block text-[0.78rem] font-semibold text-charcoal mb-1.5">
+                            Message to reporter <span className="text-text-xlight font-normal">(will be emailed to them — required for Remove/Keep)</span>
+                          </label>
+                          <textarea value={adminNote} onChange={e => setAdminNote(e.target.value)}
+                            placeholder='e.g. "We reviewed this post and removed it as it violated our community guidelines."'
+                            rows={3}
+                            className="w-full border border-teal-light rounded-[12px] px-4 py-2.5 text-[0.85rem] outline-none focus:border-teal-mid bg-white resize-none" />
+                        </div>
 
-                    {r.postSnippet && !r.postDeleted && (
-                      <div className="bg-teal-ghost/50 rounded-[10px] px-3 py-2 mt-2">
-                        <p className="text-[0.73rem] text-text-xlight mb-0.5">Reported post by <strong>{r.postAuthor}</strong>:</p>
-                        <p className="text-[0.8rem] text-text-mid line-clamp-3">{r.postSnippet}</p>
-                      </div>
-                    )}
-
-                    {r.adminNote && r.status === 'resolved' && (
-                      <div className="border-l-4 border-teal-mid bg-teal-ghost/30 px-3 py-2 mt-3 rounded-r-[8px]">
-                        <p className="text-[0.72rem] text-text-xlight mb-0.5">Admin response sent to reporter:</p>
-                        <p className="text-[0.82rem] text-teal-deep italic">{r.adminNote}</p>
+                        <div className="flex gap-3 flex-wrap">
+                          <button onClick={() => resolve(r.id, 'remove')} disabled={submitting || r.postDeleted}
+                            className="bg-red-500 text-white px-5 py-2.5 rounded-full text-[0.85rem] font-semibold hover:bg-red-600 disabled:opacity-50 transition-colors">
+                            🗑️ Remove post &amp; notify reporter
+                          </button>
+                          <button onClick={() => resolve(r.id, 'keep')} disabled={submitting}
+                            className="bg-teal-deep text-white px-5 py-2.5 rounded-full text-[0.85rem] font-semibold hover:bg-teal-dark disabled:opacity-50 transition-colors">
+                            ✓ Keep post &amp; notify reporter
+                          </button>
+                          <button onClick={() => resolve(r.id, 'dismiss')} disabled={submitting}
+                            className="border border-teal-light text-text-mid px-5 py-2.5 rounded-full text-[0.85rem] font-semibold hover:bg-teal-ghost disabled:opacity-50 transition-colors">
+                            Dismiss silently
+                          </button>
+                        </div>
+                        <p className="text-[0.72rem] text-text-xlight leading-[1.6]">
+                          The reporter&apos;s email address will receive your message automatically. All actions are logged.
+                        </p>
                       </div>
                     )}
                   </div>
-
-                  {r.status === 'pending' && (
-                    <button onClick={() => { setActiveId(activeId === r.id ? null : r.id); setAdminNote('') }}
-                      className="flex-shrink-0 bg-teal-deep text-white px-4 py-2 rounded-full text-[0.8rem] font-semibold hover:bg-teal-dark transition-colors">
-                      {activeId === r.id ? 'Cancel' : 'Review →'}
-                    </button>
-                  )}
-                </div>
-
-                {/* Action panel */}
-                {activeId === r.id && activeReport && (
-                  <div className="border-t border-teal-light px-5 py-5 bg-teal-ghost/10 space-y-4">
-                    <div>
-                      <label className="block text-[0.78rem] font-semibold text-charcoal mb-1.5">
-                        Message to reporter <span className="text-text-xlight font-normal">(will be emailed to them — required for Remove/Keep)</span>
-                      </label>
-                      <textarea value={adminNote} onChange={e => setAdminNote(e.target.value)}
-                        placeholder='e.g. "We reviewed this post and removed it as it violated our community guidelines." or "We reviewed this and found it does not violate our guidelines — the post remains live."'
-                        rows={3}
-                        className="w-full border border-teal-light rounded-[12px] px-4 py-2.5 text-[0.85rem] outline-none focus:border-teal-mid bg-white resize-none" />
-                    </div>
-
-                    <div className="flex gap-3 flex-wrap">
-                      <button onClick={() => resolve(r.id, 'remove')} disabled={submitting || r.postDeleted}
-                        className="bg-red-500 text-white px-5 py-2.5 rounded-full text-[0.85rem] font-semibold hover:bg-red-600 disabled:opacity-50 transition-colors flex items-center gap-2">
-                        🗑️ Remove post &amp; notify reporter
-                      </button>
-                      <button onClick={() => resolve(r.id, 'keep')} disabled={submitting}
-                        className="bg-teal-deep text-white px-5 py-2.5 rounded-full text-[0.85rem] font-semibold hover:bg-teal-dark disabled:opacity-50 transition-colors flex items-center gap-2">
-                        ✓ Keep post &amp; notify reporter
-                      </button>
-                      <button onClick={() => resolve(r.id, 'dismiss')} disabled={submitting}
-                        className="border border-teal-light text-text-mid px-5 py-2.5 rounded-full text-[0.85rem] font-semibold hover:bg-teal-ghost disabled:opacity-50 transition-colors">
-                        Dismiss silently
-                      </button>
-                    </div>
-                    <p className="text-[0.72rem] text-text-xlight leading-[1.6]">
-                      The reporter&apos;s email address will receive your message automatically. All actions are logged.
-                    </p>
-                  </div>
-                )}
+                ))}
               </div>
-            ))}
+            )}
+          </>
+        )}
+
+        {/* ── Blog Comments section ─────────────────────────────────── */}
+        {section === 'comments' && (
+          <>
+            <div className="flex gap-2 mb-6">
+              {(['pending', 'approved', 'all'] as const).map(f => (
+                <button key={f} onClick={() => setCmtFilter(f)}
+                  className={`px-4 py-1.5 rounded-full text-[0.8rem] font-semibold capitalize transition-all
+                    ${cmtFilter === f ? 'bg-teal-deep text-white' : 'border border-teal-light text-text-mid hover:bg-teal-ghost'}`}>
+                  {f}
+                </button>
+              ))}
+            </div>
+
+            {cmtLoading ? (
+              <div className="flex justify-center py-20">
+                <div className="flex gap-1.5">{[0,1,2].map(i => <span key={i} className="w-2 h-2 rounded-full bg-teal-mid animate-bounce" style={{ animationDelay: `${i*150}ms` }} />)}</div>
+              </div>
+            ) : comments.length === 0 ? (
+              <div className="text-center py-20">
+                <p className="text-[3rem] mb-4">💬</p>
+                <p className="text-text-mid font-semibold">No {cmtFilter} comments</p>
+                <p className="text-text-xlight text-[0.85rem] mt-1">Nothing to moderate right now.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {comments.map(c => {
+                  const authorName = c.user?.name ?? c.author ?? 'Anonymous'
+                  const avatar     = c.user?.avatarUrl
+                  return (
+                    <div key={c.id} className={`bg-white rounded-[20px] border p-5 ${c.approved ? 'border-teal-light' : 'border-amber/50 shadow-card'}`}>
+                      <div className="flex items-start gap-3">
+                        <div className="w-9 h-9 rounded-full bg-teal-ghost flex items-center justify-center flex-shrink-0 overflow-hidden">
+                          {avatar
+                            ? <Image src={avatar} alt={authorName} width={36} height={36} className="object-cover" />
+                            : <span className="text-[0.8rem]">🌿</span>}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap mb-1">
+                            <span className={`text-[0.65rem] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide
+                              ${c.approved ? 'bg-teal-ghost text-teal-deep' : 'bg-amber/20 text-amber-700'}`}>
+                              {c.approved ? 'Approved' : 'Pending'}
+                            </span>
+                            <span className="text-[0.75rem] text-text-xlight">
+                              <strong className="text-charcoal">{authorName}</strong> · on post <code className="text-[0.7rem] bg-slate-100 px-1 rounded">{c.slug}</code> · {timeAgo(c.createdAt)}
+                            </span>
+                          </div>
+                          <p className="text-[0.88rem] text-text-mid leading-[1.7] mt-1">{c.body}</p>
+                        </div>
+                        {!c.approved && (
+                          <div className="flex gap-2 flex-shrink-0">
+                            <button onClick={() => handleComment(c.id, 'approve')}
+                              className="bg-teal-deep text-white px-3.5 py-2 rounded-full text-[0.78rem] font-semibold hover:bg-teal-dark transition-colors">
+                              ✓ Approve
+                            </button>
+                            <button onClick={() => handleComment(c.id, 'reject')}
+                              className="bg-red-50 text-red-500 border border-red-200 px-3.5 py-2 rounded-full text-[0.78rem] font-semibold hover:bg-red-100 transition-colors">
+                              🗑 Reject
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </>
+        )}
+        {/* ── Story of the Week section ────────────────────────────── */}
+        {section === 'story' && (
+          <div className="space-y-6">
+            {/* Current featured story */}
+            <div className="bg-white rounded-[20px] border border-amber/40 shadow-card p-6">
+              <h2 className="font-display font-semibold text-[1.05rem] text-charcoal mb-4 flex items-center gap-2">
+                📖 This Week&apos;s Featured Story
+              </h2>
+              {storyLoading ? (
+                <div className="flex gap-1.5 py-4">
+                  {[0,1,2].map(i => <span key={i} className="w-2 h-2 rounded-full bg-amber animate-bounce" style={{ animationDelay: `${i*150}ms` }} />)}
+                </div>
+              ) : currentStory ? (
+                <div className="bg-[#FFF8EC] rounded-[14px] border border-amber/20 p-5">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-[0.65rem] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide bg-amber/20 text-amber-700">
+                      {currentStoryType === 'community' ? 'Community Post' : 'Blog Post'}
+                    </span>
+                  </div>
+                  <p className="font-display font-semibold text-[1.05rem] text-charcoal mb-1">{currentStory.title}</p>
+                  <p className="text-[0.82rem] text-text-xlight">
+                    By <strong className="text-text-mid">{currentStory.user?.name ?? currentStory.author ?? 'Anonymous'}</strong>
+                    {' · '}ID: <code className="bg-slate-100 px-1 rounded text-[0.72rem]">{currentStory.id}</code>
+                  </p>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-[2rem] mb-2">📭</p>
+                  <p className="text-text-mid font-semibold text-[0.88rem]">No story featured this week yet.</p>
+                  <p className="text-text-xlight text-[0.78rem] mt-1">Use the form below to pick one.</p>
+                </div>
+              )}
+            </div>
+
+            {/* Feature a new story */}
+            <div className="bg-white rounded-[20px] border border-teal-light shadow-card p-6">
+              <h2 className="font-display font-semibold text-[1.05rem] text-charcoal mb-1">Feature a Story</h2>
+              <p className="text-[0.78rem] text-text-xlight mb-5">
+                Enter the Post ID and select whether it&apos;s a Community post or a Blog post. Any existing featured story this week will be replaced.
+              </p>
+              <form onSubmit={featureStory} className="space-y-4">
+                <div>
+                  <label className="block text-[0.78rem] font-semibold text-charcoal mb-1.5">Post ID</label>
+                  <input
+                    type="number"
+                    value={storyPostId}
+                    onChange={e => setStoryPostId(e.target.value)}
+                    placeholder="e.g. 42"
+                    className="w-full max-w-[240px] border border-teal-light rounded-[10px] px-4 py-2.5 text-[0.88rem] outline-none focus:border-teal-mid bg-teal-ghost/20"
+                  />
+                </div>
+                <div>
+                  <p className="text-[0.78rem] font-semibold text-charcoal mb-2">Post Type</p>
+                  <div className="flex gap-4">
+                    {(['community', 'blog'] as const).map(t => (
+                      <label key={t} className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="postType"
+                          value={t}
+                          checked={storyPostType === t}
+                          onChange={() => setStoryPostType(t)}
+                          className="accent-teal-deep"
+                        />
+                        <span className="text-[0.85rem] text-text-mid capitalize">{t} post</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                {storyMsg && (
+                  <p className={`text-[0.82rem] font-semibold ${storyMsg.startsWith('✓') ? 'text-teal-deep' : 'text-red-500'}`}>
+                    {storyMsg}
+                  </p>
+                )}
+                <button
+                  type="submit"
+                  className="bg-amber text-charcoal px-6 py-2.5 rounded-full text-[0.85rem] font-semibold hover:bg-amber-soft hover:-translate-y-0.5 transition-all"
+                >
+                  ⭐ Feature this story
+                </button>
+              </form>
+            </div>
           </div>
         )}
+
       </div>
     </div>
   )

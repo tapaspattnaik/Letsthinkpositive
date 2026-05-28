@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/db'
+import { sendWelcomeEmail } from '@/lib/email'
 
 export async function POST(req: NextRequest) {
   try {
@@ -36,6 +37,11 @@ export async function POST(req: NextRequest) {
         await prisma.userBadge.create({ data: { userId: user.id, badgeId: earlyBadge.id } })
       }
     }
+
+    // Welcome email — fire and forget
+    sendWelcomeEmail({ email: user.email, name: user.name }).catch(e =>
+      console.error('Welcome email error:', e)
+    )
 
     return NextResponse.json({ success: true, userId: user.id })
   } catch (err) {

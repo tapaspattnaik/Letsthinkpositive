@@ -199,19 +199,24 @@ export default function VisionBoardPage() {
             {TEMPLATES.map((tpl, i) => {
               const alreadyAdded = cards.some(c => c.title === tpl.title)
               return (
-                <div key={i}
-                  className={`bg-gradient-to-br ${tpl.color} border border-dashed border-teal-light rounded-[24px] p-7 transition-all ${
-                    alreadyAdded ? 'opacity-50' : 'cursor-pointer hover:-translate-y-1 hover:border-teal-mid hover:shadow-lift'
-                  }`}
-                  onClick={() => !alreadyAdded && addTemplate(tpl)}>
-                  <span className="text-[2.5rem] block mb-3">{tpl.icon}</span>
+                <button
+                  key={i}
+                  type="button"
+                  disabled={alreadyAdded}
+                  onClick={() => addTemplate(tpl)}
+                  aria-label={`${alreadyAdded ? 'Already added' : 'Add'}: ${tpl.title}`}
+                  aria-disabled={alreadyAdded}
+                  className={`text-left bg-gradient-to-br ${tpl.color} border border-dashed border-teal-light rounded-[24px] p-7 transition-all w-full ${
+                    alreadyAdded ? 'opacity-50 cursor-default' : 'hover:-translate-y-1 hover:border-teal-mid hover:shadow-lift focus:outline-none focus:ring-2 focus:ring-teal-mid'
+                  }`}>
+                  <span className="text-[2.5rem] block mb-3" aria-hidden="true">{tpl.icon}</span>
                   <h3 className="font-display text-[1.1rem] text-charcoal font-semibold mb-2">{tpl.title}</h3>
-                  <p className="text-text-xlight text-[0.82rem] italic mb-3">"{tpl.prompt}"</p>
+                  <p className="text-text-xlight text-[0.82rem] italic mb-3">&ldquo;{tpl.prompt}&rdquo;</p>
                   <p className="text-text-mid text-[0.85rem] leading-[1.7] mb-4">{tpl.statement}</p>
                   <span className={`text-[0.78rem] font-semibold ${alreadyAdded ? 'text-text-xlight' : 'text-teal-mid'}`}>
                     {alreadyAdded ? '✓ Added' : '+ Add to Board'}
                   </span>
-                </div>
+                </button>
               )
             })}
           </div>

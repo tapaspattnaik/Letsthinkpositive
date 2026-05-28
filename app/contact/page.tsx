@@ -16,9 +16,9 @@ const subjects = [
 const socials = [
   { icon: '📧', label: 'hello@letsthinkpositive.com', href: 'mailto:hello@letsthinkpositive.com' },
   { icon: '▶️', label: 'YouTube — letsthinkpositive',   href: '#' },
-  { icon: '📷', label: 'Instagram — @letsthinkpositive', href: 'https://www.instagram.com/letsthinkpositive' },
+  { icon: '📷', label: 'Instagram — @_lets_think_positive', href: 'https://www.instagram.com/_lets_think_positive' },
   { icon: '💼', label: 'LinkedIn — Tapas Pattanaik',    href: 'https://www.linkedin.com/in/tapaspattnaik' },
-  { icon: '📘', label: 'Facebook — letsthinkpositive',  href: 'https://www.facebook.com/letsthinkpositive' },
+  { icon: '📘', label: 'Facebook — letthinkpositive',    href: 'https://www.facebook.com/letthinkpositive/' },
 ]
 
 interface FbPost { id: string; message?: string; story?: string; full_picture?: string; created_time: string; permalink_url: string }
@@ -53,11 +53,11 @@ function SocialFeed() {
         <h3 className="font-display text-[1.1rem] font-bold text-charcoal mb-2">Follow us on social media</h3>
         <p className="text-text-mid text-[0.87rem] mb-5">Stay connected for daily positivity, tips, and community stories.</p>
         <div className="flex justify-center gap-3 flex-wrap">
-          <a href="https://www.instagram.com/letsthinkpositive" target="_blank" rel="noopener noreferrer"
+          <a href="https://www.instagram.com/_lets_think_positive" target="_blank" rel="noopener noreferrer"
             className="flex items-center gap-2 bg-gradient-to-br from-purple-500 to-pink-500 text-white px-5 py-2.5 rounded-full font-semibold text-[0.85rem] no-underline hover:opacity-90 transition-opacity">
             📷 Instagram
           </a>
-          <a href="https://www.facebook.com/letsthinkpositive" target="_blank" rel="noopener noreferrer"
+          <a href="https://www.facebook.com/letthinkpositive/" target="_blank" rel="noopener noreferrer"
             className="flex items-center gap-2 bg-[#1877F2] text-white px-5 py-2.5 rounded-full font-semibold text-[0.85rem] no-underline hover:opacity-90 transition-opacity">
             📘 Facebook
           </a>
@@ -69,13 +69,13 @@ function SocialFeed() {
   return (
     <div className="bg-white border border-teal-light rounded-[24px] overflow-hidden shadow-card">
       {/* Tab switcher */}
-      <div className="flex border-b border-teal-light">
-        <button onClick={() => setTab('ig')}
+      <div role="tablist" aria-label="Social media feed" className="flex border-b border-teal-light">
+        <button role="tab" aria-selected={tab === 'ig'} onClick={() => setTab('ig')}
           className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-[0.85rem] font-semibold transition-colors
             ${tab === 'ig' ? 'text-teal-deep border-b-2 border-teal-deep bg-teal-ghost/30' : 'text-text-mid hover:text-teal-deep'}`}>
           📷 Instagram
         </button>
-        <button onClick={() => setTab('fb')}
+        <button role="tab" aria-selected={tab === 'fb'} onClick={() => setTab('fb')}
           className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-[0.85rem] font-semibold transition-colors
             ${tab === 'fb' ? 'text-teal-deep border-b-2 border-teal-deep bg-teal-ghost/30' : 'text-text-mid hover:text-teal-deep'}`}>
           📘 Facebook
@@ -144,7 +144,7 @@ function SocialFeed() {
 
       <div className="border-t border-teal-light px-4 py-3 flex justify-between items-center">
         <span className="text-[0.73rem] text-text-xlight">Latest from our feed</span>
-        <a href={tab === 'ig' ? 'https://www.instagram.com/letsthinkpositive' : 'https://www.facebook.com/letsthinkpositive'}
+        <a href={tab === 'ig' ? 'https://www.instagram.com/_lets_think_positive' : 'https://www.facebook.com/letthinkpositive/'}
           target="_blank" rel="noopener noreferrer"
           className="text-[0.78rem] font-semibold text-teal-mid hover:text-teal-deep no-underline">
           See all →
@@ -236,35 +236,39 @@ export default function ContactPage() {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">
-              {[
-                { label: 'Your name',          type: 'text',  key: 'name',    placeholder: 'What should we call you?' },
-                { label: 'Your email address', type: 'email', key: 'email',   placeholder: "We'll reply here — promise" },
-              ].map(f => (
-                <div key={f.key}>
-                  <label className="block text-[0.85rem] font-semibold text-teal-deep mb-1.5">{f.label}</label>
-                  <input type={f.type} placeholder={f.placeholder} required
-                    value={form[f.key as keyof typeof form]}
-                    onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))}
-                    className="w-full px-4 py-3 border border-teal-light rounded-[14px] bg-ivory text-[0.92rem] text-charcoal outline-none focus:border-teal-mid transition-colors placeholder:text-text-xlight" />
-                </div>
-              ))}
+              <div>
+                <label htmlFor="contact-name" className="block text-[0.85rem] font-semibold text-teal-deep mb-1.5">Your name</label>
+                <input id="contact-name" type="text" placeholder="What should we call you?" required
+                  autoComplete="name"
+                  value={form.name}
+                  onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
+                  className="w-full px-4 py-3 border border-teal-light rounded-[14px] bg-ivory text-[0.92rem] text-charcoal outline-none focus:border-teal-mid transition-colors placeholder:text-text-xlight" />
+              </div>
+              <div>
+                <label htmlFor="contact-email" className="block text-[0.85rem] font-semibold text-teal-deep mb-1.5">Your email address</label>
+                <input id="contact-email" type="email" placeholder="We'll reply here — promise" required
+                  autoComplete="email"
+                  value={form.email}
+                  onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
+                  className="w-full px-4 py-3 border border-teal-light rounded-[14px] bg-ivory text-[0.92rem] text-charcoal outline-none focus:border-teal-mid transition-colors placeholder:text-text-xlight" />
+              </div>
 
               <div>
-                <label className="block text-[0.85rem] font-semibold text-teal-deep mb-1.5">What&apos;s on your mind?</label>
-                <select value={form.subject} onChange={e => setForm(p => ({ ...p, subject: e.target.value }))}
+                <label htmlFor="contact-subject" className="block text-[0.85rem] font-semibold text-teal-deep mb-1.5">What&apos;s on your mind?</label>
+                <select id="contact-subject" value={form.subject} onChange={e => setForm(p => ({ ...p, subject: e.target.value }))}
                   className="w-full px-4 py-3 border border-teal-light rounded-[14px] bg-ivory text-[0.92rem] text-charcoal outline-none focus:border-teal-mid transition-colors">
                   {subjects.map(s => <option key={s}>{s}</option>)}
                 </select>
               </div>
 
               <div>
-                <label className="block text-[0.85rem] font-semibold text-teal-deep mb-1.5">Your message</label>
-                <textarea rows={5} placeholder="Write freely — there's no wrong thing to say here" required
+                <label htmlFor="contact-message" className="block text-[0.85rem] font-semibold text-teal-deep mb-1.5">Your message</label>
+                <textarea id="contact-message" rows={5} placeholder="Write freely — there's no wrong thing to say here" required
                   value={form.message} onChange={e => setForm(p => ({ ...p, message: e.target.value }))}
                   className="w-full px-4 py-3 border border-teal-light rounded-[14px] bg-ivory text-[0.92rem] text-charcoal outline-none focus:border-teal-mid transition-colors resize-vertical" />
               </div>
 
-              {status === 'error' && <p className="text-red-500 text-[0.85rem]">Something went wrong — please try again or email us directly.</p>}
+              {status === 'error' && <p role="alert" className="text-red-500 text-[0.85rem]">Something went wrong — please try again or email us directly.</p>}
 
               <button type="submit" disabled={status === 'sending'}
                 className="w-full bg-teal-deep text-white py-4 rounded-full font-semibold text-[1rem] hover:bg-teal-dark transition-colors disabled:opacity-60">

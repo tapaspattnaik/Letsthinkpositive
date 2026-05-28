@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { prisma } from '@/lib/db'
 import { TIER_STYLES } from '@/lib/badges'
+import { FollowButton } from '@/components/FollowButton'
 import type { Metadata } from 'next'
 
 interface Props { params: { id: string } }
@@ -46,12 +47,13 @@ export default async function PublicProfilePage({ params }: Props) {
           <p className="text-[0.82rem] text-text-xlight mb-3">Member since {joinedYear}</p>
           {user.bio && <p className="text-text-mid text-[0.93rem] leading-[1.7] mb-4 max-w-[420px] mx-auto">{user.bio}</p>}
           {interests.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 justify-center">
+            <div className="flex flex-wrap gap-1.5 justify-center mb-4">
               {interests.map(i => (
                 <span key={i} className="bg-teal-ghost text-teal-deep text-[0.76rem] font-medium px-3 py-1 rounded-full">{i}</span>
               ))}
             </div>
           )}
+          <FollowButton userId={id} />
         </div>
 
         {/* Badges */}

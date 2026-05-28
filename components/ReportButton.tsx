@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 
 const REASONS = [
@@ -28,6 +28,28 @@ export function ReportButton({ postType, postId, compact = false }: Props) {
   const [submitting, setSubmitting] = useState(false)
   const [done,      setDone]      = useState(false)
   const [error,     setError]     = useState('')
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const dialogRef  = useRef<HTMLDivElement>(null)
+
+  // Focus the dialog when it opens; return focus when it closes
+  useEffect(() => {
+    if (open) {
+      setTimeout(() => dialogRef.current?.querySelector<HTMLElement>('button, [href], input, select, textarea')?.focus(), 50)
+    }
+  }, [open])
+
+  function closeDialog() {
+    setOpen(false)
+    triggerRef.current?.focus()
+  }
+
+  // Escape key closes modal
+  useEffect(() => {
+    if (!open) return
+    function onKey(e: KeyboardEvent) { if (e.key === 'Escape') closeDialog() }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [open])
 
   if (!session) return null // only show for logged-in users
 
@@ -52,10 +74,13 @@ export function ReportButton({ postType, postId, compact = false }: Props) {
   return (
     <>
       <button
+        ref={triggerRef}
         onClick={() => setOpen(true)}
+        aria-haspopup="dialog"
+        aria-label="Report this post"
         title="Report this post"
-        className={`text-text-xlight hover:text-red-400 transition-colors flex items-center gap-1 ${compact ? 'p-1' : 'text-[0.75rem]'}`}>
-        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 16 16" stroke="currentColor" strokeWidth={1.8}>
+        className={`text-text-xlight hover:text-red-400 transition-colors flex items-center gap-1 min-h-[44px] min-w-[44px] justify-center ${compact ? 'p-1' : 'text-[0.75rem]'}`}>
+        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 16 16" stroke="currentColor" strokeWidth={1.8} aria-hidden="true">
           <path strokeLinecap="round" strokeLinejoin="round" d="M3 2h10l-2 5 2 5H3V2z"/>
         </svg>
         {!compact && <span>Report</span>}
@@ -64,13 +89,19 @@ export function ReportButton({ postType, postId, compact = false }: Props) {
       {/* Modal */}
       {open && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
-          onClick={e => { if (e.target === e.currentTarget) setOpen(false) }}>
-          <div className="bg-white rounded-[24px] w-full max-w-[420px] shadow-lift overflow-hidden">
+          onClick={e => { if (e.target === e.currentTarget) closeDialog() }}>
+          <div
+            ref={dialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="report-dialog-title"
+            className="bg-white rounded-[24px] w-full max-w-[420px] shadow-lift overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-teal-light">
-              <h3 className="font-display font-bold text-[1.05rem] text-charcoal">Report this post</h3>
-              <button onClick={() => setOpen(false)}
-                className="text-text-xlight hover:text-charcoal text-[1.2rem] leading-none">×</button>
+              <h3 id="report-dialog-title" className="font-display font-bold text-[1.05rem] text-charcoal">Report this post</h3>
+              <button onClick={closeDialog}
+                aria-label="Close report dialog"
+                className="text-text-xlight hover:text-charcoal text-[1.2rem] leading-none min-w-[44px] min-h-[44px] flex items-center justify-center">×</button>
             </div>
 
             {done ? (
@@ -99,19 +130,22 @@ export function ReportButton({ postType, postId, compact = false }: Props) {
                   ))}
                 </div>
 
-                <textarea value={details} onChange={e => setDetails(e.target.value)}
-                  placeholder="Additional details (optional)…"
-                  rows={2}
-                  className="w-full border border-teal-light rounded-[12px] px-3 py-2 text-[0.83rem] outline-none focus:border-teal-mid bg-ivory resize-none" />
+                <div>
+                  <label htmlFor="report-details" className="sr-only">Additional details (optional)</label>
+                  <textarea id="report-details" value={details} onChange={e => setDetails(e.target.value)}
+                    placeholder="Additional details (optional)…"
+                    rows={2}
+                    className="w-full border border-teal-light rounded-[12px] px-3 py-2 text-[0.83rem] outline-none focus:border-teal-mid bg-ivory resize-none" />
+                </div>
 
-                {error && <p className="text-red-500 text-[0.8rem]">{error}</p>}
+                {error && <p role="alert" className="text-red-500 text-[0.8rem]">{error}</p>}
 
                 <div className="flex gap-3 pt-1">
                   <button type="submit" disabled={!reason || submitting}
                     className="flex-1 bg-red-500 text-white py-2.5 rounded-full font-semibold text-[0.88rem] hover:bg-red-600 disabled:opacity-50 transition-colors">
                     {submitting ? 'Submitting…' : 'Submit report'}
                   </button>
-                  <button type="button" onClick={() => setOpen(false)}
+                  <button type="button" onClick={closeDialog}
                     className="px-4 py-2.5 border border-teal-light rounded-full text-[0.88rem] text-text-mid hover:bg-teal-ghost transition-colors">
                     Cancel
                   </button>

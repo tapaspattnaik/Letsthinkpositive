@@ -17,6 +17,8 @@ interface Notification {
 const TYPE_ICONS: Record<string, string> = {
   like:            '❤️',
   comment:         '💬',
+  follow:          '👤',
+  reaction:        '🙏',
   blog_approved:   '✅',
   blog_rejected:   '❌',
   report_resolved: '🛡️',
@@ -26,6 +28,8 @@ const TYPE_ICONS: Record<string, string> = {
 const TYPE_LABELS: Record<string, string> = {
   like:            'Like',
   comment:         'Comment',
+  follow:          'New follower',
+  reaction:        'Reaction',
   blog_approved:   'Blog approved',
   blog_rejected:   'Blog rejected',
   report_resolved: 'Report update',

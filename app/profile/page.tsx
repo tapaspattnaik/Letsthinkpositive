@@ -28,6 +28,7 @@ interface Circle {
 interface UserProfile {
   id: number; name: string; email: string; phone?: string; bio?: string
   interests: string; avatarUrl?: string; createdAt: string
+  currentStreak?: number; longestStreak?: number
   badges: BadgeEntry[]
   progress: ProgressEntry[]
 }
@@ -224,6 +225,26 @@ export default function ProfilePage() {
               })}
             </div>
           )}
+        </div>
+
+        {/* ── Streak + Quick Tools row ─────────────────────────────── */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+          <div className="bg-gradient-to-br from-teal-deep to-teal-dark rounded-[18px] p-4 text-center">
+            <span className="text-[1.8rem] block mb-1">🔥</span>
+            <p className="text-white font-bold text-[1.1rem] leading-none">{profile.currentStreak ?? 0}</p>
+            <p className="text-white/60 text-[0.72rem] mt-0.5">day streak</p>
+          </div>
+          {[
+            { href: '/mood',     icon: '📊', label: 'Mood Tracker' },
+            { href: '/habits',   icon: '🎯', label: 'Habits'       },
+            { href: '/breathing',icon: '🌬️', label: 'Breathe'      },
+          ].map(({ href, icon, label }) => (
+            <Link key={href} href={href}
+              className="bg-white border border-teal-light rounded-[18px] p-4 text-center no-underline hover:border-teal-mid hover:shadow-lift transition-all group">
+              <span className="text-[1.8rem] block mb-1">{icon}</span>
+              <span className="text-[0.8rem] font-semibold text-text-mid group-hover:text-teal-deep transition-colors">{label}</span>
+            </Link>
+          ))}
         </div>
 
         {/* ── Quick links ──────────────────────────────────────────── */}

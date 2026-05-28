@@ -45,8 +45,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${playfair.variable} ${dmSans.variable} ${dmSerif.variable}`}>
       <body className="font-body">
         <SessionProvider>
+          {/* Skip-to-content — visible on focus for keyboard/screen-reader users */}
+          <a
+            href="#main-content"
+            className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[9999] focus:bg-teal-deep focus:text-white focus:px-4 focus:py-2 focus:rounded-full focus:text-sm focus:font-semibold"
+          >
+            Skip to main content
+          </a>
           <Navbar />
-          <main className="pt-[72px]">
+          <main id="main-content" className="pt-[72px]">
             {children}
           </main>
           <Footer />

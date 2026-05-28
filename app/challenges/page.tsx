@@ -151,13 +151,19 @@ export default function ChallengesPage() {
 
   return (
     <>
-      {/* Toast */}
-      {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-charcoal text-white px-6 py-3.5 rounded-full shadow-lg flex items-center gap-3 text-[0.9rem] font-medium animate-fade-in">
-          {toast.badge && <span className="text-[1.3rem]">{toast.badge.icon}</span>}
-          {toast.msg}
-        </div>
-      )}
+      {/* Toast — role="status" so screen readers announce it */}
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 pointer-events-none">
+        {toast && (
+          <div className="bg-charcoal text-white px-6 py-3.5 rounded-full shadow-lg flex items-center gap-3 text-[0.9rem] font-medium animate-fade-in">
+            {toast.badge && <span className="text-[1.3rem]" aria-hidden="true">{toast.badge.icon}</span>}
+            {toast.msg}
+          </div>
+        )}
+      </div>
 
       {/* Hero */}
       <section className="bg-gradient-to-br from-teal-deep to-teal-dark py-20 px-[5%] text-white">

@@ -174,10 +174,13 @@ export default function MeditationPage() {
                 <p className={`text-[0.875rem] leading-[1.7] mb-5 flex-1 ${s.textColor === 'text-white' ? 'text-white/70' : 'text-text-light'}`}>
                   {s.description}
                 </p>
-                <button className={`w-full py-2.5 rounded-full font-semibold text-[0.85rem] transition-all
+                <button
+                  disabled
+                  aria-disabled="true"
+                  className={`w-full py-2.5 rounded-full font-semibold text-[0.85rem] cursor-not-allowed opacity-60
                   ${s.textColor === 'text-white'
-                    ? 'bg-white/15 text-white border border-white/25 hover:bg-white/25'
-                    : 'bg-teal-deep text-white hover:bg-teal-dark'}`}>
+                    ? 'bg-white/15 text-white border border-white/25'
+                    : 'bg-teal-deep text-white'}`}>
                   ▶ Listen (Coming Soon)
                 </button>
               </div>

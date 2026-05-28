@@ -24,6 +24,16 @@ export interface ContactPayload {
   message: string
 }
 
+// Generic low-level helper used by the weekly digest and other transactional emails
+export async function sendEmail({ to, subject, html }: { to: string; subject: string; html: string }) {
+  return transporter.sendMail({
+    from:    `"letsthinkpositive.com" <${process.env.SMTP_USER}>`,
+    to,
+    subject,
+    html,
+  })
+}
+
 export async function sendWelcomeEmail({ email, name }: { email: string; name: string }) {
   return transporter.sendMail({
     from:    `"letsthinkpositive.com" <${process.env.SMTP_USER}>`,

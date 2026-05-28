@@ -50,6 +50,8 @@ export default function JournalPage() {
     setMood('')
     setSaved(true)
     setTimeout(() => setSaved(false), 3000)
+    // Touch streak (fire-and-forget)
+    fetch('/api/streak', { method: 'POST' }).catch(() => {})
   }
 
   return (

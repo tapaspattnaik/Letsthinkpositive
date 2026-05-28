@@ -92,21 +92,32 @@ export default function SoundsPage() {
           {/* Sound grid */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
             {SOUNDS.map(s => (
-              <div key={s.id} className={`bg-white rounded-[24px] p-5 border text-center cursor-pointer transition-all hover:-translate-y-1 hover:shadow-lift
-                ${playing[s.id] ? 'border-teal-mid shadow-lift' : 'border-teal-light shadow-card'}`}
-                onClick={() => toggleSound(s)}>
-                <span className="text-[2.2rem] block mb-2">{s.icon}</span>
-                <p className={`text-[0.88rem] font-semibold mb-3 ${playing[s.id] ? 'text-teal-deep' : 'text-text-mid'}`}>{s.label}</p>
+              <div key={s.id} className={`bg-white rounded-[24px] border text-center transition-all hover:-translate-y-1 hover:shadow-lift
+                ${playing[s.id] ? 'border-teal-mid shadow-lift' : 'border-teal-light shadow-card'}`}>
+                <button
+                  type="button"
+                  onClick={() => toggleSound(s)}
+                  aria-pressed={playing[s.id] ?? false}
+                  aria-label={`${playing[s.id] ? 'Stop' : 'Play'} ${s.label}`}
+                  className="w-full pt-5 px-5 pb-3 flex flex-col items-center">
+                  <span className="text-[2.2rem] block mb-2" aria-hidden="true">{s.icon}</span>
+                  <p className={`text-[0.88rem] font-semibold mb-1 ${playing[s.id] ? 'text-teal-deep' : 'text-text-mid'}`}>{s.label}</p>
+                  <span className={`text-[0.72rem] font-semibold tracking-wide ${playing[s.id] ? 'text-teal-mid' : 'text-text-xlight'}`}>
+                    {playing[s.id] ? '▶ PLAYING' : 'TAP TO PLAY'}
+                  </span>
+                </button>
                 {playing[s.id] && (
-                  <input type="range" min={0} max={1} step={0.05}
-                    value={volumes[s.id] ?? 0.6}
-                    onChange={e => { e.stopPropagation(); setVolume(s.id, parseFloat(e.target.value)) }}
-                    onClick={e => e.stopPropagation()}
-                    className="w-full accent-teal-mid" />
+                  <div className="px-5 pb-4">
+                    <label htmlFor={`vol-${s.id}`} className="sr-only">Volume for {s.label}</label>
+                    <input
+                      id={`vol-${s.id}`}
+                      type="range" min={0} max={1} step={0.05}
+                      value={volumes[s.id] ?? 0.6}
+                      onChange={e => setVolume(s.id, parseFloat(e.target.value))}
+                      aria-label={`${s.label} volume`}
+                      className="w-full accent-teal-mid" />
+                  </div>
                 )}
-                <span className={`text-[0.72rem] font-semibold tracking-wide ${playing[s.id] ? 'text-teal-mid' : 'text-text-xlight'}`}>
-                  {playing[s.id] ? '▶ PLAYING' : 'TAP TO PLAY'}
-                </span>
               </div>
             ))}
           </div>

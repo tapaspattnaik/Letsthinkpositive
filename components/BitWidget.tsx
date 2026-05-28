@@ -100,7 +100,12 @@ export function BitWidget() {
     <div ref={widgetRef} className="fixed bottom-5 right-5 z-[999] flex flex-col items-end gap-3">
 
       {/* ── Chat panel ───────────────────────────── */}
-      <div className={`flex flex-col bg-white rounded-[24px] shadow-[0_8px_40px_rgba(0,0,0,0.18)] border border-teal-light overflow-hidden transition-all duration-300 origin-bottom-right
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Bit — AI wellness companion"
+        aria-hidden={!open}
+        className={`flex flex-col bg-white rounded-[24px] shadow-[0_8px_40px_rgba(0,0,0,0.18)] border border-teal-light overflow-hidden transition-all duration-300 origin-bottom-right
         ${open
           ? 'opacity-100 scale-100 translate-y-0 w-[360px] h-[520px] sm:w-[380px] sm:h-[540px]'
           : 'opacity-0 scale-90 translate-y-4 pointer-events-none w-[360px] h-[520px]'}`}>
@@ -138,8 +143,9 @@ export function BitWidget() {
           <span className="text-[0.65rem] text-text-xlight mr-1 font-medium">Mood:</span>
           {MOODS.map(m => (
             <button key={m.label} onClick={() => setMood(mood === m.label ? '' : m.label)}
-              title={m.label}
-              className={`text-[0.95rem] rounded-full p-0.5 transition-all ${mood === m.label ? 'bg-teal-deep scale-110' : 'hover:bg-teal-ghost'}`}>
+              aria-pressed={mood === m.label}
+              aria-label={`Set mood: ${m.label}`}
+              className={`text-[0.95rem] rounded-full p-0.5 transition-all min-w-[28px] min-h-[28px] flex items-center justify-center ${mood === m.label ? 'bg-teal-deep scale-110' : 'hover:bg-teal-ghost'}`}>
               {m.emoji}
             </button>
           ))}
@@ -190,11 +196,14 @@ export function BitWidget() {
         {/* Input */}
         <div className="flex-shrink-0 border-t border-teal-light px-3 py-2.5 bg-white">
           <div className="flex gap-2 items-end">
-            <textarea ref={inputRef} value={input} onChange={autoResize} onKeyDown={handleKey}
+            <label htmlFor="bit-input" className="sr-only">Message Bit</label>
+            <textarea id="bit-input" ref={inputRef} value={input} onChange={autoResize} onKeyDown={handleKey}
               placeholder="Message Bit…" rows={1}
+              aria-label="Message Bit"
               className="flex-1 border border-teal-light rounded-[12px] px-3 py-2 text-[0.82rem] text-charcoal bg-ivory outline-none focus:border-teal-mid transition-colors resize-none placeholder:text-text-xlight leading-[1.5]"
               style={{ maxHeight: '100px' }} />
             <button onClick={() => handleSend()} disabled={!input.trim() || streaming}
+              aria-label="Send message"
               className="flex-shrink-0 w-8 h-8 rounded-full bg-teal-deep text-white flex items-center justify-center hover:bg-teal-dark disabled:opacity-40 transition-all">
               {streaming
                 ? <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />

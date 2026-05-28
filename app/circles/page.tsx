@@ -11,9 +11,11 @@ interface Circle {
 
 export default function CirclesPage() {
   const { data: session } = useSession()
-  const [circles,  setCircles]  = useState<Circle[]>([])
-  const [joining,  setJoining]  = useState<string | null>(null)
-  const [loading,  setLoading]  = useState(true)
+  const [circles,       setCircles]       = useState<Circle[]>([])
+  const [joining,       setJoining]       = useState<string | null>(null)
+  const [leaving,       setLeaving]       = useState<string | null>(null)
+  const [confirmLeave,  setConfirmLeave]  = useState<string | null>(null)
+  const [loading,       setLoading]       = useState(true)
 
   const fetchCircles = () =>
     fetch('/api/circles').then(r => r.json()).then(d => { if (Array.isArray(d)) setCircles(d); setLoading(false) })
@@ -26,6 +28,14 @@ export default function CirclesPage() {
     await fetch(`/api/circles/${slug}/join`, { method: 'POST' })
     await fetchCircles()
     setJoining(null)
+  }
+
+  async function leave(slug: string) {
+    if (!session) return
+    setLeaving(slug)
+    await fetch(`/api/circles/${slug}/leave`, { method: 'POST' })
+    await fetchCircles()
+    setLeaving(null)
   }
 
   return (
@@ -86,10 +96,36 @@ export default function CirclesPage() {
                 </div>
 
                 {c.isMember ? (
-                  <Link href={`/circles/${c.slug}`}
-                    className="block w-full text-center bg-teal-deep text-white py-3 rounded-full font-semibold text-[0.9rem] no-underline hover:bg-teal-dark transition-colors">
-                    Enter Circle →
-                  </Link>
+                  <div className="flex gap-2">
+                    <Link href={`/circles/${c.slug}`}
+                      className="flex-1 text-center bg-teal-deep text-white py-3 rounded-full font-semibold text-[0.9rem] no-underline hover:bg-teal-dark transition-colors">
+                      Enter Circle →
+                    </Link>
+                    {confirmLeave === c.slug ? (
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => { setConfirmLeave(null); leave(c.slug) }}
+                          disabled={leaving === c.slug}
+                          aria-label={`Confirm leaving ${c.name}`}
+                          className="px-3 py-2 rounded-full border border-red-300 bg-red-50 text-red-500 text-[0.78rem] font-semibold hover:bg-red-100 disabled:opacity-50 transition-colors">
+                          Leave
+                        </button>
+                        <button
+                          onClick={() => setConfirmLeave(null)}
+                          aria-label="Cancel leaving circle"
+                          className="px-3 py-2 rounded-full border border-teal-light text-text-mid text-[0.78rem] font-semibold hover:bg-teal-ghost transition-colors">
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setConfirmLeave(c.slug)}
+                        aria-label={`Leave ${c.name}`}
+                        className="px-4 py-3 rounded-full border border-red-200 text-red-400 text-[0.82rem] font-semibold hover:bg-red-50 hover:border-red-300 transition-colors">
+                        Leave
+                      </button>
+                    )}
+                  </div>
                 ) : session ? (
                   <button onClick={() => join(c.slug)} disabled={joining === c.slug}
                     className="w-full border-2 border-teal-mid text-teal-deep py-3 rounded-full font-semibold text-[0.9rem] hover:bg-teal-ghost disabled:opacity-60 transition-colors">

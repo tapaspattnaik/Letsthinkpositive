@@ -25,37 +25,51 @@ model User {
   googleId  String?  @unique @db.VarChar(255)
   phone     String?  @db.VarChar(20)
   bio       String?  @db.Text
-  interests String   @db.VarChar(500) @default("")
+  interests String   @default("") @db.VarChar(500)
   avatarUrl String?  @db.VarChar(500)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  badges           UserBadge[]
-  progress         ChallengeProgress[]
-  posts            CommunityPost[]
-  groupMemberships GroupMember[]
-  groupPosts       GroupPost[]
-  postLikes        PostLike[]
-  postComments     PostComment[]
-  blogLikes        BlogLike[]
-  blogComments     BlogComment[]
-  blogSubmissions  UserBlogPost[]
-  reports          PostReport[]
-  notifications    Notification[]
+  currentStreak  Int       @default(0)
+  longestStreak  Int       @default(0)
+  lastActiveDate DateTime?
+
+  badges             UserBadge[]
+  progress           ChallengeProgress[]
+  posts              CommunityPost[]
+  groupMemberships   GroupMember[]
+  groupPosts         GroupPost[]
+  postLikes          PostLike[]
+  postComments       PostComment[]
+  blogLikes          BlogLike[]
+  blogComments       BlogComment[]
+  blogSubmissions    UserBlogPost[]
+  reports            PostReport[]
+  notifications      Notification[]
+  communityLikes     CommunityLike[]
+  communityReactions CommunityReaction[]
+  following          Follow[]            @relation("UserFollowing")
+  followers          Follow[]            @relation("UserFollowers")
+  passwordResets     PasswordReset[]
+  moodEntries        MoodEntry[]
+  habits             Habit[]
+  gratitudeEntries   GratitudeEntry[]
+  intentions         DailyIntention[]
+  kindnessActs       KindnessAct[]
 
   @@map("users")
 }
 
 model Badge {
-  id          Int         @id @default(autoincrement())
-  slug        String      @unique @db.VarChar(100)
-  name        String      @db.VarChar(100)
-  description String      @db.VarChar(300)
-  icon        String      @db.VarChar(10)
-  tier        String      @db.VarChar(20)
-  challenge   String?     @db.VarChar(100)
+  id          Int     @id @default(autoincrement())
+  slug        String  @unique @db.VarChar(100)
+  name        String  @db.VarChar(100)
+  description String  @db.VarChar(300)
+  icon        String  @db.VarChar(10)
+  tier        String  @db.VarChar(20)
+  challenge   String? @db.VarChar(100)
 
-  users       UserBadge[]
+  users UserBadge[]
 
   @@map("badges")
 }
@@ -66,8 +80,8 @@ model UserBadge {
   badgeId  Int
   earnedAt DateTime @default(now())
 
-  user     User     @relation(fields: [userId], references: [id])
-  badge    Badge    @relation(fields: [badgeId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
+  badge Badge @relation(fields: [badgeId], references: [id])
 
   @@unique([userId, badgeId])
   @@map("user_badges")
@@ -77,57 +91,88 @@ model ChallengeProgress {
   id            Int       @id @default(autoincrement())
   userId        Int
   challengeSlug String    @db.VarChar(100)
-  completedDays String    @db.Text @default("[]")
+  completedDays String    @default("[]") @db.Text
   startedAt     DateTime  @default(now())
   completedAt   DateTime?
 
-  user          User      @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   @@unique([userId, challengeSlug])
   @@map("challenge_progress")
 }
 
 model CommunityPost {
-  id        Int      @id @default(autoincrement())
-  title     String   @db.VarChar(200)
-  body      String   @db.Text
-  author    String   @db.VarChar(100) @default("Anonymous")
-  tags      String   @db.VarChar(500) @default("")
-  approved  Boolean  @default(false)
-  createdAt DateTime @default(now())
-  userId    Int?
-  user      User?    @relation(fields: [userId], references: [id])
+  id           Int                 @id @default(autoincrement())
+  title        String              @db.VarChar(200)
+  body         String              @db.Text
+  author       String              @default("Anonymous") @db.VarChar(100)
+  tags         String              @default("") @db.VarChar(500)
+  postType     String              @default("story") @db.VarChar(20) // story | wish
+  approved     Boolean             @default(false)
+  featuredWeek String?             @db.VarChar(10) // YYYY-Www e.g. "2025-W21", null if not featured
+  createdAt    DateTime            @default(now())
+  userId       Int?
+  user         User?               @relation(fields: [userId], references: [id])
+  likes        CommunityLike[]
+  reactions    CommunityReaction[]
 
   @@map("community_posts")
+}
+
+model CommunityLike {
+  id        Int      @id @default(autoincrement())
+  postId    Int
+  userId    Int
+  createdAt DateTime @default(now())
+
+  post CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User          @relation(fields: [userId], references: [id])
+
+  @@unique([postId, userId])
+  @@map("community_likes")
+}
+
+model CommunityReaction {
+  id        Int      @id @default(autoincrement())
+  postId    Int
+  userId    Int
+  emoji     String   @db.VarChar(10) // 🙏 ❤️ 💪 ✨ 😊
+  createdAt DateTime @default(now())
+
+  post CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User          @relation(fields: [userId], references: [id])
+
+  @@unique([postId, userId, emoji])
+  @@map("community_reactions")
 }
 
 // ── Circles (closed groups) ───────────────────────────────────────────────
 
 model Circle {
-  id          Int       @id @default(autoincrement())
-  slug        String    @unique @db.VarChar(100)
-  name        String    @db.VarChar(100)
-  description String    @db.Text
-  icon        String    @db.VarChar(10) @default("🌿")
-  color       String    @db.VarChar(50) @default("from-teal-deep to-teal-dark")
-  isPrivate   Boolean   @default(true)
-  createdAt   DateTime  @default(now())
+  id          Int      @id @default(autoincrement())
+  slug        String   @unique @db.VarChar(100)
+  name        String   @db.VarChar(100)
+  description String   @db.Text
+  icon        String   @default("🌿") @db.VarChar(10)
+  color       String   @default("from-teal-deep to-teal-dark") @db.VarChar(50)
+  isPrivate   Boolean  @default(true)
+  createdAt   DateTime @default(now())
 
-  members     GroupMember[]
-  posts       GroupPost[]
+  members GroupMember[]
+  posts   GroupPost[]
 
   @@map("circles")
 }
 
 model GroupMember {
-  id        Int      @id @default(autoincrement())
-  circleId  Int
-  userId    Int
-  role      String   @db.VarChar(20) @default("member")
-  joinedAt  DateTime @default(now())
+  id       Int      @id @default(autoincrement())
+  circleId Int
+  userId   Int
+  role     String   @default("member") @db.VarChar(20)
+  joinedAt DateTime @default(now())
 
-  circle    Circle   @relation(fields: [circleId], references: [id])
-  user      User     @relation(fields: [userId], references: [id])
+  circle Circle @relation(fields: [circleId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
 
   @@unique([circleId, userId])
   @@map("group_members")
@@ -140,36 +185,36 @@ model GroupPost {
   body      String   @db.Text
   createdAt DateTime @default(now())
 
-  circle    Circle       @relation(fields: [circleId], references: [id])
-  user      User         @relation(fields: [userId], references: [id])
-  likes     PostLike[]
-  comments  PostComment[]
+  circle   Circle        @relation(fields: [circleId], references: [id])
+  user     User          @relation(fields: [userId], references: [id])
+  likes    PostLike[]
+  comments PostComment[]
 
   @@map("group_posts")
 }
 
 model PostLike {
-  id        Int       @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   postId    Int
   userId    Int
-  createdAt DateTime  @default(now())
+  createdAt DateTime @default(now())
 
-  post      GroupPost @relation(fields: [postId], references: [id], onDelete: Cascade)
-  user      User      @relation(fields: [userId], references: [id])
+  post GroupPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User      @relation(fields: [userId], references: [id])
 
   @@unique([postId, userId])
   @@map("post_likes")
 }
 
 model PostComment {
-  id        Int       @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   postId    Int
   userId    Int
-  body      String    @db.Text
-  createdAt DateTime  @default(now())
+  body      String   @db.Text
+  createdAt DateTime @default(now())
 
-  post      GroupPost @relation(fields: [postId], references: [id], onDelete: Cascade)
-  user      User      @relation(fields: [userId], references: [id])
+  post GroupPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User      @relation(fields: [userId], references: [id])
 
   @@map("post_comments")
 }
@@ -183,7 +228,7 @@ model BlogLike {
   ipHash    String?  @db.VarChar(64)
   createdAt DateTime @default(now())
 
-  user      User?    @relation(fields: [userId], references: [id])
+  user User? @relation(fields: [userId], references: [id])
 
   @@unique([slug, userId])
   @@map("blog_likes")
@@ -198,7 +243,7 @@ model BlogComment {
   approved  Boolean  @default(false)
   createdAt DateTime @default(now())
 
-  user      User?    @relation(fields: [userId], references: [id])
+  user User? @relation(fields: [userId], references: [id])
 
   @@map("blog_comments")
 }
@@ -206,18 +251,18 @@ model BlogComment {
 // ── Post reports ─────────────────────────────────────────────────────────
 
 model PostReport {
-  id          Int       @id @default(autoincrement())
-  reporterId  Int
-  postType    String    @db.VarChar(30)   // community | circle | user_blog
-  postId      Int
-  reason      String    @db.VarChar(100)
-  details     String?   @db.Text
-  status      String    @db.VarChar(20)  @default("pending")  // pending | resolved
-  adminNote   String?   @db.Text
-  resolvedAt  DateTime?
-  createdAt   DateTime  @default(now())
+  id         Int       @id @default(autoincrement())
+  reporterId Int
+  postType   String    @db.VarChar(30) // community | circle | user_blog
+  postId     Int
+  reason     String    @db.VarChar(100)
+  details    String?   @db.Text
+  status     String    @default("pending") @db.VarChar(20) // pending | resolved
+  adminNote  String?   @db.Text
+  resolvedAt DateTime?
+  createdAt  DateTime  @default(now())
 
-  reporter    User      @relation(fields: [reporterId], references: [id])
+  reporter User @relation(fields: [reporterId], references: [id])
 
   @@map("post_reports")
 }
@@ -227,13 +272,13 @@ model PostReport {
 model Notification {
   id        Int      @id @default(autoincrement())
   userId    Int
-  type      String   @db.VarChar(50)   // like | comment | blog_approved | blog_rejected | report_resolved | circle_post
+  type      String   @db.VarChar(50) // like | comment | blog_approved | blog_rejected | report_resolved | circle_post
   message   String   @db.VarChar(500)
   link      String?  @db.VarChar(500)
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("notifications")
 }
@@ -241,20 +286,148 @@ model Notification {
 // ── User-submitted blog posts ─────────────────────────────────────────────
 
 model UserBlogPost {
-  id          Int      @id @default(autoincrement())
-  userId      Int
-  title       String   @db.VarChar(300)
-  slug        String?  @unique @db.VarChar(320)
-  excerpt     String?  @db.VarChar(500)
-  body        String   @db.LongText
-  category    String   @db.VarChar(100)
-  subCategory String?  @db.VarChar(100)
-  images      String   @db.Text @default("[]")  // JSON array of image URLs
-  status      String   @db.VarChar(20) @default("pending") // pending | approved | rejected
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  title        String   @db.VarChar(300)
+  slug         String?  @unique @db.VarChar(320)
+  excerpt      String?  @db.VarChar(500)
+  body         String   @db.LongText
+  category     String   @db.VarChar(100)
+  subCategory  String?  @db.VarChar(100)
+  images       String   @default("[]") @db.Text // JSON array of image URLs
+  status       String   @default("pending") @db.VarChar(20) // pending | approved | rejected
+  featuredWeek String?  @db.VarChar(10) // YYYY-Www e.g. "2025-W21", null if not featured
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  user        User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   @@map("user_blog_posts")
+}
+
+// ── Follows ───────────────────────────────────────────────────────────────
+
+model Follow {
+  id          Int      @id @default(autoincrement())
+  followerId  Int
+  followingId Int
+  createdAt   DateTime @default(now())
+
+  follower  User @relation("UserFollowing", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@map("follows")
+}
+
+// ── Mood tracker ─────────────────────────────────────────────────────────
+
+model MoodEntry {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  mood      Int // 1 = very low … 5 = great
+  note      String?  @db.VarChar(300)
+  date      String   @db.VarChar(10) // YYYY-MM-DD — one per user per day
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@map("mood_entries")
+}
+
+// ── Habit tracker ─────────────────────────────────────────────────────────
+
+model Habit {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  name      String   @db.VarChar(200)
+  emoji     String   @default("✅") @db.VarChar(10)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  user User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  logs HabitLog[]
+
+  @@map("habits")
+}
+
+model HabitLog {
+  id        Int      @id @default(autoincrement())
+  habitId   Int
+  userId    Int
+  date      String   @db.VarChar(10) // YYYY-MM-DD
+  createdAt DateTime @default(now())
+
+  habit Habit @relation(fields: [habitId], references: [id], onDelete: Cascade)
+
+  @@unique([habitId, date])
+  @@map("habit_logs")
+}
+
+// ── Gratitude Wall ────────────────────────────────────────────────────────
+
+model GratitudeEntry {
+  id        Int      @id @default(autoincrement())
+  userId    Int?
+  name      String   @default("Anonymous") @db.VarChar(100)
+  content   String   @db.VarChar(280)
+  hearts    Int      @default(0)
+  date      String   @db.VarChar(10) // YYYY-MM-DD
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("gratitude_entries")
+}
+
+// ── Daily Intentions ─────────────────────────────────────────────────────
+
+model DailyIntention {
+  id         Int      @id @default(autoincrement())
+  userId     Int?
+  word       String   @db.VarChar(50)
+  intention  String   @db.VarChar(200)
+  kindness   String   @db.VarChar(200)
+  reflection String?  @db.VarChar(300)
+  date       String   @db.VarChar(10) // YYYY-MM-DD
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, date])
+  @@map("daily_intentions")
+}
+
+// ── Kindness Map ──────────────────────────────────────────────────────────
+
+model KindnessAct {
+  id        Int      @id @default(autoincrement())
+  userId    Int?
+  act       String   @db.VarChar(200)
+  city      String   @db.VarChar(100)
+  country   String   @db.VarChar(100)
+  lat       Float
+  lng       Float
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("kindness_acts")
+}
+
+// ── Password resets ───────────────────────────────────────────────────────
+
+model PasswordReset {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  token     String   @unique @db.VarChar(128)
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_resets")
 }

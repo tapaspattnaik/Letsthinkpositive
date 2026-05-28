@@ -87,36 +87,39 @@ export default function RegisterPage() {
           {/* Name + Email */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-[0.8rem] font-semibold text-teal-deep mb-1.5">Full name *</label>
-              <input required value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                placeholder="Your name"
+              <label htmlFor="reg-name" className="block text-[0.8rem] font-semibold text-teal-deep mb-1.5">Full name *</label>
+              <input id="reg-name" required value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                placeholder="Your name" autoComplete="name"
+                aria-describedby={error ? 'reg-error' : undefined}
                 className="w-full border border-teal-light rounded-[14px] px-4 py-2.5 text-[0.93rem] outline-none focus:border-teal-mid transition-colors bg-ivory" />
             </div>
             <div>
-              <label className="block text-[0.8rem] font-semibold text-teal-deep mb-1.5">Phone (optional)</label>
-              <input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
-                placeholder="+44 7700 900000" type="tel"
+              <label htmlFor="reg-phone" className="block text-[0.8rem] font-semibold text-teal-deep mb-1.5">Phone (optional)</label>
+              <input id="reg-phone" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+                placeholder="+44 7700 900000" type="tel" autoComplete="tel"
                 className="w-full border border-teal-light rounded-[14px] px-4 py-2.5 text-[0.93rem] outline-none focus:border-teal-mid transition-colors bg-ivory" />
             </div>
           </div>
 
           <div>
-            <label className="block text-[0.8rem] font-semibold text-teal-deep mb-1.5">Email address *</label>
-            <input required type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-              placeholder="you@example.com"
+            <label htmlFor="reg-email" className="block text-[0.8rem] font-semibold text-teal-deep mb-1.5">Email address *</label>
+            <input id="reg-email" required type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+              placeholder="you@example.com" autoComplete="email"
+              aria-describedby={error ? 'reg-error' : undefined}
               className="w-full border border-teal-light rounded-[14px] px-4 py-2.5 text-[0.93rem] outline-none focus:border-teal-mid transition-colors bg-ivory" />
           </div>
 
           <div>
-            <label className="block text-[0.8rem] font-semibold text-teal-deep mb-1.5">Password *</label>
-            <input required type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-              placeholder="At least 8 characters" minLength={8}
+            <label htmlFor="reg-password" className="block text-[0.8rem] font-semibold text-teal-deep mb-1.5">Password *</label>
+            <input id="reg-password" required type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+              placeholder="At least 8 characters" minLength={8} autoComplete="new-password"
+              aria-describedby={error ? 'reg-error' : undefined}
               className="w-full border border-teal-light rounded-[14px] px-4 py-2.5 text-[0.93rem] outline-none focus:border-teal-mid transition-colors bg-ivory" />
           </div>
 
           <div>
-            <label className="block text-[0.8rem] font-semibold text-teal-deep mb-1.5">A little about you (optional)</label>
-            <textarea value={form.bio} onChange={e => setForm(f => ({ ...f, bio: e.target.value }))}
+            <label htmlFor="reg-bio" className="block text-[0.8rem] font-semibold text-teal-deep mb-1.5">A little about you (optional)</label>
+            <textarea id="reg-bio" value={form.bio} onChange={e => setForm(f => ({ ...f, bio: e.target.value }))}
               placeholder="What brings you here? What are you working through, or working towards?"
               rows={3}
               className="w-full border border-teal-light rounded-[14px] px-4 py-2.5 text-[0.93rem] outline-none focus:border-teal-mid transition-colors bg-ivory resize-none" />
@@ -128,6 +131,7 @@ export default function RegisterPage() {
             <div className="flex flex-wrap gap-2">
               {INTERESTS.map(i => (
                 <button key={i} type="button" onClick={() => toggle(i)}
+                  aria-pressed={selected.includes(i)}
                   className={`px-3.5 py-1.5 rounded-full border text-[0.82rem] font-medium transition-all
                     ${selected.includes(i)
                       ? 'bg-teal-deep text-white border-teal-deep'
@@ -161,7 +165,7 @@ export default function RegisterPage() {
             </span>
           </label>
 
-          {error && <p className="text-red-500 text-[0.85rem] text-center">{error}</p>}
+          {error && <p id="reg-error" role="alert" className="text-red-500 text-[0.85rem] text-center">{error}</p>}
 
           <button type="submit" disabled={loading || !agreed}
             className="w-full bg-teal-deep text-white py-3.5 rounded-full font-semibold text-[0.97rem] hover:bg-teal-dark transition-colors disabled:opacity-60">

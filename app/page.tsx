@@ -6,7 +6,9 @@ import { WellnessPillars }  from '@/components/home/WellnessPillars'
 import { FeatureCards }     from '@/components/home/FeatureCards'
 import { PromoPanel }       from '@/components/home/PromoPanel'
 import { BlogTeaser }       from '@/components/home/BlogTeaser'
+import { StoryOfWeek }      from '@/components/home/StoryOfWeek'
 import { Newsletter }       from '@/components/home/Newsletter'
+import { DailyCheckIn }    from '@/components/home/DailyCheckIn'
 import Link from 'next/link'
 
 export default function HomePage() {
@@ -15,11 +17,17 @@ export default function HomePage() {
       <Hero />
       <QuoteSection />
       <WellnessPillars />
+      <section className="py-12 px-[5%] bg-ivory">
+        <div className="max-w-2xl mx-auto">
+          <DailyCheckIn />
+        </div>
+      </section>
       <FeatureCards />
       <PromoPanel />
       <SuperbManSection />
       <Pillars />
       <BlogTeaser />
+      <StoryOfWeek />
 
       {/* Contagious CTA */}
       <section className="text-center py-20 px-[5%] bg-gradient-to-br from-teal-dark to-teal-deep relative overflow-hidden">
