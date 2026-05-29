@@ -3,12 +3,13 @@ import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 
 // GET — fetch posts (members only)
-export async function GET(_: NextRequest, { params }: { params: { slug: string } }) {
-  const session = await getSession()
+export async function GET(_: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  const session  = await getSession()
   if (!session?.user?.id)
     return NextResponse.json({ error: 'Members only.' }, { status: 401 })
 
-  const circle = await prisma.circle.findUnique({ where: { slug: params.slug } })
+  const circle = await prisma.circle.findUnique({ where: { slug } })
   if (!circle) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   const userId   = Number(session.user.id)
@@ -43,12 +44,13 @@ export async function GET(_: NextRequest, { params }: { params: { slug: string }
 }
 
 // POST — create post
-export async function POST(req: NextRequest, { params }: { params: { slug: string } }) {
-  const session = await getSession()
+export async function POST(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  const session  = await getSession()
   if (!session?.user?.id)
     return NextResponse.json({ error: 'Sign in to post.' }, { status: 401 })
 
-  const circle = await prisma.circle.findUnique({ where: { slug: params.slug } })
+  const circle = await prisma.circle.findUnique({ where: { slug } })
   if (!circle) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   const userId   = Number(session.user.id)

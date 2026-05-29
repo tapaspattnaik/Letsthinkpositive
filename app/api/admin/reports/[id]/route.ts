@@ -53,10 +53,11 @@ async function sendReporterEmail(to: string, reporterName: string, adminNote: st
 }
 
 // PATCH — admin resolves a report (adds note, optionally deletes post)
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!await requireAdmin()) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
-  const reportId = Number(params.id)
+  const { id } = await params
+  const reportId = Number(id)
   const { adminNote, action } = await req.json()
   // action: 'remove' | 'keep' | 'dismiss'
 

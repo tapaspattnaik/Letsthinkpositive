@@ -5,13 +5,14 @@ import { createNotification } from '@/lib/notifications'
 
 const VALID_EMOJIS = ['🙏', '❤️', '💪', '✨', '😊']
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const session = await getSession()
   if (!session?.user?.id)
     return NextResponse.json({ error: 'Sign in to react.' }, { status: 401 })
 
   const userId = Number(session.user.id)
-  const postId = Number(params.id)
+  const postId = Number(id)
   const { emoji } = await req.json()
 
   if (!VALID_EMOJIS.includes(emoji))
@@ -54,7 +55,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   })
 
   return NextResponse.json({
-    counts:    Object.fromEntries(reactions.map(r => [r.emoji, r._count.emoji])),
+    counts:      Object.fromEntries(reactions.map(r => [r.emoji, r._count.emoji])),
     myReactions: myReactions.map(r => r.emoji),
   })
 }

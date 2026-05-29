@@ -3,13 +3,14 @@ import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { createNotification } from '@/lib/notifications'
 
-export async function POST(_: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const session = await getSession()
   if (!session?.user?.id)
     return NextResponse.json({ error: 'Sign in to like.' }, { status: 401 })
 
   const userId = Number(session.user.id)
-  const postId = Number(params.id)
+  const postId = Number(id)
 
   const existing = await prisma.communityLike.findUnique({
     where: { postId_userId: { postId, userId } },

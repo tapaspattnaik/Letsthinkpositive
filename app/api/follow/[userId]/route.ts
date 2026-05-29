@@ -4,13 +4,14 @@ import { prisma } from '@/lib/db'
 import { createNotification } from '@/lib/notifications'
 
 // POST — toggle follow/unfollow
-export async function POST(_: NextRequest, { params }: { params: { userId: string } }) {
-  const session = await getSession()
+export async function POST(_: NextRequest, { params }: { params: Promise<{ userId: string }> }) {
+  const { userId: userIdStr } = await params
+  const session     = await getSession()
   if (!session?.user?.id)
     return NextResponse.json({ error: 'Sign in to follow.' }, { status: 401 })
 
   const followerId  = Number(session.user.id)
-  const followingId = Number(params.userId)
+  const followingId = Number(userIdStr)
 
   if (followerId === followingId)
     return NextResponse.json({ error: 'Cannot follow yourself.' }, { status: 400 })
@@ -40,9 +41,10 @@ export async function POST(_: NextRequest, { params }: { params: { userId: strin
 }
 
 // GET — check follow status + counts for a user
-export async function GET(_: NextRequest, { params }: { params: { userId: string } }) {
+export async function GET(_: NextRequest, { params }: { params: Promise<{ userId: string }> }) {
+  const { userId: userIdStr } = await params
   const session     = await getSession()
-  const targetId    = Number(params.userId)
+  const targetId    = Number(userIdStr)
   const viewerId    = session?.user?.id ? Number(session.user.id) : null
 
   const [followerCount, followingCount, isFollowing] = await Promise.all([

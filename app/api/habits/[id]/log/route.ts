@@ -3,13 +3,14 @@ import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 
 // POST — toggle today's completion for a habit
-export async function POST(_: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const session = await getSession()
   if (!session?.user?.id)
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
 
   const userId  = Number(session.user.id)
-  const habitId = Number(params.id)
+  const habitId = Number(id)
   const today   = new Date().toISOString().split('T')[0]
 
   // Verify ownership
@@ -53,13 +54,14 @@ export async function POST(_: NextRequest, { params }: { params: { id: string } 
 }
 
 // GET — streak / completion history for last 7 weeks
-export async function GET(_: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const session = await getSession()
   if (!session?.user?.id)
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
 
   const userId  = Number(session.user.id)
-  const habitId = Number(params.id)
+  const habitId = Number(id)
 
   // last 49 days
   const cutoff = new Date()
