@@ -52,10 +52,18 @@ function LoginForm() {
             <LtpLogo size={44} />
           </Link>
           <h1 className="font-display text-[2rem] text-charcoal font-bold">Welcome back</h1>
-          {justRegistered
-            ? <p className="text-teal-mid text-[0.9rem] mt-1 font-semibold">Account created! Sign in to continue 🌿</p>
-            : <p className="text-text-xlight mt-1 text-[0.9rem]">Sign in to your account</p>}
+          <p className="text-text-xlight mt-1 text-[0.9rem]">Sign in to your account</p>
         </div>
+
+        {justRegistered && (
+          <div className="flex items-center gap-3 bg-teal-ghost border border-teal-mid rounded-[20px] px-5 py-4 mb-5 animate-fade-in">
+            <span className="text-[1.8rem] flex-shrink-0">🎉</span>
+            <div>
+              <p className="text-teal-deep font-bold text-[0.95rem] leading-none mb-1">Account created successfully!</p>
+              <p className="text-teal-mid text-[0.82rem]">Sign in below to get started 🌿</p>
+            </div>
+          </div>
+        )}
 
         <div className="bg-white rounded-[28px] p-8 shadow-lift border border-teal-light space-y-4">
           {/* Google sign-in */}

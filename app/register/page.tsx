@@ -51,6 +51,7 @@ export default function RegisterPage() {
   const [agreed,       setAgreed]       = useState(false)
   const [error,        setError]        = useState('')
   const [loading,      setLoading]      = useState(false)
+  const [success,      setSuccess]      = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [pwFocused,    setPwFocused]    = useState(false)
 
@@ -81,7 +82,8 @@ export default function RegisterPage() {
       })
       const data = await res.json()
       if (!res.ok) { setError(data.error || 'Something went wrong.'); return }
-      router.push('/login?registered=1')
+      setSuccess(true)
+      setTimeout(() => router.push('/login?registered=1'), 2500)
     } finally {
       setLoading(false)
     }
@@ -262,9 +264,19 @@ export default function RegisterPage() {
             </span>
           </label>
 
-          {error && <p id="reg-error" role="alert" className="text-red-500 text-[0.85rem] text-center">{error}</p>}
+          {success && (
+            <div role="status" className="flex items-center gap-3 bg-teal-ghost border border-teal-mid rounded-[16px] px-5 py-4 animate-fade-in">
+              <span className="text-[1.6rem] flex-shrink-0">🎉</span>
+              <div>
+                <p className="text-teal-deep font-bold text-[0.95rem] leading-none mb-1">Account created!</p>
+                <p className="text-teal-mid text-[0.82rem]">Taking you to sign in…</p>
+              </div>
+            </div>
+          )}
 
-          <button type="submit" disabled={loading || !agreed}
+          {!success && error && <p id="reg-error" role="alert" className="text-red-500 text-[0.85rem] text-center">{error}</p>}
+
+          <button type="submit" disabled={loading || !agreed || success}
             className="w-full bg-teal-deep text-white py-3.5 rounded-full font-semibold text-[0.97rem] hover:bg-teal-dark transition-colors disabled:opacity-60">
             {loading ? 'Creating your account…' : 'Create my account →'}
           </button>
