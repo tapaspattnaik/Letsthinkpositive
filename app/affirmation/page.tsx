@@ -495,7 +495,6 @@ export default function AffirmationPage() {
   const downloadCard = useCallback(async () => {
     if (!cardRef.current) return
     try {
-      // @ts-expect-error — html2canvas is installed separately (npm install html2canvas)
       const html2canvas = (await import('html2canvas')).default
       const canvas = await html2canvas(cardRef.current, {
         scale: 2,
