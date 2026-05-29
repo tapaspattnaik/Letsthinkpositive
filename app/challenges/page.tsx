@@ -90,9 +90,15 @@ type Progress = Record<string, {
   startedAt: string
 }>
 
+type ChallengeStats = Record<string, {
+  count: number
+  avatars: { url: string | null; name: string }[]
+}>
+
 export default function ChallengesPage() {
   const { data: session } = useSession()
   const [progress,  setProgress]  = useState<Progress>({})
+  const [stats,     setStats]     = useState<ChallengeStats>({})
   const [loading,   setLoading]   = useState<string | null>(null)
   const [toast,     setToast]     = useState<{ msg: string; badge?: { icon: string; name: string } } | null>(null)
 
@@ -105,6 +111,13 @@ export default function ChallengesPage() {
   }, [session])
 
   useEffect(() => { fetchProgress() }, [fetchProgress])
+
+  useEffect(() => {
+    fetch('/api/challenges/stats')
+      .then(r => r.ok ? r.json() : {})
+      .then(setStats)
+      .catch(() => {})
+  }, [])
 
   function showToast(msg: string, badge?: { icon: string; name: string }) {
     setToast({ msg, badge })
@@ -195,7 +208,7 @@ export default function ChallengesPage() {
             <div className="flex items-center gap-3 mb-5">
               <span className="bg-amber text-charcoal text-[0.7rem] font-bold tracking-[0.15em] uppercase px-3 py-1 rounded-full">🔄 Challenge of the Week</span>
             </div>
-            <ChallengeCard c={weekly} progress={progress[weekly.id]} onEnroll={enroll} onCheckin={checkin} loading={loading} today={today} />
+            <ChallengeCard c={weekly} progress={progress[weekly.id]} stats={stats[weekly.id]} onEnroll={enroll} onCheckin={checkin} loading={loading} today={today} />
           </div>
         )}
 
@@ -203,7 +216,7 @@ export default function ChallengesPage() {
         {featured && (
           <div className="mb-14">
             <h2 className="font-display text-[1.15rem] text-charcoal font-semibold mb-5">🏆 Most Popular</h2>
-            <ChallengeCard c={featured} progress={progress[featured.id]} onEnroll={enroll} onCheckin={checkin} loading={loading} today={today} large />
+            <ChallengeCard c={featured} progress={progress[featured.id]} stats={stats[featured.id]} onEnroll={enroll} onCheckin={checkin} loading={loading} today={today} large />
           </div>
         )}
 
@@ -212,7 +225,7 @@ export default function ChallengesPage() {
           <h2 className="font-display text-[1.15rem] text-charcoal font-semibold mb-6">All Challenges</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {rest.map(c => (
-              <ChallengeCard key={c.id} c={c} progress={progress[c.id]} onEnroll={enroll} onCheckin={checkin} loading={loading} today={today} />
+              <ChallengeCard key={c.id} c={c} progress={progress[c.id]} stats={stats[c.id]} onEnroll={enroll} onCheckin={checkin} loading={loading} today={today} />
             ))}
           </div>
         </div>
@@ -223,10 +236,12 @@ export default function ChallengesPage() {
 
 type ChallengeType = typeof CHALLENGES[number]
 type ProgressEntry = Progress[string] | undefined
+type StatsEntry    = ChallengeStats[string] | undefined
 
-function ChallengeCard({ c, progress, onEnroll, onCheckin, loading, today, large = false }: {
+function ChallengeCard({ c, progress, stats, onEnroll, onCheckin, loading, today, large = false }: {
   c: ChallengeType
   progress: ProgressEntry
+  stats: StatsEntry
   onEnroll: (id: string) => void
   onCheckin: (id: string, totalDays: number) => void
   loading: string | null
@@ -252,10 +267,34 @@ function ChallengeCard({ c, progress, onEnroll, onCheckin, loading, today, large
         <p className="text-[0.82rem] text-text-light mb-1"><strong className="text-charcoal">Goal:</strong> {c.outcome}</p>
 
         {/* Badge preview */}
-        <div className="flex items-center gap-2 mt-2 mb-4">
+        <div className="flex items-center gap-2 mt-2 mb-3">
           <span className="text-[1rem]">{c.badge.icon}</span>
           <span className="text-[0.76rem] text-text-xlight">Complete to earn: <strong className="text-charcoal">{c.badge.name}</strong> <span className="text-amber">({c.badge.tier})</span></span>
         </div>
+
+        {/* Participant count + stacked avatars */}
+        {stats && stats.count > 0 && (
+          <div className="flex items-center gap-2.5 mb-4">
+            <div className="flex -space-x-2.5">
+              {stats.avatars.slice(0, 5).map((a, i) => (
+                <div
+                  key={i}
+                  title={a.name}
+                  style={{ zIndex: 10 - i }}
+                  className="relative w-7 h-7 rounded-full border-2 border-white overflow-hidden bg-teal-ghost flex items-center justify-center flex-shrink-0 shadow-sm">
+                  {a.url
+                    ? <img src={a.url} alt={a.name} className="w-full h-full object-cover" />
+                    : <span className="text-[0.58rem] font-bold text-teal-deep leading-none">{a.name.charAt(0).toUpperCase()}</span>
+                  }
+                </div>
+              ))}
+            </div>
+            <span className="text-[0.78rem] text-text-mid font-medium">
+              <strong className="text-charcoal">{stats.count.toLocaleString()}</strong>{' '}
+              {stats.count === 1 ? 'person' : 'people'} joined
+            </span>
+          </div>
+        )}
 
         {/* Progress bar */}
         {enrolled && !isComplete && (
