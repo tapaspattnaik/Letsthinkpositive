@@ -23,15 +23,38 @@ const INTERESTS = [
   'Journaling', 'Community', 'Kids Wellness', 'Creative Arts',
 ]
 
+// ── Password strength helpers ─────────────────────────────────────────────
+const RULES = [
+  { id: 'len',     label: 'At least 8 characters',       test: (p: string) => p.length >= 8 },
+  { id: 'upper',   label: 'One uppercase letter (A–Z)',   test: (p: string) => /[A-Z]/.test(p) },
+  { id: 'number',  label: 'One number (0–9)',             test: (p: string) => /[0-9]/.test(p) },
+  { id: 'special', label: 'One special character (!@#…)', test: (p: string) => /[^A-Za-z0-9]/.test(p) },
+]
+
+function strength(p: string): 0 | 1 | 2 | 3 {
+  const passed = RULES.filter(r => r.test(p)).length
+  if (passed <= 1) return 1
+  if (passed === 2 || passed === 3) return 2
+  return 3
+}
+
+const STRENGTH_LABEL = ['', 'Weak', 'Fair', 'Strong']
+const STRENGTH_COLOR = ['', 'bg-red-400', 'bg-amber', 'bg-teal-mid']
+const STRENGTH_TEXT  = ['', 'text-red-500', 'text-amber', 'text-teal-mid']
+
 export default function RegisterPage() {
   const router = useRouter()
   const [form, setForm] = useState({
-    name: '', email: '', password: '', phone: '', bio: '',
+    name: '', email: '', password: '', confirm: '', phone: '', bio: '',
   })
-  const [selected, setSelected] = useState<string[]>([])
-  const [agreed,   setAgreed]   = useState(false)
-  const [error,    setError]    = useState('')
-  const [loading,  setLoading]  = useState(false)
+  const [selected,     setSelected]     = useState<string[]>([])
+  const [agreed,       setAgreed]       = useState(false)
+  const [error,        setError]        = useState('')
+  const [loading,      setLoading]      = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [pwFocused,    setPwFocused]    = useState(false)
+
+  const pwStrength = form.password ? strength(form.password) : 0
 
   function toggle(interest: string) {
     setSelected(prev =>
@@ -41,15 +64,20 @@ export default function RegisterPage() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
-    if (selected.length === 0) { setError('Please pick at least one interest.'); return }
-    if (!agreed) { setError('Please agree to the Terms & Conditions to continue.'); return }
+    if (form.password.length < 8)           { setError('Password must be at least 8 characters.'); return }
+    if (pwStrength < 2)                      { setError('Password is too weak — add uppercase letters, numbers or symbols.'); return }
+    if (form.password !== form.confirm)      { setError('Passwords do not match.'); return }
+    if (selected.length === 0)               { setError('Please pick at least one interest.'); return }
+    if (!agreed)                             { setError('Please agree to the Terms & Conditions to continue.'); return }
     setError('')
     setLoading(true)
     try {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { confirm: _confirm, ...payload } = form
       const res = await fetch('/api/auth/register', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ ...form, interests: selected }),
+        body:    JSON.stringify({ ...payload, interests: selected }),
       })
       const data = await res.json()
       if (!res.ok) { setError(data.error || 'Something went wrong.'); return }
@@ -109,12 +137,81 @@ export default function RegisterPage() {
               className="w-full border border-teal-light rounded-[14px] px-4 py-2.5 text-[0.93rem] outline-none focus:border-teal-mid transition-colors bg-ivory" />
           </div>
 
+          {/* Password */}
           <div>
             <label htmlFor="reg-password" className="block text-[0.8rem] font-semibold text-teal-deep mb-1.5">Password *</label>
-            <input id="reg-password" required type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-              placeholder="At least 8 characters" minLength={8} autoComplete="new-password"
-              aria-describedby={error ? 'reg-error' : undefined}
-              className="w-full border border-teal-light rounded-[14px] px-4 py-2.5 text-[0.93rem] outline-none focus:border-teal-mid transition-colors bg-ivory" />
+            <div className="relative">
+              <input
+                id="reg-password" required
+                type={showPassword ? 'text' : 'password'}
+                value={form.password}
+                onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+                onFocus={() => setPwFocused(true)}
+                onBlur={() => setPwFocused(false)}
+                placeholder="Create a strong password"
+                autoComplete="new-password"
+                className="w-full border border-teal-light rounded-[14px] px-4 py-2.5 pr-11 text-[0.93rem] outline-none focus:border-teal-mid transition-colors bg-ivory" />
+              <button
+                type="button"
+                onClick={() => setShowPassword(s => !s)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-text-xlight hover:text-charcoal transition-colors text-[0.85rem]"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}>
+                {showPassword ? '🙈' : '👁️'}
+              </button>
+            </div>
+
+            {/* Strength bar */}
+            {form.password && (
+              <div className="mt-2">
+                <div className="flex gap-1 mb-1">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className={`h-1 flex-1 rounded-full transition-all duration-300 ${i <= pwStrength ? STRENGTH_COLOR[pwStrength] : 'bg-teal-light'}`} />
+                  ))}
+                </div>
+                <p className={`text-[0.73rem] font-semibold ${STRENGTH_TEXT[pwStrength]}`}>
+                  {STRENGTH_LABEL[pwStrength]}
+                </p>
+              </div>
+            )}
+
+            {/* Rules checklist — shown while focused or if weak */}
+            {(pwFocused || (form.password && pwStrength < 3)) && (
+              <ul className="mt-2 space-y-1">
+                {RULES.map(rule => {
+                  const pass = rule.test(form.password)
+                  return (
+                    <li key={rule.id} className={`flex items-center gap-1.5 text-[0.75rem] transition-colors ${pass ? 'text-teal-mid' : 'text-text-xlight'}`}>
+                      <span className="text-[0.7rem]">{pass ? '✅' : '○'}</span>
+                      {rule.label}
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
+          </div>
+
+          {/* Confirm password */}
+          <div>
+            <label htmlFor="reg-confirm" className="block text-[0.8rem] font-semibold text-teal-deep mb-1.5">Confirm password *</label>
+            <div className="relative">
+              <input
+                id="reg-confirm" required
+                type={showPassword ? 'text' : 'password'}
+                value={form.confirm}
+                onChange={e => setForm(f => ({ ...f, confirm: e.target.value }))}
+                placeholder="Repeat your password"
+                autoComplete="new-password"
+                className={`w-full border rounded-[14px] px-4 py-2.5 text-[0.93rem] outline-none focus:border-teal-mid transition-colors bg-ivory
+                  ${form.confirm && form.confirm !== form.password ? 'border-red-300 focus:border-red-400' : 'border-teal-light'}`} />
+              {form.confirm && (
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[0.85rem]">
+                  {form.confirm === form.password ? '✅' : '❌'}
+                </span>
+              )}
+            </div>
+            {form.confirm && form.confirm !== form.password && (
+              <p className="text-[0.73rem] text-red-500 mt-1">Passwords do not match</p>
+            )}
           </div>
 
           <div>
