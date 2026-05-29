@@ -42,8 +42,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${playfair.variable} ${dmSans.variable} ${dmSerif.variable}`}>
-      <body className="font-body">
+    <html lang="en" className={`${playfair.variable} ${dmSans.variable} ${dmSerif.variable}`} suppressHydrationWarning>
+      <body className="font-body" suppressHydrationWarning>
         <SessionProvider>
           {/* Skip-to-content — visible on focus for keyboard/screen-reader users */}
           <a
