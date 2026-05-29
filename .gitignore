@@ -32,3 +32,5 @@ Thumbs.db
 
 # website backup (keep locally, not in git)
 website/
+
+.vercel
