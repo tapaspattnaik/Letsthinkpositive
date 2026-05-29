@@ -44,6 +44,8 @@ const config: Config = {
         'pulse-ring':  'pulse-ring 4s ease-in-out infinite',
         'stroke-glow': 'stroke-glow 2.5s ease-in-out infinite',
         'arc-glow':    'arc-glow 3s ease-in-out infinite',
+        'marquee':     'marquee 30s linear infinite',
+        'fade-in':     'fade-in 0.3s ease-out',
       },
       keyframes: {
         'pulse-ring': {
@@ -57,6 +59,14 @@ const config: Config = {
         'arc-glow': {
           '0%, 100%': { borderColor: '#E8A020' },
           '50%':       { borderColor: '#F5C96A' },
+        },
+        'marquee': {
+          '0%':   { transform: 'translateX(0)' },
+          '100%': { transform: 'translateX(-50%)' },
+        },
+        'fade-in': {
+          '0%':   { opacity: '0', transform: 'translateY(-4px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
         },
       },
     },

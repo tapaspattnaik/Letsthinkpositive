@@ -4,6 +4,7 @@ import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { SessionProvider } from '@/components/layout/SessionProvider'
 import { BitWidget } from '@/components/BitWidget'
+import { ConstructionBanner } from '@/components/layout/ConstructionBanner'
 import './globals.css'
 
 const playfair = Playfair_Display({
@@ -52,6 +53,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           >
             Skip to main content
           </a>
+          <ConstructionBanner />
           <Navbar />
           <main id="main-content" className="pt-[72px]">
             {children}
