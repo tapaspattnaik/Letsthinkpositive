@@ -72,6 +72,19 @@ export default function CirclesPage() {
               {[0,1,2].map(i => <span key={i} className="w-2 h-2 rounded-full bg-teal-mid animate-bounce" style={{ animationDelay: `${i*150}ms` }} />)}
             </div>
           </div>
+        ) : circles.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <span className="text-[4rem] mb-4">🔒</span>
+            <h2 className="font-display text-[1.4rem] text-charcoal font-bold mb-2">Circles are coming soon</h2>
+            <p className="text-text-mid text-[0.92rem] max-w-[380px] leading-[1.75] mb-6">
+              We&apos;re setting up private group spaces for the community. Check back soon — or{' '}
+              <Link href="/community" className="text-teal-mid font-semibold hover:text-teal-deep no-underline">visit the community</Link>{' '}
+              in the meantime.
+            </p>
+            <Link href="/community" className="bg-teal-deep text-white px-6 py-3 rounded-full font-semibold text-[0.9rem] no-underline hover:bg-teal-dark transition-colors">
+              Go to Community →
+            </Link>
+          </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
             {circles.map(c => (

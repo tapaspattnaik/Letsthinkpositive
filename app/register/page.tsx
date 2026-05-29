@@ -38,6 +38,10 @@ function strength(p: string): 0 | 1 | 2 | 3 {
   return 3
 }
 
+// ── Email validation ─────────────────────────────────────────────────────────
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
+function isValidEmail(e: string) { return EMAIL_RE.test(e.trim()) }
+
 const STRENGTH_LABEL = ['', 'Weak', 'Fair', 'Strong']
 const STRENGTH_COLOR = ['', 'bg-red-400', 'bg-amber', 'bg-teal-mid']
 const STRENGTH_TEXT  = ['', 'text-red-500', 'text-amber', 'text-teal-mid']
@@ -54,6 +58,7 @@ export default function RegisterPage() {
   const [success,      setSuccess]      = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [pwFocused,    setPwFocused]    = useState(false)
+  const [emailTouched, setEmailTouched] = useState(false)
 
   const pwStrength = form.password ? strength(form.password) : 0
 
@@ -63,8 +68,12 @@ export default function RegisterPage() {
     )
   }
 
+  const emailValid   = isValidEmail(form.email)
+  const emailInvalid = emailTouched && form.email.length > 0 && !emailValid
+
   async function submit(e: React.FormEvent) {
     e.preventDefault()
+    if (!isValidEmail(form.email))           { setError('Please enter a valid email address.'); return }
     if (form.password.length < 8)           { setError('Password must be at least 8 characters.'); return }
     if (pwStrength < 2)                      { setError('Password is too weak — add uppercase letters, numbers or symbols.'); return }
     if (form.password !== form.confirm)      { setError('Passwords do not match.'); return }
@@ -133,10 +142,35 @@ export default function RegisterPage() {
 
           <div>
             <label htmlFor="reg-email" className="block text-[0.8rem] font-semibold text-teal-deep mb-1.5">Email address *</label>
-            <input id="reg-email" required type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-              placeholder="you@example.com" autoComplete="email"
-              aria-describedby={error ? 'reg-error' : undefined}
-              className="w-full border border-teal-light rounded-[14px] px-4 py-2.5 text-[0.93rem] outline-none focus:border-teal-mid transition-colors bg-ivory" />
+            <div className="relative">
+              <input
+                id="reg-email" required type="email"
+                value={form.email}
+                onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                onBlur={() => setEmailTouched(true)}
+                placeholder="you@example.com"
+                autoComplete="email"
+                aria-describedby="email-hint"
+                className={`w-full border rounded-[14px] px-4 py-2.5 pr-10 text-[0.93rem] outline-none transition-colors bg-ivory
+                  ${emailInvalid
+                    ? 'border-red-300 focus:border-red-400'
+                    : emailTouched && emailValid
+                    ? 'border-teal-mid focus:border-teal-deep'
+                    : 'border-teal-light focus:border-teal-mid'}`} />
+              {form.email && emailTouched && (
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[0.85rem]">
+                  {emailValid ? '✅' : '❌'}
+                </span>
+              )}
+            </div>
+            {emailInvalid && (
+              <p id="email-hint" className="text-[0.73rem] text-red-500 mt-1">
+                Please enter a valid email address (e.g. you@example.com)
+              </p>
+            )}
+            {emailTouched && emailValid && (
+              <p className="text-[0.73rem] text-teal-mid mt-1">✓ Looks good!</p>
+            )}
           </div>
 
           {/* Password */}
