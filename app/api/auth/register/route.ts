@@ -45,7 +45,15 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, userId: user.id })
   } catch (err) {
-    console.error('Register error:', err)
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error('Register error:', msg)
+    // Surface DB connection errors clearly in development / staging
+    if (msg.includes('connect') || msg.includes('ECONNREFUSED') || msg.includes("Can't reach")) {
+      return NextResponse.json({ error: 'Database connection failed. Please try again shortly.' }, { status: 503 })
+    }
+    if (msg.includes('Unknown column') || msg.includes("doesn't exist")) {
+      return NextResponse.json({ error: 'Database schema is out of date — please contact support.' }, { status: 500 })
+    }
     return NextResponse.json({ error: 'Something went wrong. Please try again.' }, { status: 500 })
   }
 }
