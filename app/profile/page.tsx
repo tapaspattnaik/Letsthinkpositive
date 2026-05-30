@@ -22,6 +22,15 @@ interface ProgressEntry {
   startedAt: string; completedAt: string | null
 }
 interface Circle { id: number; slug: string; name: string; icon: string; isMember: boolean }
+
+interface FeedPost {
+  id: number; type: 'community' | 'circle'
+  title?: string; body: string; author?: string
+  user: { id: number; name: string; avatarUrl: string | null } | null
+  circle?: { slug: string; name: string; icon: string }
+  tags?: string; likeCount: number; likedByMe: boolean
+  commentCount?: number; createdAt: string
+}
 interface UserProfile {
   id: number; name: string; email: string; phone?: string; bio?: string
   interests: string; avatarUrl?: string; createdAt: string
@@ -57,6 +66,9 @@ export default function ProfilePage() {
 
   const [profile,   setProfile]   = useState<UserProfile | null>(null)
   const [circles,   setCircles]   = useState<Circle[]>([])
+  const [feed,      setFeed]      = useState<FeedPost[]>([])
+  const [feedLoading, setFeedLoading] = useState(false)
+  const [feedFilter, setFeedFilter] = useState<'all' | 'community' | 'circles'>('all')
   const [editing,   setEditing]   = useState(false)
   const [form,      setForm]      = useState({ name: '', phone: '', bio: '' })
   const [selected,  setSelected]  = useState<string[]>([])
@@ -77,6 +89,15 @@ export default function ProfilePage() {
       setForm({ name: data.name, phone: data.phone ?? '', bio: data.bio ?? '' })
       setSelected(data.interests ? data.interests.split(',').filter(Boolean) : [])
     })
+    setFeedLoading(true)
+    fetch('/api/feed/home').then(r => r.ok ? r.json() : { community: [], circles: [] }).then(data => {
+      const combined: FeedPost[] = [
+        ...(data.community ?? []),
+        ...(data.circles ?? []),
+      ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      setFeed(combined)
+      setFeedLoading(false)
+    }).catch(() => setFeedLoading(false))
     fetch('/api/circles').then(r => r.json()).then(data => {
       if (Array.isArray(data)) setCircles(data.filter((c: Circle) => c.isMember))
     })
@@ -395,94 +416,101 @@ export default function ProfilePage() {
               ))}
             </div>
 
-            {/* ── OVERVIEW TAB ─────────────────────────────────────── */}
+            {/* ── OVERVIEW TAB — Social Home Feed ──────────────────── */}
             {activeTab === 'overview' && (
-              <div className="space-y-5">
+              <div className="space-y-4">
 
-                {/* Active challenges preview */}
+                {/* Active challenges mini strip */}
                 {activeChallenges.length > 0 && (
-                  <div className="bg-white rounded-[24px] p-6 shadow-card border border-teal-light/60">
-                    <div className="flex items-center justify-between mb-5">
-                      <div>
-                        <h2 className="font-display text-[1.15rem] font-bold text-charcoal">Active Challenges</h2>
-                        <p className="text-text-xlight text-[0.78rem]">Your ongoing wellness journeys</p>
-                      </div>
-                      <Link href="/challenges" className="text-[0.78rem] text-teal-mid font-semibold hover:text-teal-deep no-underline transition-colors">
-                        View all →
+                  <div className="bg-gradient-to-r from-teal-deep to-teal-dark rounded-[20px] px-5 py-4 flex items-center gap-4 flex-wrap">
+                    <span className="text-[1.5rem]">🏆</span>
+                    <div className="flex-1">
+                      <p className="text-white font-semibold text-[0.88rem]">{activeChallenges.length} active challenge{activeChallenges.length > 1 ? 's' : ''}</p>
+                      <p className="text-white/60 text-[0.75rem]">{activeChallenges[0] && CHALLENGE_META[activeChallenges[0].challengeSlug]?.title}</p>
+                    </div>
+                    <Link href="/challenges" className="text-amber text-[0.8rem] font-bold no-underline hover:text-amber-soft transition-colors flex-shrink-0">Check in →</Link>
+                  </div>
+                )}
+
+                {/* Circles joined strip */}
+                {circles.length > 0 && (
+                  <div className="bg-white rounded-[20px] px-5 py-4 shadow-card border border-teal-light/60 flex items-center gap-3 flex-wrap">
+                    <span className="text-text-xlight text-[0.75rem] font-semibold uppercase tracking-wide">Your Circles:</span>
+                    {circles.map(c => (
+                      <Link key={c.id} href={`/circles/${c.slug}`}
+                        className="flex items-center gap-1.5 bg-teal-ghost hover:bg-teal-light/30 border border-teal-light hover:border-teal-mid rounded-full px-3 py-1.5 no-underline transition-all group">
+                        <span className="text-[0.85rem]">{c.icon}</span>
+                        <span className="text-[0.75rem] font-semibold text-teal-deep">{c.name}</span>
+                      </Link>
+                    ))}
+                    <Link href="/circles" className="text-teal-mid text-[0.75rem] font-semibold no-underline hover:text-teal-deep">+ Find more</Link>
+                  </div>
+                )}
+
+                {/* Feed filter */}
+                <div className="flex items-center justify-between">
+                  <div className="flex gap-1.5 bg-teal-ghost/60 rounded-full p-1">
+                    {(['all', 'community', 'circles'] as const).map(f => (
+                      <button key={f} onClick={() => setFeedFilter(f)}
+                        className={`px-4 py-1.5 rounded-full text-[0.78rem] font-semibold transition-all capitalize
+                          ${feedFilter === f ? 'bg-white text-teal-deep shadow-sm' : 'text-text-xlight hover:text-charcoal'}`}>
+                        {f === 'circles' ? '🔒 Circles' : f === 'community' ? '💛 Community' : '🌍 All'}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex gap-3">
+                    <Link href="/community" className="text-[0.78rem] text-teal-mid font-semibold no-underline hover:text-teal-deep transition-colors">Community →</Link>
+                  </div>
+                </div>
+
+                {/* Feed posts */}
+                {feedLoading ? (
+                  <div className="flex justify-center py-12">
+                    <div className="flex gap-1.5">{[0,1,2].map(i => <span key={i} className="w-2 h-2 rounded-full bg-teal-mid animate-bounce" style={{ animationDelay:`${i*150}ms` }} />)}</div>
+                  </div>
+                ) : (() => {
+                  const filtered = feed.filter(p => feedFilter === 'all' || p.type === feedFilter)
+                  if (filtered.length === 0) return (
+                    <div className="bg-white rounded-[20px] p-8 shadow-card border border-teal-light/60 text-center">
+                      <span className="text-[3rem] block mb-3">
+                        {feedFilter === 'circles' ? '🔒' : '💛'}
+                      </span>
+                      <p className="font-semibold text-charcoal text-[0.95rem] mb-2">
+                        {feedFilter === 'circles' ? 'No circle updates yet' : 'No community posts yet'}
+                      </p>
+                      <p className="text-text-mid text-[0.85rem] mb-4">
+                        {feedFilter === 'circles' ? 'Join a circle to see posts from its members.' : 'Be the first to share something with the community.'}
+                      </p>
+                      <Link href={feedFilter === 'circles' ? '/circles' : '/community'}
+                        className="inline-block bg-teal-deep text-white px-6 py-2.5 rounded-full font-semibold text-[0.85rem] no-underline hover:bg-teal-dark transition-colors">
+                        {feedFilter === 'circles' ? 'Browse Circles →' : 'Visit Community →'}
                       </Link>
                     </div>
-                    <div className="space-y-3">
-                      {activeChallenges.slice(0, 3).map(p => {
-                        const meta = CHALLENGE_META[p.challengeSlug]
-                        if (!meta) return null
-                        const days = JSON.parse(p.completedDays) as string[]
-                        const pct  = Math.round((days.length / meta.totalDays) * 100)
-                        return (
-                          <div key={p.id} className={`bg-gradient-to-r ${meta.color} rounded-[16px] px-5 py-4 flex items-center gap-4`}>
-                            <span className="text-[2rem] flex-shrink-0">{meta.icon}</span>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between gap-2 mb-2">
-                                <p className="font-semibold text-[0.9rem] text-charcoal truncate">{meta.title}</p>
-                                <span className="text-[0.72rem] text-text-xlight flex-shrink-0 font-medium">{days.length}/{meta.totalDays} days</span>
-                              </div>
-                              <div className="w-full h-2.5 bg-white/60 rounded-full overflow-hidden">
-                                <div className="h-full bg-teal-mid rounded-full transition-all duration-700" style={{ width: `${pct}%` }} />
-                              </div>
-                              <p className="text-[0.72rem] text-text-xlight mt-1">{pct}% complete</p>
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Featured badge or CTA */}
-                {profile.badges.length > 0 ? (
-                  <div className="bg-white rounded-[24px] p-6 shadow-card border border-teal-light/60">
-                    <div className="flex items-center justify-between mb-4">
-                      <h2 className="font-display text-[1.15rem] font-bold text-charcoal">Latest Badge</h2>
-                      <button onClick={() => setActiveTab('badges')} className="text-[0.78rem] text-teal-mid font-semibold hover:text-teal-deep transition-colors">
-                        All {profile.badges.length} →
-                      </button>
-                    </div>
-                    {(() => {
-                      const latest = profile.badges[0]
-                      const style  = TIER_STYLES[latest.badge.tier] ?? TIER_STYLES.bronze
-                      return (
-                        <div className={`flex items-center gap-5 ${style.bg} border-2 ${style.border} rounded-[20px] p-5`}>
-                          <span className="text-[3rem] flex-shrink-0">{latest.badge.icon}</span>
-                          <div>
-                            <p className={`font-bold text-[1.1rem] ${style.text}`}>{latest.badge.name}</p>
-                            <p className="text-text-mid text-[0.85rem] mt-0.5">{latest.badge.description}</p>
-                            <p className="text-text-xlight text-[0.72rem] mt-1">
-                              Earned {new Date(latest.earnedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
-                            </p>
-                          </div>
-                          <span className={`ml-auto text-[0.7rem] font-bold uppercase tracking-widest ${style.text} flex-shrink-0`}>{style.label}</span>
+                  )
+                  return (
+                    <div className="space-y-4">
+                      {filtered.slice(0, 20).map(post => (
+                        <FeedCard key={`${post.type}-${post.id}`} post={post} />
+                      ))}
+                      {filtered.length > 0 && (
+                        <div className="text-center pt-2">
+                          <Link href={feedFilter === 'circles' ? '/circles' : '/community'}
+                            className="text-teal-mid text-[0.82rem] font-semibold hover:text-teal-deep no-underline transition-colors">
+                            See more in {feedFilter === 'circles' ? 'Circles' : 'Community'} →
+                          </Link>
                         </div>
-                      )
-                    })()}
-                  </div>
-                ) : (
-                  <div className="bg-gradient-to-br from-amber/10 to-white border border-amber/30 rounded-[24px] p-8 text-center">
-                    <span className="text-[3.5rem] block mb-3">🏅</span>
-                    <h3 className="font-display font-bold text-charcoal text-[1.15rem] mb-2">No badges yet — let&apos;s change that!</h3>
-                    <p className="text-text-mid text-[0.88rem] mb-5 max-w-xs mx-auto">Complete your first challenge and earn a badge. Each one is a milestone in your wellness journey.</p>
-                    <Link href="/challenges"
-                      className="inline-block bg-teal-deep text-white px-7 py-3 rounded-full font-semibold text-[0.9rem] no-underline hover:bg-teal-dark transition-colors">
-                      Browse Challenges →
-                    </Link>
-                  </div>
-                )}
+                      )}
+                    </div>
+                  )
+                })()}
 
-                {/* Circles preview */}
+                {/* Circles preview — when no circles joined */}
+                {circles.length === 0 && (
                 <div className="bg-white rounded-[24px] p-6 shadow-card border border-teal-light/60">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="font-display text-[1.15rem] font-bold text-charcoal">My Circles</h2>
                     <Link href="/circles" className="text-[0.78rem] text-teal-mid font-semibold hover:text-teal-deep no-underline transition-colors">Browse all →</Link>
                   </div>
-                  {circles.length === 0 ? (
                     <div className="flex items-center gap-4 bg-teal-ghost/40 rounded-[16px] px-5 py-4">
                       <span className="text-[2rem]">🔒</span>
                       <div>
@@ -491,18 +519,9 @@ export default function ProfilePage() {
                       </div>
                       <Link href="/circles" className="ml-auto flex-shrink-0 text-teal-mid text-[0.8rem] font-semibold no-underline hover:text-teal-deep transition-colors">Join →</Link>
                     </div>
-                  ) : (
-                    <div className="flex flex-wrap gap-2">
-                      {circles.map(c => (
-                        <Link key={c.id} href={`/circles/${c.slug}`}
-                          className="flex items-center gap-2 bg-teal-ghost hover:bg-teal-light/40 border border-teal-light hover:border-teal-mid rounded-full px-4 py-2 no-underline transition-all group">
-                          <span className="text-[1rem]">{c.icon}</span>
-                          <span className="text-[0.82rem] font-semibold text-charcoal group-hover:text-teal-deep transition-colors">{c.name}</span>
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                  </div>
+                )}
+
               </div>
             )}
 
@@ -644,6 +663,95 @@ export default function ProfilePage() {
             )}
           </div>
         </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Feed Card component ──────────────────────────────────────────────────────
+function FeedCard({ post }: { post: FeedPost }) {
+  function timeAgo(d: string) {
+    const diff = Date.now() - new Date(d).getTime()
+    const mins = Math.floor(diff / 60000)
+    if (mins < 1)  return 'just now'
+    if (mins < 60) return `${mins}m ago`
+    const hrs = Math.floor(mins / 60)
+    if (hrs < 24)  return `${hrs}h ago`
+    return `${Math.floor(hrs / 24)}d ago`
+  }
+
+  const displayName = post.user?.name ?? post.author ?? 'Community member'
+  const initial     = displayName.charAt(0).toUpperCase()
+
+  return (
+    <div className="bg-white border border-teal-light/60 rounded-[20px] p-5 shadow-card hover:shadow-lift transition-shadow">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div className="flex items-center gap-3">
+          {/* Avatar */}
+          <div className="w-9 h-9 rounded-full overflow-hidden bg-teal-ghost flex items-center justify-center flex-shrink-0 border-2 border-teal-light">
+            {post.user?.avatarUrl
+              ? <Image src={post.user.avatarUrl} alt={displayName} width={36} height={36} className="object-cover" />
+              : <span className="text-[0.85rem] font-bold text-teal-deep">{initial}</span>
+            }
+          </div>
+          <div>
+            <p className="font-semibold text-charcoal text-[0.88rem] leading-none">{displayName}</p>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="text-text-xlight text-[0.7rem]">{timeAgo(post.createdAt)}</span>
+              {post.type === 'circle' && post.circle && (
+                <>
+                  <span className="text-text-xlight text-[0.65rem]">·</span>
+                  <Link href={`/circles/${post.circle.slug}`}
+                    className="flex items-center gap-1 text-[0.7rem] text-teal-mid font-semibold no-underline hover:text-teal-deep transition-colors">
+                    <span>{post.circle.icon}</span>{post.circle.name}
+                  </Link>
+                </>
+              )}
+              {post.type === 'community' && (
+                <>
+                  <span className="text-text-xlight text-[0.65rem]">·</span>
+                  <span className="text-[0.68rem] text-amber font-semibold bg-amber/10 px-2 py-0.5 rounded-full">Community</span>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      {post.title && <p className="font-bold text-charcoal text-[0.95rem] mb-1">{post.title}</p>}
+      <p className="text-text-mid text-[0.88rem] leading-[1.7] line-clamp-4">{post.body}</p>
+
+      {/* Tags */}
+      {post.tags && post.tags.trim() && (
+        <div className="flex flex-wrap gap-1.5 mt-3">
+          {post.tags.split(',').filter(Boolean).slice(0, 4).map(t => (
+            <span key={t} className="bg-teal-ghost text-teal-deep text-[0.68rem] font-medium px-2.5 py-0.5 rounded-full">#{t.trim()}</span>
+          ))}
+        </div>
+      )}
+
+      {/* Footer */}
+      <div className="flex items-center gap-4 mt-4 pt-3 border-t border-teal-light/40">
+        <div className="flex items-center gap-1.5 text-text-xlight text-[0.78rem]">
+          <svg className={`w-3.5 h-3.5 ${post.likedByMe ? 'text-red-400 fill-current' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+          </svg>
+          <span>{post.likeCount}</span>
+        </div>
+        {post.commentCount !== undefined && (
+          <div className="flex items-center gap-1.5 text-text-xlight text-[0.78rem]">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
+            </svg>
+            <span>{post.commentCount}</span>
+          </div>
+        )}
+        <Link href={post.type === 'community' ? '/community' : `/circles/${post.circle?.slug ?? ''}`}
+          className="ml-auto text-teal-mid text-[0.75rem] font-semibold hover:text-teal-deep no-underline transition-colors">
+          View →
+        </Link>
       </div>
     </div>
   )
