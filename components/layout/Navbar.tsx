@@ -37,6 +37,7 @@ const NAV_GROUPS: NavGroup[] = [
       { href: '/vision-board', label: 'Vision Board',     desc: 'Visualise your goals',       icon: '⭐' },
       { href: '/reframe',      label: 'Thought Reframer',   desc: 'CBT-based reframing',          icon: '🧠' },
       { href: '/intention',    label: 'Morning Intention',  desc: 'Set your daily focus',         icon: '🌅' },
+      { href: '/yoga',          label: 'Yoga Guide',         desc: 'Types, steps & benefits',      icon: '🧘‍♀️' },
       { href: '/affirmation',  label: 'Daily Affirmation',  desc: 'Generate & download a card',   icon: '💌' },
       { href: '/snapshot',     label: 'Wellness Snapshot',  desc: 'Your 7-day wellbeing summary', icon: '📈' },
       { href: '/quotes',       label: 'Quote Creator',      desc: 'Make a shareable quote card',  icon: '🎨' },

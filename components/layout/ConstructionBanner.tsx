@@ -2,17 +2,20 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useSession } from 'next-auth/react'
 
 export function ConstructionBanner() {
+  const { data: session } = useSession()
   const [dismissed, setDismissed] = useState(true) // start hidden to avoid flash
   const [email,     setEmail]     = useState('')
   const [status,    setStatus]    = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
 
   useEffect(() => {
-    // Show unless user already dismissed
+    // Hide for logged-in users or if already dismissed
+    if (session) { setDismissed(true); return }
     const hidden = localStorage.getItem('ltp-banner-dismissed')
     if (!hidden) setDismissed(false)
-  }, [])
+  }, [session])
 
   function dismiss() {
     localStorage.setItem('ltp-banner-dismissed', '1')
