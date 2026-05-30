@@ -9,6 +9,22 @@ interface Article {
   image: string | null; source: string; publishedAt: string
 }
 
+// Embedded fallback stories — shown when the API is unavailable or unconfigured
+const FALLBACK_STORIES: Article[] = [
+  { title: 'Scientists discover promising approach to ocean plastic cleanup', description: 'A team of researchers has developed a biodegradable net system that could remove up to 90% of microplastics from coastal waters using natural ocean currents.', url: '#', image: null, source: 'Science Daily', publishedAt: new Date().toISOString() },
+  { title: 'Bus driver learns sign language to communicate with deaf student', description: 'A school bus driver spent six months learning sign language so his lone deaf passenger would never feel alone on the daily ride to school.', url: '#', image: null, source: 'Upworthy', publishedAt: new Date().toISOString() },
+  { title: 'Costa Rica runs on 100% renewable energy for 400 consecutive days', description: 'The Central American nation has broken its own world record for sustained renewable electricity generation using hydro, wind and solar power.', url: '#', image: null, source: 'Reuters', publishedAt: new Date().toISOString() },
+  { title: 'AI detects early-stage pancreatic cancer with 96% accuracy', description: 'A deep-learning model trained on CT scans identifies pancreatic tumours at a stage when surgical cure is still possible — far earlier than current methods allow.', url: '#', image: null, source: 'MIT Technology Review', publishedAt: new Date().toISOString() },
+  { title: '93-year-old grandmother completes her university degree after 70-year gap', description: 'Having left college to raise her family in 1952, she finally walked the stage last week — to a standing ovation from every student and faculty member.', url: '#', image: null, source: 'BBC News', publishedAt: new Date().toISOString() },
+  { title: 'Community garden transforms abandoned lot into green space feeding 40 families', description: 'Neighbours came together over 18 months to turn derelict land into a thriving garden that now supplies fresh produce to dozens of local families weekly.', url: '#', image: null, source: 'The Guardian', publishedAt: new Date().toISOString() },
+  { title: 'Europe\'s wolf population triples in 25 years thanks to rewilding efforts', description: 'Driven by protected-area expansion and cross-border conservation treaties, wolf numbers in Europe have rebounded to over 20,000 — a conservation triumph.', url: '#', image: null, source: 'WWF', publishedAt: new Date().toISOString() },
+  { title: 'Startup builds affordable prosthetic arms using 3-D printing for $50', description: 'A social enterprise has shipped over 20,000 low-cost prosthetics to amputees in developing countries, transforming lives for the price of a meal out.', url: '#', image: null, source: 'Fast Company', publishedAt: new Date().toISOString() },
+  { title: 'Childhood cancer survival rates reach all-time high of 85%', description: 'Advances in targeted therapy and immunotherapy have pushed five-year survival rates for paediatric cancers to historic highs never seen before.', url: '#', image: null, source: 'Cancer Research UK', publishedAt: new Date().toISOString() },
+  { title: 'Former refugee now runs the largest food bank in the city that once sheltered him', description: 'After arriving with nothing 20 years ago, he now distributes over 5,000 meals a week and employs 60 people from similar backgrounds.', url: '#', image: null, source: 'The Guardian', publishedAt: new Date().toISOString() },
+  { title: 'Teen starts free library of warm coats for anyone who needs one', description: 'A 15-year-old set up a "take one, leave one" coat exchange that has distributed over 3,000 coats across two consecutive winters in her community.', url: '#', image: null, source: 'Good News Network', publishedAt: new Date().toISOString() },
+  { title: 'India plants 250 million trees in a single day — a new world record', description: 'As part of a national reforestation drive, 1.5 million volunteers participated in a coordinated tree-planting event across 20 states simultaneously.', url: '#', image: null, source: 'NDTV', publishedAt: new Date().toISOString() },
+]
+
 const CATEGORIES = [
   { key: 'all',         label: 'All Good News', icon: '🌍' },
   { key: 'science',     label: 'Science',       icon: '🔬' },
@@ -40,12 +56,22 @@ export default function GoodNewsPage() {
     if (!append) setLoading(true)
     else setLoadingMore(true)
     try {
-      const res  = await fetch(`/api/news?category=${cat}&page=${pg}`)
+      const res = await fetch(`/api/news?category=${cat}&page=${pg}`)
+      // Guard against non-JSON responses (503, HTML error pages)
+      const ct = res.headers.get('content-type') ?? ''
+      if (!ct.includes('application/json')) throw new Error('Non-JSON response')
       const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'API error')
       setConfigured(data.configured !== false)
-      if (append) setArticles(prev => [...prev, ...(data.articles ?? [])])
-      else setArticles(data.articles ?? [])
-      setHasMore((data.articles?.length ?? 0) === 12)
+      const newArticles = data.articles ?? []
+      if (append) setArticles(prev => [...prev, ...newArticles])
+      else setArticles(newArticles)
+      setHasMore(newArticles.length === 12)
+    } catch {
+      // Fallback to embedded mock stories so the page is never blank
+      setConfigured(false)
+      if (!append) setArticles(FALLBACK_STORIES)
+      setHasMore(false)
     } finally {
       setLoading(false)
       setLoadingMore(false)
