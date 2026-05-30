@@ -8,11 +8,15 @@ const next = require('next')
 
 const dev  = process.env.NODE_ENV !== 'production'
 const port = parseInt(process.env.PORT || '3000', 10)
-const app  = next({ dev })
+
+// Limit concurrent connections to prevent process count explosion on shared hosting
+const MAX_CONNECTIONS = 50
+
+const app    = next({ dev })
 const handle = app.getRequestHandler()
 
 app.prepare().then(() => {
-  createServer(async (req, res) => {
+  const server = createServer(async (req, res) => {
     try {
       const parsedUrl = parse(req.url, true)
       await handle(req, res, parsedUrl)
@@ -21,7 +25,20 @@ app.prepare().then(() => {
       res.statusCode = 500
       res.end('Internal server error')
     }
-  }).listen(port, () => {
-    console.log(`> Ready on http://localhost:${port}`)
+  })
+
+  server.maxConnections = MAX_CONNECTIONS
+
+  // Graceful shutdown — closes DB connections cleanly when process exits
+  const shutdown = () => {
+    console.log('> Graceful shutdown...')
+    server.close(() => process.exit(0))
+    setTimeout(() => process.exit(1), 10000)
+  }
+  process.on('SIGTERM', shutdown)
+  process.on('SIGINT',  shutdown)
+
+  server.listen(port, () => {
+    console.log(`> Ready on http://localhost:${port} [${dev ? 'dev' : 'production'}]`)
   })
 })
