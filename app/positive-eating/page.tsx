@@ -215,6 +215,37 @@ export default function PositiveEatingPage() {
             </Link>
           </div>
         </section>
+
+        {/* Related content */}
+        <section>
+          <div className="flex items-center gap-3 mb-6">
+            <div className="flex-1 h-px bg-teal-light" />
+            <span className="text-text-xlight text-[0.72rem] font-semibold uppercase tracking-widest">Continue Exploring</span>
+            <div className="flex-1 h-px bg-teal-light" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[
+              { href: '/happy-foods',   icon: '😊', label: 'Foods That Make You Happy',   desc: 'Serotonin, dopamine & joy on a plate',       color: 'bg-amber/10 border-amber/30'       },
+              { href: '/mood',          icon: '📊', label: 'Mood Tracker',                 desc: 'Log how food affects your daily mood',        color: 'bg-blue-50 border-blue-200'         },
+              { href: '/habits-lab',    icon: '⚡', label: 'Habits Lab',                   desc: 'Build lasting healthy eating habits',          color: 'bg-teal-ghost border-teal-light'    },
+              { href: '/journal',       icon: '📓', label: 'Gratitude Journal',            desc: 'Write about how nourishment makes you feel',  color: 'bg-teal-ghost border-teal-light'    },
+              { href: '/snapshot',      icon: '📈', label: 'Wellness Snapshot',            desc: 'See your wellbeing trends over 7 days',       color: 'bg-purple-50 border-purple-200'     },
+              { href: '/yoga',          icon: '🧘', label: 'Yoga Guide',                   desc: 'Pair nutrition with mindful movement',        color: 'bg-green-50 border-green-200'       },
+            ].map(r => (
+              <Link key={r.href} href={r.href}
+                className={`flex items-start gap-4 ${r.color} border rounded-[18px] p-5 no-underline hover:-translate-y-1 hover:shadow-lift transition-all group`}>
+                <span className="text-[2rem] flex-shrink-0">{r.icon}</span>
+                <div>
+                  <p className="font-bold text-charcoal text-[0.93rem] mb-1 group-hover:text-teal-deep transition-colors">{r.label}</p>
+                  <p className="text-text-xlight text-[0.78rem] leading-snug">{r.desc}</p>
+                </div>
+                <svg className="w-4 h-4 text-text-xlight group-hover:text-teal-mid transition-colors ml-auto flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                </svg>
+              </Link>
+            ))}
+          </div>
+        </section>
       </div>
     </>
   )

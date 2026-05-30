@@ -68,8 +68,9 @@ const NAV_GROUPS: NavGroup[] = [
       {
         label: '🌿 Wellbeing',
         items: [
-          { href: '/positive-eating', label: 'Positive Eating', desc: 'Food, mood & nutrition',   icon: '🥗' },
-          { href: '/kids',            label: 'Kids Zone',        desc: 'For little learners',      icon: '🌈' },
+          { href: '/positive-eating', label: 'Positive Eating',    desc: 'Food, mood & nutrition',    icon: '🥗' },
+          { href: '/happy-foods',     label: 'Foods for Happiness', desc: 'Eat your way to joy',       icon: '😊' },
+          { href: '/kids',            label: 'Kids Zone',           desc: 'For little learners',       icon: '🌈' },
         ],
       },
     ],
