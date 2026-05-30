@@ -72,6 +72,11 @@ const config: Config = {
     },
   },
   plugins: [],
+  safelist: [
+    'w-[680px]', 'w-[280px]',
+    'grid-cols-3', 'grid-cols-4', 'grid-cols-5',
+    'columns-1', 'columns-2', 'columns-3',
+  ],
 }
 
 export default config
