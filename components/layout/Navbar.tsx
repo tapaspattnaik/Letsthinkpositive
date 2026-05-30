@@ -180,11 +180,11 @@ export function Navbar() {
         ref={navRef}
         className="fixed top-0 left-0 right-0 z-50 bg-ivory border-b border-teal-light shadow-[0_1px_12px_rgba(26,107,107,0.08)] h-[72px] flex items-center justify-between px-4 sm:px-[5%]"
       >
-        {/* Logo — bigger and always shows text */}
-        <Link href="/" className="flex items-center gap-2.5 no-underline hover:opacity-85 transition-opacity flex-shrink-0">
-          <LtpLogo size={52} />
+        {/* Logo */}
+        <Link href="/" className="flex items-center gap-3 no-underline hover:opacity-85 transition-opacity flex-shrink-0">
+          <LtpLogo size={62} />
           <div className="flex flex-col leading-none">
-            <span className="font-body text-[1.05rem] leading-tight">
+            <span className="font-body text-[1.25rem] leading-tight tracking-tight">
               <span className="text-teal-mid font-light">lets</span>
               <span className="text-teal-deep font-bold">think</span>
               <span className="text-amber font-light">positive</span>
@@ -314,7 +314,8 @@ export function Navbar() {
                   className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full border border-teal-light hover:border-teal-mid transition-colors">
                   <div className="w-7 h-7 rounded-full overflow-hidden bg-teal-ghost flex items-center justify-center flex-shrink-0">
                     {session.user?.image
-                      ? <Image src={session.user.image} alt="avatar" width={28} height={28} className="object-cover" />
+                      // eslint-disable-next-line @next/next/no-img-element
+                      ? <img src={session.user.image} alt="avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                       : <span className="text-[0.8rem]">🌿</span>}
                   </div>
                   <span className="text-[0.82rem] font-medium text-teal-deep max-w-[80px] truncate">{session.user?.name?.split(' ')[0]}</span>

@@ -191,7 +191,11 @@ export default function ProfilePage() {
             <div className="relative flex-shrink-0 group">
               <div className="w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] rounded-full overflow-hidden border-4 border-white shadow-lift bg-teal-ghost flex items-center justify-center">
                 {profile.avatarUrl
-                  ? <Image src={profile.avatarUrl} alt="Avatar" fill className="object-cover" />
+                  ? (
+                    /* Use plain <img> to bypass Next.js domain restrictions for Google/external avatars */
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={profile.avatarUrl} alt={profile.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  )
                   : (
                     <div className="w-full h-full bg-gradient-to-br from-teal-mid to-teal-deep flex items-center justify-center">
                       <span className="text-white font-display font-bold text-[2.8rem]">{profile.name.charAt(0).toUpperCase()}</span>
@@ -689,7 +693,7 @@ function FeedCard({ post }: { post: FeedPost }) {
           {/* Avatar */}
           <div className="w-9 h-9 rounded-full overflow-hidden bg-teal-ghost flex items-center justify-center flex-shrink-0 border-2 border-teal-light">
             {post.user?.avatarUrl
-              ? <Image src={post.user.avatarUrl} alt={displayName} width={36} height={36} className="object-cover" />
+              ? <img src={post.user.avatarUrl} alt={displayName} width={36} height={36} className="object-cover w-full h-full" referrerPolicy="no-referrer" />
               : <span className="text-[0.85rem] font-bold text-teal-deep">{initial}</span>
             }
           </div>
