@@ -19,6 +19,11 @@ export function Newsletter() {
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ email, name: name.trim() || undefined }),
       })
+      // Guard against HTML error pages (503, 500) being returned instead of JSON
+      const contentType = res.headers.get('content-type') ?? ''
+      if (!contentType.includes('application/json')) {
+        throw new Error('Server is temporarily unavailable. Please try again in a moment.')
+      }
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Something went wrong')
       setDone(true)

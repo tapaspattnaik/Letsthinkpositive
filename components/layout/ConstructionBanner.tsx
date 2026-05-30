@@ -32,6 +32,8 @@ export function ConstructionBanner() {
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ email: email.trim() }),
       })
+      const ct = res.headers.get('content-type') ?? ''
+      if (!ct.includes('application/json')) { setStatus('error'); return }
       setStatus(res.ok ? 'done' : 'error')
     } catch {
       setStatus('error')
