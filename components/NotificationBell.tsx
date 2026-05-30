@@ -52,10 +52,10 @@ export function NotificationBell() {
     } catch { /* swallow network errors */ }
   }, [session?.user?.id])
 
-  // Fetch on mount + poll every 30 s
+  // Fetch on mount + poll every 2 minutes (reduced from 30s to ease DB pressure)
   useEffect(() => {
     fetchNotifications()
-    const interval = setInterval(fetchNotifications, 30_000)
+    const interval = setInterval(fetchNotifications, 120_000)
     return () => clearInterval(interval)
   }, [fetchNotifications])
 

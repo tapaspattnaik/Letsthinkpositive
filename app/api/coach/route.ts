@@ -32,6 +32,11 @@ Categories you can support:
 
 Remember: You are a wellness guide, not a therapist. If someone expresses crisis-level distress, gently encourage them to reach out to a professional or helpline.`
 
+// Module-level singleton — created once, reused across all requests
+const together = process.env.TOGETHER_API_KEY
+  ? new Together({ apiKey: process.env.TOGETHER_API_KEY })
+  : null
+
 const encoder = new TextEncoder()
 function fallbackSSE(msg: string) {
   return new Response(
@@ -47,8 +52,7 @@ function fallbackSSE(msg: string) {
 }
 
 export async function POST(req: NextRequest) {
-  const apiKey = process.env.TOGETHER_API_KEY ?? ''
-  if (!apiKey) {
+  if (!together) {
     return fallbackSSE("The Calm Coach isn't configured yet — TOGETHER_API_KEY is missing from the server environment.")
   }
 
@@ -57,8 +61,6 @@ export async function POST(req: NextRequest) {
     if (!messages?.length) {
       return new Response('Messages required', { status: 400 })
     }
-
-    const together = new Together({ apiKey })
 
     const stream = await together.chat.completions.create({
       model:       'meta-llama/Llama-3.3-70B-Instruct-Turbo',

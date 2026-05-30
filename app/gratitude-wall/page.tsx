@@ -72,7 +72,8 @@ export default function GratitudeWallPage() {
 
   useEffect(() => {
     fetchEntries()
-    intervalRef.current = setInterval(fetchEntries, 30000)
+    // Poll every 90 seconds — reduced from 30s to ease server load
+    intervalRef.current = setInterval(fetchEntries, 90000)
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current)
     }
