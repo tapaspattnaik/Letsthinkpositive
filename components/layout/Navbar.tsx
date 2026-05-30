@@ -78,11 +78,12 @@ const NAV_GROUPS: NavGroup[] = [
     label: 'Community',
     icon: '💛',
     items: [
-      { href: '/community',      label: 'Community',      desc: 'Stories & sharing',              icon: '💬' },
-      { href: '/circles',        label: 'Circles',        desc: 'Private group spaces',           icon: '🔒' },
-      { href: '/gratitude-wall', label: 'Gratitude Wall', desc: "Share what you're grateful for", icon: '🙏' },
-      { href: '/kindness-map',   label: 'Kindness Map',   desc: 'See kindness spread worldwide',  icon: '🗺️' },
-      { href: '/about',          label: 'About',          desc: 'Our mission & story',            icon: '🌱' },
+      { href: '/community',         label: 'Community',      desc: 'Stories & sharing',              icon: '💬' },
+      { href: '/community/gallery', label: 'Gallery',       desc: 'Good deeds & activities',        icon: '📸' },
+      { href: '/circles',           label: 'Circles',       desc: 'Private group spaces',           icon: '🔒' },
+      { href: '/gratitude-wall',    label: 'Gratitude Wall',desc: "Share what you're grateful for", icon: '🙏' },
+      { href: '/kindness-map',      label: 'Kindness Map',  desc: 'See kindness spread worldwide',  icon: '🗺️' },
+      { href: '/about',             label: 'About',         desc: 'Our mission & story',            icon: '🌱' },
     ],
   },
 ]

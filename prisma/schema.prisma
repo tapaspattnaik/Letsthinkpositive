@@ -56,6 +56,8 @@ model User {
   gratitudeEntries   GratitudeEntry[]
   intentions         DailyIntention[]
   kindnessActs       KindnessAct[]
+  galleryPosts       GalleryPost[]
+  galleryHearts      GalleryHeart[]
 
   @@map("users")
 }
@@ -415,6 +417,37 @@ model KindnessAct {
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@map("kindness_acts")
+}
+
+// ── Community Gallery ─────────────────────────────────────────────────────
+
+model GalleryPost {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  title       String   @db.VarChar(200)
+  description String?  @db.Text
+  imageUrl    String   @db.VarChar(500)
+  category    String   @default("activity") @db.VarChar(50)
+  approved    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  user   User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hearts GalleryHeart[]
+
+  @@map("gallery_posts")
+}
+
+model GalleryHeart {
+  id        Int      @id @default(autoincrement())
+  postId    Int
+  userId    Int
+  createdAt DateTime @default(now())
+
+  post GalleryPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@map("gallery_hearts")
 }
 
 // ── Password resets ───────────────────────────────────────────────────────
