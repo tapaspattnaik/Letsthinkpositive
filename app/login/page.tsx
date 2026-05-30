@@ -21,6 +21,8 @@ function LoginForm() {
   const router         = useRouter()
   const params         = useSearchParams()
   const justRegistered = params.get('registered') === '1'
+  // Preserve the page the user was trying to reach before being redirected to login
+  const callbackUrl    = params.get('callbackUrl') || '/profile'
 
   const [email,       setEmail]      = useState('')
   const [password,    setPassword]   = useState('')
@@ -35,13 +37,14 @@ function LoginForm() {
     const res = await signIn('credentials', { email, password, redirect: false })
     setLoading(false)
     if (res?.error) { setError('Incorrect email or password. Please try again.'); return }
-    router.push('/profile')
+    // Redirect back to where they came from, or profile
+    router.push(callbackUrl)
     router.refresh()
   }
 
   async function signInWithGoogle() {
     setGoogleLoading(true)
-    await signIn('google', { callbackUrl: '/profile' })
+    await signIn('google', { callbackUrl })
   }
 
   return (

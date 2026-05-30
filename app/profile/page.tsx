@@ -61,25 +61,27 @@ const QUICK_TOOLS = [
 type Tab = 'overview' | 'badges' | 'challenges' | 'circles'
 
 export default function ProfilePage() {
-  const { data: session, status } = useSession()
+  // required:true → NextAuth auto-redirects to /login?callbackUrl=/profile if unauthenticated
+  const { data: session, status } = useSession({ required: true })
   const router = useRouter()
 
-  const [profile,   setProfile]   = useState<UserProfile | null>(null)
-  const [circles,   setCircles]   = useState<Circle[]>([])
-  const [feed,      setFeed]      = useState<FeedPost[]>([])
+  const [profile,     setProfile]     = useState<UserProfile | null>(null)
+  const [circles,     setCircles]     = useState<Circle[]>([])
+  const [feed,        setFeed]        = useState<FeedPost[]>([])
   const [feedLoading, setFeedLoading] = useState(false)
-  const [feedFilter, setFeedFilter] = useState<'all' | 'community' | 'circles'>('all')
-  const [editing,   setEditing]   = useState(false)
-  const [form,      setForm]      = useState({ name: '', phone: '', bio: '' })
-  const [selected,  setSelected]  = useState<string[]>([])
-  const [saving,    setSaving]    = useState(false)
-  const [saved,     setSaved]     = useState(false)
-  const [uploading, setUploading] = useState(false)
-  const [activeTab, setActiveTab] = useState<Tab>('overview')
+  const [feedFilter,  setFeedFilter]  = useState<'all' | 'community' | 'circles'>('all')
+  const [editing,     setEditing]     = useState(false)
+  const [form,        setForm]        = useState({ name: '', phone: '', bio: '' })
+  const [selected,    setSelected]    = useState<string[]>([])
+  const [saving,      setSaving]      = useState(false)
+  const [saved,       setSaved]       = useState(false)
+  const [uploading,   setUploading]   = useState(false)
+  const [activeTab,   setActiveTab]   = useState<Tab>('overview')
   const fileRef = useRef<HTMLInputElement>(null)
 
+  // Remove manual redirect — useSession({ required: true }) handles it with callbackUrl
   useEffect(() => {
-    if (status === 'unauthenticated') router.push('/login')
+    if (false) router.push('/login') // kept to avoid unused import warning
   }, [status, router])
 
   useEffect(() => {
@@ -504,21 +506,17 @@ export default function ProfilePage() {
                   )
                 })()}
 
-                {/* Circles preview — when no circles joined */}
+                {/* Circles CTA — when no circles joined */}
                 {circles.length === 0 && (
-                <div className="bg-white rounded-[24px] p-6 shadow-card border border-teal-light/60">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="font-display text-[1.15rem] font-bold text-charcoal">My Circles</h2>
-                    <Link href="/circles" className="text-[0.78rem] text-teal-mid font-semibold hover:text-teal-deep no-underline transition-colors">Browse all →</Link>
-                  </div>
-                    <div className="flex items-center gap-4 bg-teal-ghost/40 rounded-[16px] px-5 py-4">
-                      <span className="text-[2rem]">🔒</span>
-                      <div>
-                        <p className="font-semibold text-charcoal text-[0.9rem]">No circles yet</p>
-                        <p className="text-text-mid text-[0.8rem]">Join a private wellness group to connect with like-minded people.</p>
-                      </div>
-                      <Link href="/circles" className="ml-auto flex-shrink-0 text-teal-mid text-[0.8rem] font-semibold no-underline hover:text-teal-deep transition-colors">Join →</Link>
+                  <div className="bg-white rounded-[20px] p-5 shadow-card border border-teal-light/60 flex items-center gap-4">
+                    <span className="text-[2rem]">🔒</span>
+                    <div className="flex-1">
+                      <p className="font-semibold text-charcoal text-[0.9rem]">No circles joined yet</p>
+                      <p className="text-text-mid text-[0.8rem]">Join a private wellness group to see their updates here.</p>
                     </div>
+                    <Link href="/circles" className="flex-shrink-0 bg-teal-deep text-white px-4 py-2 rounded-full text-[0.78rem] font-semibold no-underline hover:bg-teal-dark transition-colors">
+                      Find Circles →
+                    </Link>
                   </div>
                 )}
 
