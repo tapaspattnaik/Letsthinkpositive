@@ -112,7 +112,45 @@ export default function QuoteCreatorPage() {
     } catch { handleDownload() }
   }, [quote, handleDownload])
 
+  const [copied, setCopied] = useState(false)
+
   const handleReset = () => { setQuote(''); setAttribution(''); setStyleId(1); setPhotoId(PHOTO_TEMPLATES[0].id); setBgMode('color'); setStep(1) }
+
+  const siteUrl = 'https://letsthinkpositive.com/quotes'
+  const shareText = attribution
+    ? `"${quote}" — ${attribution.replace(/^—\s*/, '')}\n\nCreate your own at letsthinkpositive.com 🌿`
+    : `"${quote}"\n\nCreate your own at letsthinkpositive.com 🌿`
+
+  function shareTwitter() {
+    const text = attribution
+      ? `"${quote}" — ${attribution.replace(/^—\s*/, '')} | letsthinkpositive.com`
+      : `"${quote}" | letsthinkpositive.com`
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(siteUrl)}&hashtags=letsthinkpositive,mindfulness,positivity`, '_blank', 'width=600,height=400')
+  }
+
+  function shareWhatsApp() {
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`, '_blank')
+  }
+
+  function shareFacebook() {
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(siteUrl)}&quote=${encodeURIComponent(shareText)}`, '_blank', 'width=600,height=400')
+  }
+
+  function shareLinkedIn() {
+    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(siteUrl)}`, '_blank', 'width=600,height=500')
+  }
+
+  function shareTelegram() {
+    window.open(`https://t.me/share/url?url=${encodeURIComponent(siteUrl)}&text=${encodeURIComponent(shareText)}`, '_blank')
+  }
+
+  async function copyText() {
+    try {
+      await navigator.clipboard.writeText(shareText)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2500)
+    } catch { /* fallback */ }
+  }
 
   const STEP_LABELS = ['Your Quote', 'Design', 'Preview & Share']
 
@@ -327,27 +365,110 @@ export default function QuoteCreatorPage() {
               </div>
             </div>
 
-            {/* Actions */}
-            <div className="flex flex-wrap gap-3 justify-center mb-6">
+            {/* Primary actions */}
+            <div className="flex flex-wrap gap-3 justify-center mb-8">
               <button onClick={handleDownload} disabled={downloading}
-                className="flex items-center gap-2 bg-teal-deep text-white px-7 py-3.5 rounded-full font-semibold text-[0.92rem] hover:bg-teal-dark hover:-translate-y-0.5 transition-all disabled:opacity-60">
+                className="flex items-center gap-2 bg-teal-deep text-white px-7 py-3.5 rounded-full font-semibold text-[0.92rem] hover:bg-teal-dark hover:-translate-y-0.5 transition-all disabled:opacity-60 shadow-md">
                 {downloading
-                  ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />Downloading…</>
-                  : <>⬇️ Download as Image</>}
+                  ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />Saving…</>
+                  : <><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>Download Image</>}
               </button>
               <button onClick={handleShare}
-                className="flex items-center gap-2 bg-amber text-charcoal px-7 py-3.5 rounded-full font-semibold text-[0.92rem] hover:bg-amber-soft hover:-translate-y-0.5 transition-all">
-                📤 Share
-              </button>
-              <button onClick={handleReset}
-                className="flex items-center gap-2 border border-teal-light text-text-mid px-6 py-3.5 rounded-full font-semibold text-[0.88rem] hover:bg-teal-ghost transition-all">
-                🔄 Start Over
+                className="flex items-center gap-2 bg-amber text-charcoal px-6 py-3.5 rounded-full font-semibold text-[0.92rem] hover:bg-amber-soft hover:-translate-y-0.5 transition-all shadow-md">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" /></svg>
+                Native Share
               </button>
             </div>
 
-            <div className="flex justify-center gap-5">
+            {/* Social sharing grid */}
+            <div className="border border-teal-light rounded-[24px] p-6 mb-6 bg-ivory">
+              <p className="text-[0.75rem] font-bold text-text-xlight uppercase tracking-widest mb-4 text-center">Share to Social Media</p>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
+                {/* Twitter / X */}
+                <button onClick={shareTwitter}
+                  className="flex items-center gap-3 bg-black text-white px-4 py-3 rounded-[14px] hover:bg-gray-800 hover:-translate-y-0.5 transition-all font-semibold text-[0.88rem]">
+                  <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                  </svg>
+                  Post on X
+                </button>
+
+                {/* WhatsApp */}
+                <button onClick={shareWhatsApp}
+                  className="flex items-center gap-3 bg-[#25D366] text-white px-4 py-3 rounded-[14px] hover:bg-[#1ebe5d] hover:-translate-y-0.5 transition-all font-semibold text-[0.88rem]">
+                  <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                  </svg>
+                  WhatsApp
+                </button>
+
+                {/* Facebook */}
+                <button onClick={shareFacebook}
+                  className="flex items-center gap-3 bg-[#1877F2] text-white px-4 py-3 rounded-[14px] hover:bg-[#1565d8] hover:-translate-y-0.5 transition-all font-semibold text-[0.88rem]">
+                  <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                  </svg>
+                  Facebook
+                </button>
+
+                {/* LinkedIn */}
+                <button onClick={shareLinkedIn}
+                  className="flex items-center gap-3 bg-[#0A66C2] text-white px-4 py-3 rounded-[14px] hover:bg-[#0958a8] hover:-translate-y-0.5 transition-all font-semibold text-[0.88rem]">
+                  <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                  </svg>
+                  LinkedIn
+                </button>
+
+                {/* Telegram */}
+                <button onClick={shareTelegram}
+                  className="flex items-center gap-3 bg-[#26A5E4] text-white px-4 py-3 rounded-[14px] hover:bg-[#1e96d4] hover:-translate-y-0.5 transition-all font-semibold text-[0.88rem]">
+                  <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                  </svg>
+                  Telegram
+                </button>
+
+                {/* Copy Text */}
+                <button onClick={copyText}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-[14px] hover:-translate-y-0.5 transition-all font-semibold text-[0.88rem] border
+                    ${copied
+                      ? 'bg-teal-ghost border-teal-mid text-teal-deep'
+                      : 'bg-white border-teal-light text-charcoal hover:border-teal-mid hover:bg-teal-ghost'}`}>
+                  {copied
+                    ? <><svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>Copied!</>
+                    : <><svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5A3.375 3.375 0 006.375 7.5H5.25m11.9-3.664A2.251 2.251 0 0015 2.25h-1.5a2.251 2.251 0 00-2.15 1.586" /></svg>Copy Text</>
+                  }
+                </button>
+              </div>
+
+              {/* Post to Community */}
+              <div className="border-t border-teal-light pt-4">
+                <a href={`/community?quote=${encodeURIComponent(quote)}`}
+                  className="flex items-center justify-center gap-3 w-full bg-gradient-to-r from-teal-deep to-teal-dark text-white py-3.5 rounded-[14px] font-semibold text-[0.92rem] no-underline hover:-translate-y-0.5 hover:shadow-lift transition-all">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+                  </svg>
+                  🌿 Post to letsthinkpositive Community
+                </a>
+                <p className="text-[0.72rem] text-text-xlight text-center mt-2">Share with fellow members — inspire someone today</p>
+              </div>
+            </div>
+
+            {/* Instagram note */}
+            <div className="flex items-start gap-3 bg-gradient-to-r from-[#f09433]/10 to-[#e6683c]/10 border border-[#e6683c]/20 rounded-[14px] px-4 py-3 mb-6">
+              <span className="text-[1.2rem] flex-shrink-0">📸</span>
+              <div>
+                <p className="text-[0.82rem] font-semibold text-charcoal">Instagram?</p>
+                <p className="text-[0.75rem] text-text-mid">Download the image above, then post it to your Instagram feed or story and tag <strong>@letsthinkpositive</strong> 🌿</p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap justify-center gap-5">
               <button onClick={() => setStep(2)} className="text-[0.8rem] text-teal-mid hover:text-teal-deep transition-colors">← Change design</button>
               <button onClick={() => setStep(1)} className="text-[0.8rem] text-teal-mid hover:text-teal-deep transition-colors">Edit quote</button>
+              <button onClick={handleReset} className="text-[0.8rem] text-text-xlight hover:text-red-400 transition-colors">🔄 Start over</button>
             </div>
           </div>
         )}
