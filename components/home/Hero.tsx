@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import Image from 'next/image'
 
 export function Hero() {
   return (
@@ -31,19 +30,8 @@ export function Hero() {
           </div>
         </div>
 
-        {/* Right side — photo + animated symbol overlay */}
+        {/* Right side — animated symbol */}
         <div className="hidden md:flex flex-col items-center justify-center relative" aria-hidden="true">
-          {/* Background photo — serene wellness image */}
-          <div className="absolute inset-0 rounded-[32px] overflow-hidden opacity-25">
-            <Image
-              src="https://images.pexels.com/photos/3822622/pexels-photo-3822622.jpeg?auto=compress&cs=tinysrgb&w=800"
-              alt=""
-              fill
-              className="object-cover"
-              sizes="400px"
-              priority
-            />
-          </div>
           <div className="relative w-[380px] h-[380px] flex items-center justify-center">
             {/* Rings — outer rotates CW, mid CCW, inner CW; dashed so rotation is visible */}
             {(['animate-ring-outer', 'animate-ring-mid', 'animate-ring-inner'] as const).map((cls, i) => {

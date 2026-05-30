@@ -141,9 +141,9 @@ a, button, [role="button"], input, select, textarea, label {
   100% { transform: rotate(360deg) scale(1);    opacity: 0.65; }
 }
 
-.animate-ring-outer { animation: ring-outer 18s  ease-in-out infinite; }
-.animate-ring-mid   { animation: ring-mid   14s  ease-in-out infinite; }
-.animate-ring-inner { animation: ring-inner 10s  ease-in-out infinite; }
+.animate-ring-outer { animation: ring-outer 36s  ease-in-out infinite; }
+.animate-ring-mid   { animation: ring-mid   28s  ease-in-out infinite; }
+.animate-ring-inner { animation: ring-inner 20s  ease-in-out infinite; }
 
 /* Core — breathing expand/contract with layered glow */
 @keyframes core-breathe {
@@ -160,7 +160,7 @@ a, button, [role="button"], input, select, textarea, label {
   }
 }
 .animate-core-breathe {
-  animation: core-breathe 4s ease-in-out infinite;
+  animation: core-breathe 7s ease-in-out infinite;
 }
 
 /* Inner orb — slightly offset breathing so it lags behind the outer */
@@ -169,8 +169,8 @@ a, button, [role="button"], input, select, textarea, label {
   50%       { transform: scale(1.08); opacity: 1;    }
 }
 .animate-orb-breathe {
-  animation: orb-breathe 4s ease-in-out infinite;
-  animation-delay: 0.6s;
+  animation: orb-breathe 7s ease-in-out infinite;
+  animation-delay: 1s;
 }
 
 /* Signal bars — independent height waves, origin at bottom */
@@ -189,9 +189,9 @@ a, button, [role="button"], input, select, textarea, label {
   50%       { transform: scaleY(1.10); opacity: 1;    }
   80%       { transform: scaleY(0.30); opacity: 0.45;  }
 }
-.animate-bar-1 { animation: bar-1 2.8s ease-in-out infinite;              }
-.animate-bar-2 { animation: bar-2 2.8s ease-in-out infinite; animation-delay: 0.35s; }
-.animate-bar-3 { animation: bar-3 2.8s ease-in-out infinite; animation-delay: 0.7s;  }
+.animate-bar-1 { animation: bar-1 5s ease-in-out infinite;              }
+.animate-bar-2 { animation: bar-2 5s ease-in-out infinite; animation-delay: 0.7s; }
+.animate-bar-3 { animation: bar-3 5s ease-in-out infinite; animation-delay: 1.4s;  }
 
 /* Arc cascade — outer fires first, ripples inward like a transmission */
 @keyframes arc-fire {
@@ -200,4 +200,4 @@ a, button, [role="button"], input, select, textarea, label {
   70%  { opacity: 0.60; border-color: rgba(232,160,32,0.85); }
   100% { opacity: 0.30; border-color: rgba(232,160,32,0.55); }
 }
-.animate-arc-fire { animation: arc-fire 3.6s ease-in-out infinite; }
+.animate-arc-fire { animation: arc-fire 6s ease-in-out infinite; }
