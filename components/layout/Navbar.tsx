@@ -8,52 +8,81 @@ import Image from 'next/image'
 import { LtpLogo } from '@/components/ui/LtpLogo'
 import { NotificationBell } from '@/components/NotificationBell'
 
-interface NavItem  { href: string; label: string; desc?: string; icon?: string }
-interface NavGroup { label: string; icon: string; items: NavItem[] }
+interface NavItem     { href: string; label: string; desc?: string; icon?: string }
+interface NavSubGroup { label: string; items: NavItem[] }
+interface NavGroup    { label: string; icon: string; items?: NavItem[]; subGroups?: NavSubGroup[] }
 
 const NAV_GROUPS: NavGroup[] = [
   {
     label: 'Read',
     icon: '📖',
     items: [
-      { href: '/blog',       label: 'Blog',       desc: 'Stories & insights',         icon: '✍️' },
-      { href: '/good-news',  label: 'Good News',  desc: 'Uplifting stories globally',  icon: '🌍' },
-      { href: '/library',    label: 'Library',    desc: 'Wellness articles',           icon: '📚' },
-      { href: '/feed',       label: 'Daily Feed', desc: 'Quotes & inspiration',        icon: '✨' },
+      { href: '/blog',      label: 'Blog',       desc: 'Stories & insights',        icon: '✍️' },
+      { href: '/good-news', label: 'Good News',  desc: 'Uplifting stories globally', icon: '🌍' },
+      { href: '/library',   label: 'Library',    desc: 'Wellness articles',          icon: '📚' },
+      { href: '/feed',      label: 'Daily Feed', desc: 'Quotes & inspiration',       icon: '✨' },
     ],
   },
   {
     label: 'Tools',
     icon: '🛠️',
-    items: [
-      { href: '/journal',      label: 'Journal',          desc: 'Gratitude journaling',       icon: '📓' },
-      { href: '/coach',        label: 'Calm Coach',       desc: 'AI wellness guide',          icon: '🌿' },
-      { href: '/meditation',   label: 'Meditation',       desc: 'Guided sessions',            icon: '🧘' },
-      { href: '/sounds',       label: 'Calm Sounds',      desc: 'Ambient sound mixer',        icon: '🎧' },
-      { href: '/challenges',   label: 'Challenges',       desc: '30-day programmes',          icon: '🏆' },
-      { href: '/mood',         label: 'Mood Tracker',     desc: 'Log & chart your mood',      icon: '📊' },
-      { href: '/habits',       label: 'Habit Tracker',    desc: 'Build daily habits',         icon: '🎯' },
-      { href: '/breathing',    label: 'Breathing',        desc: 'Guided breathing exercises', icon: '🌬️' },
-      { href: '/vision-board', label: 'Vision Board',     desc: 'Visualise your goals',       icon: '⭐' },
-      { href: '/reframe',      label: 'Thought Reframer',   desc: 'CBT-based reframing',          icon: '🧠' },
-      { href: '/intention',    label: 'Morning Intention',  desc: 'Set your daily focus',         icon: '🌅' },
-      { href: '/yoga',          label: 'Yoga Guide',         desc: 'Types, steps & benefits',      icon: '🧘‍♀️' },
-      { href: '/affirmation',  label: 'Daily Affirmation',  desc: 'Generate & download a card',   icon: '💌' },
-      { href: '/snapshot',     label: 'Wellness Snapshot',  desc: 'Your 7-day wellbeing summary', icon: '📈' },
-      { href: '/quotes',       label: 'Quote Creator',      desc: 'Make a shareable quote card',  icon: '🎨' },
-      { href: '/kids',         label: 'Kids Zone',          desc: 'For little learners',          icon: '🌈' },
-      { href: '/drawing',      label: 'Positive Drawing',   desc: 'Zentangle, mandala & more',    icon: '✏️' },
+    subGroups: [
+      {
+        label: '🪞 Reflect',
+        items: [
+          { href: '/journal',    label: 'Journal',           desc: 'Gratitude journaling',       icon: '📓' },
+          { href: '/mood',       label: 'Mood Tracker',      desc: 'Log & chart your mood',      icon: '📊' },
+          { href: '/snapshot',   label: 'Wellness Snapshot', desc: 'Your 7-day summary',         icon: '📈' },
+          { href: '/intention',  label: 'Morning Intention', desc: 'Set your daily focus',        icon: '🌅' },
+        ],
+      },
+      {
+        label: '🧘 Calm',
+        items: [
+          { href: '/coach',      label: 'Calm Coach',        desc: 'AI wellness guide',          icon: '🌿' },
+          { href: '/meditation', label: 'Meditation',        desc: 'Guided sessions',            icon: '🧘' },
+          { href: '/sounds',     label: 'Calm Sounds',       desc: 'Ambient sound mixer',        icon: '🎧' },
+          { href: '/breathing',  label: 'Breathing',         desc: 'Guided exercises',           icon: '🌬️' },
+        ],
+      },
+      {
+        label: '💪 Grow',
+        items: [
+          { href: '/challenges',    label: 'Challenges',       desc: '30-day programmes',         icon: '🏆' },
+          { href: '/habits',        label: 'Habit Tracker',    desc: 'Build daily habits',        icon: '🎯' },
+          { href: '/habits-lab',    label: 'Habits Lab',       desc: 'Habit science & stacking',  icon: '⚡' },
+          { href: '/yoga',          label: 'Yoga Guide',       desc: 'Types, steps & benefits',   icon: '🧘‍♀️' },
+          { href: '/reframe',       label: 'Thought Reframer', desc: 'CBT-based reframing',       icon: '🧠' },
+          { href: '/wisdom-coaching', label: 'Wisdom Coaching', desc: 'Life guidance & purpose',  icon: '👴' },
+        ],
+      },
+      {
+        label: '🎨 Create',
+        items: [
+          { href: '/affirmation',  label: 'Daily Affirmation', desc: 'Generate a card',           icon: '💌' },
+          { href: '/quotes',       label: 'Quote Creator',     desc: 'Shareable quote card',      icon: '🎨' },
+          { href: '/vision-board', label: 'Vision Board',      desc: 'Visualise your goals',      icon: '⭐' },
+          { href: '/drawing',      label: 'Positive Drawing',  desc: 'Zentangle & mandala',       icon: '✏️' },
+        ],
+      },
+      {
+        label: '🌿 Wellbeing',
+        items: [
+          { href: '/positive-eating', label: 'Positive Eating', desc: 'Food, mood & nutrition',   icon: '🥗' },
+          { href: '/kids',            label: 'Kids Zone',        desc: 'For little learners',      icon: '🌈' },
+        ],
+      },
     ],
   },
   {
     label: 'Community',
     icon: '💛',
     items: [
-      { href: '/community',      label: 'Community',       desc: 'Stories & sharing',             icon: '💬' },
-      { href: '/circles',        label: 'Circles',         desc: 'Private group spaces',          icon: '🔒' },
-      { href: '/gratitude-wall', label: 'Gratitude Wall',  desc: "Share what you're grateful for", icon: '🙏' },
-      { href: '/kindness-map',   label: 'Kindness Map',    desc: 'See kindness spread worldwide',  icon: '🗺️' },
-      { href: '/about',          label: 'About',           desc: 'Our mission & story',           icon: '🌱' },
+      { href: '/community',      label: 'Community',      desc: 'Stories & sharing',              icon: '💬' },
+      { href: '/circles',        label: 'Circles',        desc: 'Private group spaces',           icon: '🔒' },
+      { href: '/gratitude-wall', label: 'Gratitude Wall', desc: "Share what you're grateful for", icon: '🙏' },
+      { href: '/kindness-map',   label: 'Kindness Map',   desc: 'See kindness spread worldwide',  icon: '🗺️' },
+      { href: '/about',          label: 'About',          desc: 'Our mission & story',            icon: '🌱' },
     ],
   },
 ]
@@ -129,8 +158,10 @@ export function Navbar() {
     setSearchQ('')
   }
 
-  const isGroupActive = (group: NavGroup) =>
-    group.items.some(i => pathname === i.href || pathname.startsWith(i.href + '/'))
+  const isGroupActive = (group: NavGroup) => {
+    const allItems = group.items ?? group.subGroups?.flatMap(sg => sg.items) ?? []
+    return allItems.some(i => pathname === i.href || pathname.startsWith(i.href + '/'))
+  }
 
   // ── Render ─────────────────────────────────────────────────
   return (
@@ -184,29 +215,56 @@ export function Navbar() {
                 aria-label={`${group.label} menu`}
                 onMouseEnter={() => openDropdown(group.label)}
                 onMouseLeave={scheduleClose}
-                className={`absolute top-full left-1/2 -translate-x-1/2 w-[280px] z-50 transition-all duration-200 origin-top
+                className={`absolute top-full z-50 transition-all duration-200 origin-top
+                  ${group.subGroups ? 'left-1/2 -translate-x-1/2 w-[680px]' : 'left-1/2 -translate-x-1/2 w-[280px]'}
                   ${openGroup === group.label
                     ? 'opacity-100 scale-y-100 translate-y-0 pointer-events-auto'
                     : 'opacity-0 scale-y-95 -translate-y-1 pointer-events-none'}`}>
                 <div className="pt-2">
-                  <div className="bg-white border border-teal-light rounded-[20px] shadow-lift p-2">
-                    {group.items.map(item => (
-                      <Link key={item.href} href={item.href}
-                        onClick={() => setOpenGroup(null)}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-[14px] no-underline transition-all group
-                          ${pathname === item.href || pathname.startsWith(item.href + '/')
-                            ? 'bg-teal-ghost text-teal-deep'
-                            : 'text-charcoal hover:bg-teal-ghost hover:text-teal-deep'}`}>
-                        <span className="text-[1.3rem] flex-shrink-0">{item.icon}</span>
-                        <div>
-                          <p className="font-semibold text-[0.88rem] leading-none mb-0.5">{item.label}</p>
-                          {item.desc && <p className="text-[0.75rem] text-text-xlight group-hover:text-teal-mid transition-colors">{item.desc}</p>}
-                        </div>
-                        {(pathname === item.href || pathname.startsWith(item.href + '/')) && (
-                          <span className="ml-auto w-1.5 h-1.5 rounded-full bg-amber flex-shrink-0" />
-                        )}
-                      </Link>
-                    ))}
+                  <div className="bg-white border border-teal-light rounded-[20px] shadow-lift p-3">
+                    {group.subGroups ? (
+                      /* ── Sub-grouped layout (Tools) ── */
+                      <div className="grid grid-cols-3 gap-3">
+                        {group.subGroups.map(sg => (
+                          <div key={sg.label}>
+                            <p className="text-[0.68rem] font-bold text-text-xlight uppercase tracking-widest px-2 pb-1.5 pt-0.5">{sg.label}</p>
+                            {sg.items.map(item => (
+                              <Link key={item.href} href={item.href}
+                                onClick={() => setOpenGroup(null)}
+                                className={`flex items-center gap-2.5 px-2.5 py-2 rounded-[10px] no-underline transition-all group
+                                  ${pathname === item.href || pathname.startsWith(item.href + '/')
+                                    ? 'bg-teal-ghost text-teal-deep'
+                                    : 'text-charcoal hover:bg-teal-ghost hover:text-teal-deep'}`}>
+                                <span className="text-[1.1rem] flex-shrink-0">{item.icon}</span>
+                                <div className="min-w-0">
+                                  <p className="font-semibold text-[0.82rem] leading-none mb-0.5 truncate">{item.label}</p>
+                                  {item.desc && <p className="text-[0.7rem] text-text-xlight group-hover:text-teal-mid transition-colors truncate">{item.desc}</p>}
+                                </div>
+                              </Link>
+                            ))}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      /* ── Flat layout (Read, Community) ── */
+                      (group.items ?? []).map(item => (
+                        <Link key={item.href} href={item.href}
+                          onClick={() => setOpenGroup(null)}
+                          className={`flex items-center gap-3 px-4 py-3 rounded-[14px] no-underline transition-all group
+                            ${pathname === item.href || pathname.startsWith(item.href + '/')
+                              ? 'bg-teal-ghost text-teal-deep'
+                              : 'text-charcoal hover:bg-teal-ghost hover:text-teal-deep'}`}>
+                          <span className="text-[1.3rem] flex-shrink-0">{item.icon}</span>
+                          <div>
+                            <p className="font-semibold text-[0.88rem] leading-none mb-0.5">{item.label}</p>
+                            {item.desc && <p className="text-[0.75rem] text-text-xlight group-hover:text-teal-mid transition-colors">{item.desc}</p>}
+                          </div>
+                          {(pathname === item.href || pathname.startsWith(item.href + '/')) && (
+                            <span className="ml-auto w-1.5 h-1.5 rounded-full bg-amber flex-shrink-0" />
+                          )}
+                        </Link>
+                      ))
+                    )}
                   </div>
                 </div>
               </div>
@@ -410,23 +468,37 @@ export function Navbar() {
                     {/* Subitems */}
                     {isExpanded && (
                       <div className="ml-5 pl-3 border-l-2 border-teal-light mt-0.5 mb-1.5 flex flex-col gap-0.5">
-                        {group.items.map(item => {
-                          const active = pathname === item.href || pathname.startsWith(item.href + '/')
-                          return (
-                            <Link
-                              key={item.href}
-                              href={item.href}
-                              onClick={() => setDrawerOpen(false)}
-                              className={`flex items-center gap-3 px-4 py-3.5 rounded-[14px] text-[0.9rem] no-underline transition-all
-                                ${active
-                                  ? 'bg-teal-ghost text-teal-deep font-semibold'
-                                  : 'text-charcoal hover:bg-teal-ghost/70 hover:text-teal-deep'}`}>
-                              <span className="text-[1.15rem] w-7 text-center flex-shrink-0">{item.icon}</span>
-                              <span className="flex-1">{item.label}</span>
-                              {active && <span className="w-1.5 h-1.5 rounded-full bg-amber flex-shrink-0" />}
-                            </Link>
-                          )
-                        })}
+                        {group.subGroups
+                          ? group.subGroups.map(sg => (
+                            <div key={sg.label}>
+                              <p className="text-[0.65rem] font-bold text-text-xlight uppercase tracking-widest px-4 py-2">{sg.label}</p>
+                              {sg.items.map(item => {
+                                const active = pathname === item.href || pathname.startsWith(item.href + '/')
+                                return (
+                                  <Link key={item.href} href={item.href} onClick={() => setDrawerOpen(false)}
+                                    className={`flex items-center gap-3 px-4 py-3 rounded-[14px] text-[0.88rem] no-underline transition-all
+                                      ${active ? 'bg-teal-ghost text-teal-deep font-semibold' : 'text-charcoal hover:bg-teal-ghost/70 hover:text-teal-deep'}`}>
+                                    <span className="text-[1.1rem] w-7 text-center flex-shrink-0">{item.icon}</span>
+                                    <span className="flex-1">{item.label}</span>
+                                    {active && <span className="w-1.5 h-1.5 rounded-full bg-amber flex-shrink-0" />}
+                                  </Link>
+                                )
+                              })}
+                            </div>
+                          ))
+                          : (group.items ?? []).map(item => {
+                            const active = pathname === item.href || pathname.startsWith(item.href + '/')
+                            return (
+                              <Link key={item.href} href={item.href} onClick={() => setDrawerOpen(false)}
+                                className={`flex items-center gap-3 px-4 py-3.5 rounded-[14px] text-[0.9rem] no-underline transition-all
+                                  ${active ? 'bg-teal-ghost text-teal-deep font-semibold' : 'text-charcoal hover:bg-teal-ghost/70 hover:text-teal-deep'}`}>
+                                <span className="text-[1.15rem] w-7 text-center flex-shrink-0">{item.icon}</span>
+                                <span className="flex-1">{item.label}</span>
+                                {active && <span className="w-1.5 h-1.5 rounded-full bg-amber flex-shrink-0" />}
+                              </Link>
+                            )
+                          })
+                        }
                       </div>
                     )}
                   </div>

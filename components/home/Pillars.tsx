@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 const pillars = [
   { icon: '🧠', title: 'Mental Wellness & Mindset',    text: 'Your thoughts are the most powerful thing you own. We help you understand them, challenge them, and gently retrain them — so they work for you, not against you.' },
   { icon: '💼', title: 'Career & Professional Growth', text: 'Your mindset at work is your most important qualification. We bring clarity, confidence, and purpose into your professional journey.' },
@@ -5,11 +7,11 @@ const pillars = [
   { icon: '🎓', title: 'Student Motivation',           text: 'Students are not the future — they are the present. And they deserve someone who takes their inner world as seriously as their exam results.' },
 ]
 
-const comingSoon = [
-  { icon: '🧘', label: 'Yoga'           },
-  { icon: '🥗', label: 'Positive Eating'},
-  { icon: '⚡', label: 'Habits Lab'     },
-  { icon: '👴', label: 'Wisdom Coaching'},
+const launched = [
+  { icon: '🧘', label: 'Yoga',            href: '/yoga'            },
+  { icon: '🥗', label: 'Positive Eating', href: '/positive-eating' },
+  { icon: '⚡', label: 'Habits Lab',      href: '/habits-lab'      },
+  { icon: '👴', label: 'Wisdom Coaching', href: '/wisdom-coaching'  },
 ]
 
 export function Pillars() {
@@ -40,12 +42,13 @@ export function Pillars() {
         </div>
 
         <div className="mt-10">
-          <p className="text-[0.9rem] text-text-light mb-3">Also coming soon:</p>
+          <p className="text-[0.9rem] text-text-light mb-3 font-medium">Also explore:</p>
           <div className="flex gap-3 flex-wrap">
-            {comingSoon.map(c => (
-              <span key={c.label} className="inline-flex items-center gap-1.5 bg-teal-ghost text-teal-deep px-4 py-2 rounded-full text-[0.83rem] font-medium border border-dashed border-teal-light">
-                {c.icon} {c.label} <span className="text-text-xlight text-[0.7rem]">— soon</span>
-              </span>
+            {launched.map(c => (
+              <Link key={c.label} href={c.href}
+                className="inline-flex items-center gap-1.5 bg-teal-ghost text-teal-deep px-4 py-2 rounded-full text-[0.83rem] font-semibold border border-teal-light hover:bg-teal-light/40 hover:border-teal-mid transition-all no-underline">
+                {c.icon} {c.label}
+              </Link>
             ))}
           </div>
         </div>
