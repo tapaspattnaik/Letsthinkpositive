@@ -18,16 +18,77 @@
   --shadow:      0 4px 24px rgba(26,107,107,0.10);
   --shadow-lg:   0 12px 48px rgba(26,107,107,0.15);
   --transition:  0.3s cubic-bezier(0.4,0,0.2,1);
+
+  /* Semantic tokens — change in dark mode */
+  --bg-page:     #F8F8F4;
+  --bg-card:     #ffffff;
+  --bg-nav:      #F8F8F4;
+  --text-body:   #1C2B2B;
+  --text-mid:    #2E4A4A;
+  --text-light:  #4A6565;
+  --text-xlight: #7A9898;
+  --border:      #A8D8D0;
 }
+
+/* ── Dark Mode overrides ──────────────────────────────────────── */
+html.dark {
+  --bg-page:     #0d1a1a;
+  --bg-card:     #132222;
+  --bg-nav:      #0d1a1a;
+  --text-body:   #e2f0ee;
+  --text-mid:    #a8d4cc;
+  --text-light:  #7ab8b0;
+  --text-xlight: #4a8880;
+  --border:      #1e3838;
+  --teal-ghost:  #0f2828;
+  --ivory:       #0d1a1a;
+  --amber-pale:  #1a1400;
+}
+
+html.dark body { background: var(--bg-page); color: var(--text-body); }
+
+/* Key dark mode overrides for common Tailwind classes */
+html.dark .bg-white        { background-color: var(--bg-card) !important; }
+html.dark .bg-ivory        { background-color: var(--bg-page) !important; }
+html.dark .bg-teal-ghost   { background-color: var(--teal-ghost) !important; }
+html.dark .bg-amber-pale   { background-color: var(--amber-pale) !important; }
+html.dark .border-teal-light { border-color: var(--border) !important; }
+html.dark .text-charcoal   { color: var(--text-body) !important; }
+html.dark .text-text-mid   { color: var(--text-mid) !important; }
+html.dark .text-text-light { color: var(--text-light) !important; }
+html.dark .text-text-xlight{ color: var(--text-xlight) !important; }
+
+/* Navbar dark */
+html.dark nav.fixed { background-color: var(--bg-nav) !important; border-color: var(--border) !important; }
+
+/* Card backgrounds */
+html.dark .shadow-card,
+html.dark .shadow-lift { background-color: var(--bg-card); }
+
+/* Input fields */
+html.dark input,
+html.dark textarea,
+html.dark select {
+  background-color: #0f2828 !important;
+  color: var(--text-body) !important;
+  border-color: var(--border) !important;
+}
+
+/* Dropdown menus */
+html.dark [role="menu"] > div > div { background-color: var(--bg-card) !important; }
+
+/* Smooth transition for dark mode switch */
+html, html * { transition: background-color 0.25s ease, border-color 0.25s ease, color 0.2s ease; }
+html.dark [style*="background"] { transition: none; } /* skip inline backgrounds */
 
 html { scroll-behavior: smooth; }
 
 body {
-  background: var(--ivory);
-  color: var(--charcoal);
+  background: var(--bg-page);
+  color: var(--text-body);
   line-height: 1.7;
   overflow-x: hidden;
-  -webkit-text-size-adjust: 100%; /* prevent iOS font scaling on orientation change */
+  -webkit-text-size-adjust: 100%;
 }
 
 /* Remove 300ms tap delay on all interactive elements */

@@ -7,6 +7,7 @@ import { useSession, signOut } from 'next-auth/react'
 import Image from 'next/image'
 import { LtpLogo } from '@/components/ui/LtpLogo'
 import { NotificationBell } from '@/components/NotificationBell'
+import { ThemeToggle } from '@/components/ui/ThemeToggle'
 
 interface NavItem     { href: string; label: string; desc?: string; icon?: string }
 interface NavSubGroup { label: string; items: NavItem[] }
@@ -32,6 +33,7 @@ const NAV_GROUPS: NavGroup[] = [
         items: [
           { href: '/journal',    label: 'Journal',           desc: 'Gratitude journaling',       icon: '📓' },
           { href: '/mood',       label: 'Mood Tracker',      desc: 'Log & chart your mood',      icon: '📊' },
+          { href: '/sleep',      label: 'Sleep Tracker',     desc: 'Track & improve your sleep', icon: '🌙' },
           { href: '/snapshot',   label: 'Wellness Snapshot', desc: 'Your 7-day summary',         icon: '📈' },
           { href: '/intention',  label: 'Morning Intention', desc: 'Set your daily focus',        icon: '🌅' },
         ],
@@ -272,6 +274,9 @@ export function Navbar() {
               </div>
             </li>
           ))}
+
+          {/* Dark mode toggle */}
+          <li><ThemeToggle /></li>
 
           {/* Search */}
           <li>
@@ -521,6 +526,10 @@ export function Navbar() {
 
           {/* Drawer footer — auth */}
           <div className="flex-shrink-0 border-t border-teal-light px-4 py-4 bg-ivory space-y-2.5">
+            <div className="flex items-center justify-between px-1 pb-1">
+              <span className="text-[0.78rem] text-text-xlight font-medium">Appearance</span>
+              <ThemeToggle />
+            </div>
             {session ? (
               <>
                 <Link

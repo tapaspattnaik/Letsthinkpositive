@@ -58,6 +58,7 @@ model User {
   kindnessActs       KindnessAct[]
   galleryPosts       GalleryPost[]
   galleryHearts      GalleryHeart[]
+  sleepLogs          SleepLog[]
 
   @@map("users")
 }
@@ -448,6 +449,25 @@ model GalleryHeart {
 
   @@unique([postId, userId])
   @@map("gallery_hearts")
+}
+
+// ── Sleep Tracker ─────────────────────────────────────────────────────────
+
+model SleepLog {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  date         String   @db.VarChar(10)   // YYYY-MM-DD
+  bedtime      String   @db.VarChar(5)    // HH:MM (24h)
+  wakeTime     String   @db.VarChar(5)    // HH:MM (24h)
+  durationMins Int                         // calculated duration
+  quality      Int                         // 1–5
+  notes        String?  @db.VarChar(500)
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@map("sleep_logs")
 }
 
 // ── Password resets ───────────────────────────────────────────────────────
