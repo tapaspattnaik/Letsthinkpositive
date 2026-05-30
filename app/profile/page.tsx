@@ -33,9 +33,29 @@ interface FeedPost {
 }
 interface UserProfile {
   id: number; name: string; email: string; phone?: string; bio?: string
-  interests: string; avatarUrl?: string; createdAt: string
+  interests: string; avatarUrl?: string; coverStyle?: string; coverUrl?: string; createdAt: string
   currentStreak?: number; longestStreak?: number
   badges: BadgeEntry[]; progress: ProgressEntry[]
+}
+
+// ── Cover presets ─────────────────────────────────────────────────────────────
+const COVER_PRESETS = [
+  { key: 'teal',    label: 'Forest Teal',   css: 'linear-gradient(135deg,#0F4040,#1A6B6B,#2D9B8A)' },
+  { key: 'sunset',  label: 'Sunset',        css: 'linear-gradient(135deg,#b5451b,#e8a020,#f5c96a)' },
+  { key: 'ocean',   label: 'Deep Ocean',    css: 'linear-gradient(135deg,#0a1a4a,#0093E9,#80D0C7)' },
+  { key: 'aurora',  label: 'Aurora',        css: 'linear-gradient(135deg,#1a1a2e,#a18cd1,#2D9B8A)' },
+  { key: 'rose',    label: 'Rose Gold',     css: 'linear-gradient(135deg,#4a1a2e,#c95b8a,#f5c96a)' },
+  { key: 'forest',  label: 'Forest',        css: 'linear-gradient(135deg,#1a2e1a,#2d5a27,#56ab2f)' },
+  { key: 'night',   label: 'Starry Night',  css: 'linear-gradient(135deg,#0d0d2b,#1a1a4a,#4a6b8a)' },
+  { key: 'lavender',label: 'Lavender',      css: 'linear-gradient(135deg,#3d1a5a,#a18cd1,#fbc2eb)' },
+  { key: 'sand',    label: 'Desert Sand',   css: 'linear-gradient(135deg,#4a3000,#c8860a,#f5c96a)' },
+  { key: 'mint',    label: 'Mint Fresh',    css: 'linear-gradient(135deg,#004040,#2D9B8A,#A8D8D0)' },
+]
+
+function getCoverStyle(profile: UserProfile): React.CSSProperties {
+  if (profile.coverUrl) return { backgroundImage: `url(${profile.coverUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+  const preset = COVER_PRESETS.find(p => p.key === (profile.coverStyle ?? 'teal'))
+  return { background: preset?.css ?? COVER_PRESETS[0].css }
 }
 
 const CHALLENGE_META: Record<string, { icon: string; title: string; totalDays: number; color: string }> = {
@@ -75,9 +95,12 @@ export default function ProfilePage() {
   const [selected,    setSelected]    = useState<string[]>([])
   const [saving,      setSaving]      = useState(false)
   const [saved,       setSaved]       = useState(false)
-  const [uploading,   setUploading]   = useState(false)
-  const [activeTab,   setActiveTab]   = useState<Tab>('overview')
-  const fileRef = useRef<HTMLInputElement>(null)
+  const [uploading,     setUploading]     = useState(false)
+  const [activeTab,     setActiveTab]     = useState<Tab>('overview')
+  const [showCoverPick, setShowCoverPick] = useState(false)
+  const [uploadingCover,setUploadingCover]= useState(false)
+  const fileRef      = useRef<HTMLInputElement>(null)
+  const coverFileRef = useRef<HTMLInputElement>(null)
 
   // Remove manual redirect — useSession({ required: true }) handles it with callbackUrl
   useEffect(() => {
@@ -129,6 +152,30 @@ export default function ProfilePage() {
     setUploading(false)
   }
 
+  async function selectCoverPreset(key: string) {
+    setProfile(p => p ? { ...p, coverStyle: key, coverUrl: undefined } : p)
+    setShowCoverPick(false)
+    await fetch('/api/profile', {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ coverStyle: key, coverUrl: null }),
+    })
+  }
+
+  async function uploadCover(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingCover(true)
+    const fd = new FormData()
+    fd.append('cover', file)
+    const res  = await fetch('/api/profile/cover', { method: 'POST', body: fd })
+    const data = await res.json()
+    if (data.coverUrl) {
+      setProfile(p => p ? { ...p, coverUrl: data.coverUrl, coverStyle: undefined } : p)
+      setShowCoverPick(false)
+    }
+    setUploadingCover(false)
+  }
+
   if (status === 'loading' || !profile) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-teal-ghost pt-[72px]">
@@ -164,23 +211,34 @@ export default function ProfilePage() {
       ══════════════════════════════════════════════════════════ */}
       <div className="relative">
         {/* Cover */}
-        <div className="h-[160px] sm:h-[200px] bg-gradient-to-r from-teal-deep via-[#1a7a6e] to-teal-dark relative overflow-hidden">
-          {/* Decorative circles */}
+        <div className="h-[160px] sm:h-[200px] relative overflow-hidden"
+          style={getCoverStyle(profile)}>
+          {/* Decorative overlay circles */}
           <div className="absolute -top-10 -right-10 w-60 h-60 rounded-full bg-white/5" />
           <div className="absolute top-8 right-32 w-32 h-32 rounded-full bg-white/5" />
           <div className="absolute -bottom-6 left-20 w-40 h-40 rounded-full bg-white/5" />
-          <div className="absolute top-4 left-1/3 w-20 h-20 rounded-full bg-amber/10" />
-          {/* Edit profile button */}
-          {!editing && (
-            <button
-              onClick={() => setEditing(true)}
-              className="absolute top-4 right-4 sm:right-6 flex items-center gap-2 bg-white/15 hover:bg-white/25 border border-white/25 text-white text-[0.78rem] font-semibold px-4 py-2 rounded-full transition-all backdrop-blur-sm">
+          <div className="absolute top-4 left-1/3 w-20 h-20 rounded-full bg-black/5" />
+
+          {/* Top-right action buttons */}
+          <div className="absolute top-4 right-4 sm:right-6 flex gap-2">
+            <button onClick={() => setShowCoverPick(true)}
+              className="flex items-center gap-1.5 bg-black/30 hover:bg-black/50 border border-white/20 text-white text-[0.75rem] font-semibold px-3.5 py-2 rounded-full transition-all backdrop-blur-sm">
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
               </svg>
-              Edit Profile
+              {uploadingCover ? 'Uploading…' : '🖼️ Cover'}
             </button>
-          )}
+            {!editing && (
+              <button onClick={() => setEditing(true)}
+                className="flex items-center gap-1.5 bg-white/15 hover:bg-white/25 border border-white/25 text-white text-[0.75rem] font-semibold px-3.5 py-2 rounded-full transition-all backdrop-blur-sm">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125" />
+                </svg>
+                ✏️ Edit Profile
+              </button>
+            )}
+          </div>
+          <input ref={coverFileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={uploadCover} />
         </div>
 
         {/* Avatar + name — overlaps the cover */}
@@ -280,6 +338,75 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* ── Cover Picker Modal ──────────────────────────────────────────── */}
+      {showCoverPick && (
+        <div className="fixed inset-0 z-[70] bg-black/50 backdrop-blur-sm flex items-center justify-center px-4 py-8 overflow-y-auto">
+          <div className="bg-white rounded-[28px] w-full max-w-lg shadow-2xl">
+            <div className="flex items-center justify-between px-7 pt-7 pb-4">
+              <div>
+                <h2 className="font-display text-[1.3rem] font-bold text-charcoal">Choose Cover</h2>
+                <p className="text-text-xlight text-[0.78rem]">Pick a gradient or upload your own photo</p>
+              </div>
+              <button onClick={() => setShowCoverPick(false)} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-teal-ghost transition-colors text-text-mid">✕</button>
+            </div>
+
+            <div className="px-7 pb-7 space-y-5">
+              {/* Gradient presets */}
+              <div>
+                <p className="text-[0.75rem] font-bold text-text-xlight uppercase tracking-widest mb-3">Gradient Presets</p>
+                <div className="grid grid-cols-5 gap-3">
+                  {COVER_PRESETS.map(p => (
+                    <button key={p.key} onClick={() => selectCoverPreset(p.key)}
+                      title={p.label}
+                      className={`relative h-14 rounded-[12px] overflow-hidden transition-all hover:scale-105
+                        ${(profile.coverStyle === p.key && !profile.coverUrl) ? 'ring-3 ring-teal-deep scale-105 shadow-lift' : ''}`}
+                      style={{ background: p.css, outline: (profile.coverStyle === p.key && !profile.coverUrl) ? '3px solid #1A6B6B' : 'none', outlineOffset: '2px' }}>
+                      {(profile.coverStyle === p.key && !profile.coverUrl) && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <svg className="w-5 h-5 text-white drop-shadow" fill="none" viewBox="0 0 12 12" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M2 6l3 3 5-5"/></svg>
+                        </div>
+                      )}
+                      <span className="absolute bottom-1 left-0 right-0 text-center text-white text-[0.55rem] font-semibold drop-shadow leading-none">{p.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="flex items-center gap-3">
+                <div className="flex-1 h-px bg-teal-light" />
+                <span className="text-text-xlight text-[0.72rem] font-medium">or upload a photo</span>
+                <div className="flex-1 h-px bg-teal-light" />
+              </div>
+
+              {/* Upload custom photo */}
+              <button onClick={() => coverFileRef.current?.click()} disabled={uploadingCover}
+                className="w-full flex items-center justify-center gap-3 border-2 border-dashed border-teal-light rounded-[16px] py-5 hover:border-teal-mid hover:bg-teal-ghost/30 transition-all disabled:opacity-60">
+                {uploadingCover ? (
+                  <><span className="w-5 h-5 border-2 border-teal-mid border-t-transparent rounded-full animate-spin" /><span className="text-teal-mid font-semibold text-[0.88rem]">Uploading…</span></>
+                ) : (
+                  <>
+                    <svg className="w-6 h-6 text-teal-mid" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                    </svg>
+                    <div className="text-left">
+                      <p className="text-teal-deep font-semibold text-[0.88rem]">Upload custom cover photo</p>
+                      <p className="text-text-xlight text-[0.72rem]">JPEG, PNG or WebP · max 5 MB · recommended 1500×400px</p>
+                    </div>
+                  </>
+                )}
+              </button>
+
+              {/* Live preview */}
+              <div>
+                <p className="text-[0.75rem] font-bold text-text-xlight uppercase tracking-widest mb-2">Preview</p>
+                <div className="h-20 rounded-[14px] overflow-hidden" style={getCoverStyle(profile)} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Edit form modal */}
       {editing && (

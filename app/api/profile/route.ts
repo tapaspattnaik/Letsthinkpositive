@@ -10,7 +10,7 @@ export async function GET() {
   const user = await prisma.user.findUnique({
     where: { id: Number(session.user.id) },
     include: {
-      badges: { include: { badge: true }, orderBy: { earnedAt: 'desc' } },
+      badges:   { include: { badge: true }, orderBy: { earnedAt: 'desc' } },
       progress: { orderBy: { startedAt: 'desc' } },
     },
   })
@@ -26,15 +26,17 @@ export async function PUT(req: NextRequest) {
   if (!session?.user?.id)
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
 
-  const { name, phone, bio, interests } = await req.json()
+  const { name, phone, bio, interests, coverStyle, coverUrl } = await req.json()
 
   const updated = await prisma.user.update({
     where: { id: Number(session.user.id) },
     data: {
-      name:      name      || undefined,
-      phone:     phone     ?? undefined,
-      bio:       bio       ?? undefined,
-      interests: Array.isArray(interests) ? interests.join(',') : (interests ?? undefined),
+      name:       name       || undefined,
+      phone:      phone      ?? undefined,
+      bio:        bio        ?? undefined,
+      interests:  Array.isArray(interests) ? interests.join(',') : (interests ?? undefined),
+      coverStyle: coverStyle ?? undefined,
+      coverUrl:   coverUrl   ?? undefined,
     },
   })
 
