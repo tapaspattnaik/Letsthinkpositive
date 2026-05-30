@@ -34,8 +34,10 @@ const NAV_GROUPS: NavGroup[] = [
           { href: '/journal',    label: 'Journal',           desc: 'Gratitude journaling',       icon: '📓' },
           { href: '/mood',       label: 'Mood Tracker',      desc: 'Log & chart your mood',      icon: '📊' },
           { href: '/sleep',      label: 'Sleep Tracker',     desc: 'Track & improve your sleep', icon: '🌙' },
+          { href: '/water',      label: 'Water Tracker',     desc: 'Daily hydration goals',      icon: '💧' },
+          { href: '/calendar',   label: 'Wellness Calendar', desc: 'Your journey, day by day',   icon: '📅' },
           { href: '/snapshot',   label: 'Wellness Snapshot', desc: 'Your 7-day summary',         icon: '📈' },
-          { href: '/intention',  label: 'Morning Intention', desc: 'Set your daily focus',        icon: '🌅' },
+          { href: '/intention',  label: 'Morning Intention', desc: 'Set your daily focus',       icon: '🌅' },
         ],
       },
       {
@@ -81,6 +83,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: 'Community',
     icon: '💛',
     items: [
+      { href: '/quiz',              label: 'Wellness Quiz',  desc: 'Get your personal plan',         icon: '🎯' },
       { href: '/community',         label: 'Community',      desc: 'Stories & sharing',              icon: '💬' },
       { href: '/community/gallery', label: 'Gallery',       desc: 'Good deeds & activities',        icon: '📸' },
       { href: '/circles',           label: 'Circles',       desc: 'Private group spaces',           icon: '🔒' },

@@ -1,0 +1,20 @@
+{
+  "name": "letsthinkpositive",
+  "short_name": "LTP",
+  "description": "A space for mental wellness, gratitude, calm sounds, and AI-guided positivity.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F8F8F4",
+  "theme_color": "#1A6B6B",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "categories": ["health", "lifestyle", "meditation"],
+  "shortcuts": [
+    { "name": "Journal",   "url": "/journal",   "description": "Open gratitude journal",   "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Breathe",   "url": "/breathing", "description": "Start breathing exercise",  "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Mood",      "url": "/mood",      "description": "Log your mood",             "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

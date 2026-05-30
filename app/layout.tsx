@@ -27,6 +27,12 @@ const dmSerif = DM_Serif_Display({
   display: 'swap',
 })
 
+export const viewport = {
+  themeColor: '#1A6B6B',
+  width: 'device-width',
+  initialScale: 1,
+}
+
 export const metadata: Metadata = {
   title: {
     default:  'letsthinkpositive — where every thought begins with hope',
@@ -38,6 +44,15 @@ export const metadata: Metadata = {
     siteName: 'letsthinkpositive',
     locale:   'en_IN',
     type:     'website',
+  },
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'letsthinkpositive',
+  },
+  other: {
+    'mobile-web-app-capable': 'yes',
   },
 }
 
