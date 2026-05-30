@@ -70,17 +70,31 @@ export async function POST(req: NextRequest) {
       stream:      true,
     })
 
-    const encoder = new TextEncoder()
+    // 60-second hard timeout — prevents hung SSE connections from holding
+    // a Node.js process open indefinitely on Hostinger shared hosting.
+    const abort      = new AbortController()
+    const timeoutId  = setTimeout(() => abort.abort(), 60_000)
+
     const readable = new ReadableStream({
       async start(controller) {
-        for await (const chunk of stream) {
-          const text = chunk.choices[0]?.delta?.content ?? ''
-          if (text) {
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text })}\n\n`))
+        try {
+          for await (const chunk of stream) {
+            if (abort.signal.aborted) break
+            const text = chunk.choices[0]?.delta?.content ?? ''
+            if (text) {
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text })}\n\n`))
+            }
           }
+        } finally {
+          clearTimeout(timeoutId)
+          controller.enqueue(encoder.encode('data: [DONE]\n\n'))
+          controller.close()
         }
-        controller.enqueue(encoder.encode('data: [DONE]\n\n'))
-        controller.close()
+      },
+      cancel() {
+        // Client disconnected — abort the upstream AI stream immediately
+        clearTimeout(timeoutId)
+        abort.abort()
       },
     })
 
@@ -89,6 +103,7 @@ export async function POST(req: NextRequest) {
         'Content-Type':  'text/event-stream',
         'Cache-Control': 'no-cache',
         'Connection':    'keep-alive',
+        'X-Accel-Buffering': 'no', // disable nginx buffering for SSE
       },
     })
   } catch (err) {

@@ -11,31 +11,35 @@ export async function GET() {
 
     const userId = Number(session.user.id)
 
-    // Fetch joined circles
-    const memberships = await prisma.groupMember.findMany({
-      where: { userId },
-      include: { circle: { select: { id: true, slug: true, name: true, icon: true } } },
-    })
+    // Run memberships + community posts in PARALLEL (was sequential — 3 round trips → 2)
+    const [memberships, communityPosts] = await Promise.all([
+      prisma.groupMember.findMany({
+        where:  { userId },
+        select: {
+          circleId: true,
+          circle:   { select: { id: true, slug: true, name: true, icon: true } },
+        },
+      }),
+      prisma.communityPost.findMany({
+        where:   { approved: true },
+        orderBy: { createdAt: 'desc' },
+        take:    12,                    // reduced from 15 to lower data transfer
+        include: {
+          user:   { select: { id: true, name: true, avatarUrl: true } },
+          _count: { select: { likes: true } },
+          likes:  { where: { userId }, select: { id: true } },
+        },
+      }),
+    ])
+
     const circleIds = memberships.map(m => m.circleId)
 
-    // Fetch recent community posts (approved)
-    const communityPosts = await prisma.communityPost.findMany({
-      where:   { approved: true },
-      orderBy: { createdAt: 'desc' },
-      take:    15,
-      include: {
-        user:   { select: { id: true, name: true, avatarUrl: true } },
-        _count: { select: { likes: true } },
-        likes:  { where: { userId }, select: { id: true } },
-      },
-    })
-
-    // Fetch recent circle posts from all joined circles
+    // Only run circle posts query if the user is actually in any circles
     const circlePosts = circleIds.length > 0
       ? await prisma.groupPost.findMany({
           where:   { circleId: { in: circleIds } },
           orderBy: { createdAt: 'desc' },
-          take:    20,
+          take:    15,
           include: {
             user:   { select: { id: true, name: true, avatarUrl: true } },
             circle: { select: { slug: true, name: true, icon: true } },
@@ -45,7 +49,7 @@ export async function GET() {
         })
       : []
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       community: communityPosts.map(p => ({
         id:         p.id,
         type:       'community' as const,
@@ -70,6 +74,11 @@ export async function GET() {
         createdAt:    p.createdAt,
       })),
     })
+
+    // Cache for 60 seconds on the client — reduces repeated identical fetches
+    // from the same user refreshing their profile feed
+    response.headers.set('Cache-Control', 'private, max-age=60')
+    return response
   } catch (err) {
     console.error('Home feed error:', err)
     return NextResponse.json({ community: [], circles: [] }, { status: 500 })

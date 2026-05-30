@@ -9,27 +9,37 @@ interface IgPost {
   media_type: string; timestamp: string; permalink: string
 }
 
+// Helper — fetch with a hard timeout so a slow/hung Facebook API never
+// blocks the server process on Hostinger shared hosting.
+function fetchWithTimeout(url: string, timeoutMs = 5000): Promise<Response> {
+  const controller = new AbortController()
+  const id = setTimeout(() => controller.abort(), timeoutMs)
+  return fetch(url, {
+    signal: controller.signal,
+    next:   { revalidate: 3600 },
+  }).finally(() => clearTimeout(id))
+}
+
+export const revalidate = 3600  // cache the response for 1 hour
+
 export async function GET() {
   const pageId    = process.env.FB_PAGE_ID
   const pageToken = process.env.FB_PAGE_ACCESS_TOKEN
   const igUserId  = process.env.IG_USER_ID
 
-  // Return placeholder if not configured
   if (!pageToken || !pageId || !igUserId) {
     return NextResponse.json({ fb: [], ig: [], configured: false })
   }
 
   const results = await Promise.allSettled([
-    // Facebook Page posts
-    fetch(
+    fetchWithTimeout(
       `https://graph.facebook.com/v20.0/${pageId}/posts?fields=message,story,full_picture,created_time,permalink_url&limit=6&access_token=${pageToken}`,
-      { next: { revalidate: 3600 } }
+      5000
     ).then(r => r.json()),
 
-    // Instagram posts
-    fetch(
+    fetchWithTimeout(
       `https://graph.facebook.com/v20.0/${igUserId}/media?fields=id,caption,media_url,thumbnail_url,media_type,timestamp,permalink&limit=6&access_token=${pageToken}`,
-      { next: { revalidate: 3600 } }
+      5000
     ).then(r => r.json()),
   ])
 

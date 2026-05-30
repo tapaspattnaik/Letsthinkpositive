@@ -101,6 +101,8 @@ model ChallengeProgress {
   user User @relation(fields: [userId], references: [id])
 
   @@unique([userId, challengeSlug])
+  @@index([userId])                    // speeds up progress lookups per user
+  @@index([challengeSlug, startedAt])  // speeds up stats query (slug + order)
   @@map("challenge_progress")
 }
 
@@ -119,6 +121,8 @@ model CommunityPost {
   likes        CommunityLike[]
   reactions    CommunityReaction[]
 
+  @@index([approved, createdAt])   // speeds up the main feed query (WHERE approved=true ORDER BY createdAt)
+  @@index([approved, postType])    // speeds up story vs wish filtering
   @@map("community_posts")
 }
 
