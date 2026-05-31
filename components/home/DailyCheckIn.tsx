@@ -23,6 +23,63 @@ const MOODS = [
   { value: 5, emoji: '😊', label: 'Great' },
 ]
 
+// Mood-specific response messages
+const MOOD_RESPONSES: Record<number, {
+  heading: string
+  message: string
+  tip: string
+  tipIcon: string
+  action: { label: string; href: string }
+  color: string
+  bg: string
+}> = {
+  1: {
+    heading: 'Thank you for being honest.',
+    message: 'Rough days are real, and checking in anyway takes courage. You don\'t have to feel okay to show up.',
+    tip: 'Try 3 minutes of box breathing — it can shift your nervous system in minutes.',
+    tipIcon: '🌬️',
+    action: { label: 'Try breathing exercise →', href: '/breathing' },
+    color: 'text-blue-600',
+    bg: 'bg-blue-50 border-blue-200',
+  },
+  2: {
+    heading: 'It\'s okay to feel low.',
+    message: 'You noticed where you are today — that\'s awareness, and awareness is the first step toward change.',
+    tip: 'A short walk or 5 minutes of gentle music can gently lift your mood.',
+    tipIcon: '🎵',
+    action: { label: 'Play calm sounds →', href: '/sounds' },
+    color: 'text-indigo-600',
+    bg: 'bg-indigo-50 border-indigo-200',
+  },
+  3: {
+    heading: 'Okay is perfectly fine.',
+    message: 'Not every day needs to be amazing. Steady and present is a great place to be.',
+    tip: 'Write one thing you\'re grateful for — even something small can shift your perspective.',
+    tipIcon: '📓',
+    action: { label: 'Open your journal →', href: '/journal' },
+    color: 'text-amber-700',
+    bg: 'bg-amber/10 border-amber/30',
+  },
+  4: {
+    heading: 'That\'s a good day! 🌱',
+    message: 'You\'re in a good place today. Carry that energy forward — a little momentum goes a long way.',
+    tip: 'Good mood is the perfect time to build a habit. Check in on your daily habits.',
+    tipIcon: '🎯',
+    action: { label: 'View your habits →', href: '/habits' },
+    color: 'text-teal-deep',
+    bg: 'bg-teal-ghost border-teal-light',
+  },
+  5: {
+    heading: 'You\'re feeling great — wonderful! ✨',
+    message: 'This is the energy to bottle. Notice what\'s working today and carry it with you.',
+    tip: 'Great days are when breakthroughs happen. Set an intention and ride this wave.',
+    tipIcon: '🌅',
+    action: { label: 'Set your intention →', href: '/intention' },
+    color: 'text-teal-deep',
+    bg: 'bg-teal-ghost border-teal-mid',
+  },
+}
+
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 
 function Skeleton() {
@@ -142,44 +199,67 @@ export function DailyCheckIn() {
 
   // ── Already checked in (or just completed)
   if (checkIn?.checkedIn) {
-    const moodData = MOODS[(checkIn.mood ?? 3) - 1]
+    const moodVal  = checkIn.mood ?? 3
+    const moodData = MOODS[moodVal - 1]
+    const response = MOOD_RESPONSES[moodVal]
+
     return (
-      <div className={`bg-white rounded-[24px] shadow-card border border-teal-light p-8 transition-all duration-500 ${justDone ? 'scale-[1.01]' : ''}`}>
+      <div className={`bg-white rounded-[24px] shadow-card border border-teal-light p-7 transition-all duration-500 ${justDone ? 'scale-[1.01]' : ''}`}>
         {header}
 
-        {/* Completion card */}
-        <div className="flex flex-col items-center text-center py-2">
-          <div className={`text-[3.5rem] mb-3 transition-transform duration-300 ${justDone ? 'scale-125' : ''}`}>
+        {/* Top — emoji + mood label */}
+        <div className="flex items-center gap-4 mb-5">
+          <div className={`text-[3.2rem] transition-transform duration-500 ${justDone ? 'scale-125' : ''}`}>
             {moodData.emoji}
           </div>
-
-          <p className="font-display font-bold text-charcoal text-[1.05rem] mb-1">
-            {justDone ? 'Check-in complete!' : 'Already checked in today'}
-          </p>
-          <p className="text-text-mid text-[0.85rem] mb-5">
-            You logged <span className="font-semibold text-teal-deep">{moodData.label}</span> today
-          </p>
-
-          {/* Streak display */}
-          <div className="flex items-center gap-6 mb-5">
-            <div className="text-center">
-              <div className="flex items-center justify-center gap-1 mb-0.5">
-                <span className="text-[1.4rem]">🔥</span>
-                <span className="font-bold text-[1.6rem] text-amber">{streak}</span>
-              </div>
-              <p className="text-text-xlight text-[0.72rem]">day streak</p>
-            </div>
-            <div className="w-px h-10 bg-teal-light" />
-            <div className="text-center">
-              <p className="font-bold text-[1.6rem] text-teal-deep mb-0.5">{longestStreak}</p>
-              <p className="text-text-xlight text-[0.72rem]">longest streak</p>
-            </div>
+          <div>
+            <p className="font-display font-bold text-charcoal text-[1.1rem] leading-tight">
+              {justDone ? response.heading : 'You\'ve checked in today'}
+            </p>
+            <p className="text-text-xlight text-[0.78rem] mt-0.5">
+              Feeling <span className={`font-semibold ${response.color}`}>{moodData.label}</span> today
+            </p>
           </div>
+        </div>
 
-          <Link
-            href="/mood"
-            className="text-teal-deep font-semibold text-[0.85rem] hover:text-teal-dark transition-colors no-underline">
-            See your full mood history →
+        {/* Personalized message */}
+        <p className="text-text-mid text-[0.88rem] leading-[1.75] mb-4">
+          {response.message}
+        </p>
+
+        {/* Tip box */}
+        <div className={`flex items-start gap-3 ${response.bg} border rounded-[14px] px-4 py-3.5 mb-5`}>
+          <span className="text-[1.2rem] flex-shrink-0">{response.tipIcon}</span>
+          <div>
+            <p className="text-[0.82rem] text-charcoal leading-[1.65]">{response.tip}</p>
+            <Link href={response.action.href}
+              className={`text-[0.78rem] font-semibold ${response.color} no-underline hover:opacity-80 transition-opacity mt-1 block`}>
+              {response.action.label}
+            </Link>
+          </div>
+        </div>
+
+        {/* Streak row */}
+        <div className="flex items-center justify-between pt-4 border-t border-teal-light">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[1.1rem]">🔥</span>
+              <span className="font-bold text-[1.1rem] text-amber">{streak}</span>
+              <span className="text-text-xlight text-[0.72rem]">day streak</span>
+            </div>
+            {longestStreak > 0 && (
+              <>
+                <span className="text-teal-light">·</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-bold text-[1.1rem] text-teal-deep">{longestStreak}</span>
+                  <span className="text-text-xlight text-[0.72rem]">best</span>
+                </div>
+              </>
+            )}
+          </div>
+          <Link href="/mood"
+            className="text-teal-mid font-semibold text-[0.78rem] hover:text-teal-deep no-underline transition-colors">
+            Full history →
           </Link>
         </div>
       </div>
