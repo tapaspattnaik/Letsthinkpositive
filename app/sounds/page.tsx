@@ -235,6 +235,203 @@ const SOUNDS: SoundDef[] = [
       return [oL, oR, oH]
     },
   },
+
+  // ── Musical Instruments ──────────────────────────────────────────────────────
+
+  {
+    id: 'piano', label: 'Soft Piano', icon: '🎹', color: 'from-gray-300 to-slate-500',
+    build(ctx, dest) {
+      // Pentatonic scale: C4 D4 E4 G4 A4 C5 D5 E5 G5
+      const PENTA = [261.6, 293.7, 329.6, 392.0, 440.0, 523.3, 587.3, 659.3, 784.0]
+      const reverb = ctx.createConvolver()
+      // Simple reverb impulse
+      const irLen = ctx.sampleRate * 2
+      const irBuf = ctx.createBuffer(2, irLen, ctx.sampleRate)
+      for (let c = 0; c < 2; c++) {
+        const d = irBuf.getChannelData(c)
+        for (let i = 0; i < irLen; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / irLen, 2)
+      }
+      reverb.buffer = irBuf
+      const reverbGain = ctx.createGain(); reverbGain.gain.value = 0.35
+      reverb.connect(reverbGain); reverbGain.connect(dest)
+
+      function playNote() {
+        const freq = PENTA[Math.floor(Math.random() * PENTA.length)]
+        const t = ctx.currentTime
+        // Piano tone = sine + triangle + slight 2nd harmonic
+        const o1 = ctx.createOscillator(); o1.type = 'sine';     o1.frequency.value = freq
+        const o2 = ctx.createOscillator(); o2.type = 'triangle'; o2.frequency.value = freq
+        const o3 = ctx.createOscillator(); o3.type = 'sine';     o3.frequency.value = freq * 2
+        const g = ctx.createGain()
+        g.gain.setValueAtTime(0, t)
+        g.gain.linearRampToValueAtTime(0.18, t + 0.01)  // fast attack
+        g.gain.exponentialRampToValueAtTime(0.06, t + 0.8)
+        g.gain.exponentialRampToValueAtTime(0.001, t + 2.5)
+        const g2 = ctx.createGain(); g2.gain.value = 0.4
+        const g3 = ctx.createGain(); g3.gain.value = 0.08
+        o1.connect(g); o2.connect(g2); g2.connect(g); o3.connect(g3); g3.connect(g)
+        g.connect(dest); g.connect(reverb)
+        o1.start(t); o2.start(t); o3.start(t)
+        o1.stop(t + 3); o2.stop(t + 3); o3.stop(t + 3)
+        setTimeout(playNote, 1800 + Math.random() * 3500)
+      }
+      playNote()
+      return []
+    },
+  },
+
+  {
+    id: 'flute', label: 'Bamboo Flute', icon: '🪈', color: 'from-lime-400 to-teal-500',
+    build(ctx, dest) {
+      // Pentatonic minor: D4 F4 G4 A4 C5 D5 F5
+      const SCALE = [293.7, 349.2, 392.0, 440.0, 523.3, 587.3, 698.5]
+      function playPhrase() {
+        const noteCount = 2 + Math.floor(Math.random() * 4)
+        let delay = 0
+        for (let i = 0; i < noteCount; i++) {
+          const freq = SCALE[Math.floor(Math.random() * SCALE.length)]
+          const dur  = 0.4 + Math.random() * 0.8
+          const t    = ctx.currentTime + delay
+          // Flute = sine + breathiness
+          const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = freq
+          const noise = makeNoise(ctx, 'white')
+          const noiseF = ctx.createBiquadFilter(); noiseF.type = 'bandpass'; noiseF.frequency.value = freq * 2; noiseF.Q.value = 3
+          const noiseG = ctx.createGain(); noiseG.gain.value = 0.04
+          // Vibrato
+          const vib = ctx.createOscillator(); vib.frequency.value = 5.5
+          const vibG = ctx.createGain(); vibG.gain.value = freq * 0.012
+          vib.connect(vibG); vibG.connect(o.frequency)
+          const g = ctx.createGain()
+          g.gain.setValueAtTime(0, t)
+          g.gain.linearRampToValueAtTime(0.22, t + 0.08)
+          g.gain.setValueAtTime(0.22, t + dur - 0.12)
+          g.gain.linearRampToValueAtTime(0, t + dur)
+          noise.connect(noiseF); noiseF.connect(noiseG); noiseG.connect(dest)
+          o.connect(g); g.connect(dest)
+          o.start(t); vib.start(t); noise.start()
+          o.stop(t + dur + 0.1); vib.stop(t + dur + 0.1)
+          setTimeout(() => { try { noise.stop() } catch {} }, (delay + dur + 0.2) * 1000)
+          delay += dur + 0.1 + Math.random() * 0.3
+        }
+        setTimeout(playPhrase, (delay + 1.5 + Math.random() * 3) * 1000)
+      }
+      playPhrase()
+      return []
+    },
+  },
+
+  {
+    id: 'harp', label: 'Harp', icon: '🎵', color: 'from-yellow-300 to-amber-500',
+    build(ctx, dest) {
+      // Harp arpeggios in C major pentatonic: C3 E3 G3 C4 E4 G4 C5
+      const STRINGS = [130.8, 164.8, 196.0, 261.6, 329.6, 392.0, 523.3, 659.3]
+      const reverb = ctx.createConvolver()
+      const irLen = ctx.sampleRate * 3
+      const irBuf = ctx.createBuffer(2, irLen, ctx.sampleRate)
+      for (let c = 0; c < 2; c++) {
+        const d = irBuf.getChannelData(c)
+        for (let i = 0; i < irLen; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / irLen, 1.5) * 0.5
+      }
+      reverb.buffer = irBuf
+      const rvG = ctx.createGain(); rvG.gain.value = 0.4; reverb.connect(rvG); rvG.connect(dest)
+
+      function pluckArpeggio() {
+        const chord = STRINGS.slice(Math.floor(Math.random() * 3), Math.floor(Math.random() * 3) + 4)
+        chord.forEach((freq, i) => {
+          const t = ctx.currentTime + i * 0.12
+          // Plucked string = sine + harmonics with fast decay
+          const o1 = ctx.createOscillator(); o1.type = 'sine';     o1.frequency.value = freq
+          const o2 = ctx.createOscillator(); o2.type = 'triangle'; o2.frequency.value = freq * 2
+          const o3 = ctx.createOscillator(); o3.type = 'sine';     o3.frequency.value = freq * 3
+          const g = ctx.createGain()
+          g.gain.setValueAtTime(0.18, t)
+          g.gain.exponentialRampToValueAtTime(0.001, t + 4.0)
+          const g2 = ctx.createGain(); g2.gain.value = 0.3
+          const g3 = ctx.createGain(); g3.gain.value = 0.1
+          o1.connect(g); o2.connect(g2); g2.connect(g); o3.connect(g3); g3.connect(g)
+          g.connect(dest); g.connect(reverb)
+          o1.start(t); o2.start(t); o3.start(t)
+          o1.stop(t + 4.5); o2.stop(t + 4.5); o3.stop(t + 4.5)
+        })
+        setTimeout(pluckArpeggio, 4000 + Math.random() * 4000)
+      }
+      pluckArpeggio()
+      return []
+    },
+  },
+
+  {
+    id: 'hangdrum', label: 'Hang Drum', icon: '🥁', color: 'from-rose-400 to-orange-500',
+    build(ctx, dest) {
+      // Authentic hang drum frequencies: D3, A3, Bb3, C4, D4, E4, F4, G4, A4
+      const HANG = [146.8, 220.0, 233.1, 261.6, 293.7, 329.6, 349.2, 392.0, 440.0]
+      const reverb = ctx.createConvolver()
+      const irLen = ctx.sampleRate * 2.5
+      const irBuf = ctx.createBuffer(2, irLen, ctx.sampleRate)
+      for (let c = 0; c < 2; c++) {
+        const d = irBuf.getChannelData(c)
+        for (let i = 0; i < irLen; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / irLen, 3) * 0.7
+      }
+      reverb.buffer = irBuf
+      const rvG = ctx.createGain(); rvG.gain.value = 0.5; reverb.connect(rvG); rvG.connect(dest)
+
+      function strike() {
+        const freq = HANG[Math.floor(Math.random() * HANG.length)]
+        const t    = ctx.currentTime
+        // Hang drum = metallic bell-like tone
+        const o1 = ctx.createOscillator(); o1.type = 'sine'; o1.frequency.value = freq
+        const o2 = ctx.createOscillator(); o2.type = 'sine'; o2.frequency.value = freq * 2.76 // inharmonic partial
+        const o3 = ctx.createOscillator(); o3.type = 'sine'; o3.frequency.value = freq * 5.40
+        const g = ctx.createGain()
+        g.gain.setValueAtTime(0.22, t)
+        g.gain.exponentialRampToValueAtTime(0.001, t + 3.5)
+        const g2 = ctx.createGain(); g2.gain.value = 0.25
+        const g3 = ctx.createGain(); g3.gain.value = 0.05
+        o1.connect(g); o2.connect(g2); g2.connect(g); o3.connect(g3); g3.connect(g)
+        g.connect(dest); g.connect(reverb)
+        o1.start(t); o2.start(t); o3.start(t)
+        o1.stop(t + 4); o2.stop(t + 4); o3.stop(t + 4)
+        // Sometimes double-strike for rhythm
+        if (Math.random() > 0.6) setTimeout(strike, 600 + Math.random() * 400)
+        setTimeout(strike, 1500 + Math.random() * 3000)
+      }
+      strike()
+      return []
+    },
+  },
+
+  {
+    id: 'cello', label: 'Cello Drone', icon: '🎻', color: 'from-amber-700 to-red-800',
+    build(ctx, dest) {
+      // Warm cello drone on C2 with harmonics — meditative, grounding
+      const root = 65.4  // C2
+      const filter = ctx.createBiquadFilter()
+      filter.type = 'lowpass'; filter.frequency.value = 800
+
+      // Bow pressure modulation — sawtooth filtered to sound like a bowed string
+      const harmonics = [1, 2, 3, 4, 5, 6, 7]
+      const oscs: OscillatorNode[] = []
+      harmonics.forEach((h, i) => {
+        const o = ctx.createOscillator(); o.type = 'sawtooth'
+        o.frequency.value = root * h
+        const g = ctx.createGain(); g.gain.value = 0.12 / (h * 1.2)
+        // Slow vibrato
+        const vib = ctx.createOscillator(); vib.frequency.value = 0.3 + Math.random() * 0.3
+        const vibG = ctx.createGain(); vibG.gain.value = root * h * 0.003
+        vib.connect(vibG); vibG.connect(o.frequency)
+        o.connect(g); g.connect(filter); vib.start(); o.start()
+        oscs.push(o, vib)
+      })
+      const masterG = ctx.createGain(); masterG.gain.value = 0.5
+      filter.connect(masterG); masterG.connect(dest)
+      // Slow swell
+      const swell = lfo(ctx, 0.04, 0.3, 0.7)
+      swell.gain.connect(masterG.gain)
+      masterG.gain.value = swell.offset
+      oscs.push(swell.osc)
+      return oscs
+    },
+  },
 ]
 
 const BREATHING = [
@@ -337,9 +534,11 @@ export default function SoundsPage() {
       <section className="py-12 px-[5%]">
         <div className="max-w-3xl mx-auto">
 
-          {/* Sound grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
-            {SOUNDS.map(s => (
+          {/* Nature sounds */}
+          <div className="mb-2">
+            <p className="text-[0.72rem] font-bold text-text-xlight uppercase tracking-widest mb-3">🌿 Nature & Ambience</p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {SOUNDS.filter(s => !['piano','flute','harp','hangdrum','cello'].includes(s.id)).map(s => (
               <div key={s.id} className={`bg-white rounded-[24px] border overflow-hidden transition-all hover:-translate-y-1 hover:shadow-lift
                 ${playing[s.id] ? 'border-teal-mid shadow-lift' : 'border-teal-light shadow-card'}`}>
                 <button
@@ -378,6 +577,51 @@ export default function SoundsPage() {
                 )}
               </div>
             ))}
+          </div>
+
+          {/* Instruments section */}
+          <div className="mt-8 mb-6">
+            <p className="text-[0.72rem] font-bold text-text-xlight uppercase tracking-widest mb-3">🎵 Musical Instruments</p>
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+              {SOUNDS.filter(s => ['piano','flute','harp','hangdrum','cello'].includes(s.id)).map(s => (
+                <div key={s.id} className={`bg-white rounded-[24px] border overflow-hidden transition-all hover:-translate-y-1 hover:shadow-lift
+                  ${playing[s.id] ? 'border-teal-mid shadow-lift' : 'border-teal-light shadow-card'}`}>
+                  <button
+                    type="button"
+                    onClick={() => toggleSound(s)}
+                    aria-pressed={playing[s.id] ?? false}
+                    aria-label={`${playing[s.id] ? 'Stop' : 'Play'} ${s.label}`}
+                    className="w-full pt-5 px-5 pb-3 flex flex-col items-center relative">
+                    {playing[s.id] && (
+                      <div className={`absolute inset-0 bg-gradient-to-b ${s.color} opacity-10 rounded-t-[24px]`} />
+                    )}
+                    <span className={`text-[2.5rem] block mb-2 transition-transform duration-300 ${playing[s.id] ? 'scale-110' : ''}`}>
+                      {s.icon}
+                    </span>
+                    <p className={`text-[0.85rem] font-semibold mb-1 text-center ${playing[s.id] ? 'text-teal-deep' : 'text-text-mid'}`}>{s.label}</p>
+                    {playing[s.id] ? (
+                      <span className="flex items-center gap-1 text-[0.65rem] font-bold text-teal-mid">
+                        <span className="w-1.5 h-1.5 rounded-full bg-teal-mid animate-pulse" />PLAYING
+                      </span>
+                    ) : (
+                      <span className="text-[0.65rem] font-semibold text-text-xlight">TAP TO PLAY</span>
+                    )}
+                  </button>
+                  {playing[s.id] && (
+                    <div className="px-4 pb-4">
+                      <input type="range" min={0} max={1} step={0.05}
+                        value={volumes[s.id] ?? 0.6}
+                        onChange={e => setVolume(s.id, parseFloat(e.target.value))}
+                        aria-label={`${s.label} volume`}
+                        className="w-full accent-teal-mid h-1.5" />
+                      <div className="flex justify-between text-[0.6rem] text-text-xlight mt-0.5">
+                        <span>🔉</span><span>🔊</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Active mix bar */}
