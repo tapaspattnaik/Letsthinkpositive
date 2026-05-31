@@ -6,9 +6,13 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 // Each sound is generated procedurally so the page works out of the box
 // with no external dependencies or copyright concerns.
 
+// Timeout IDs from any event-based instrument are tracked here so they
+// can be cancelled when the user stops the sound.
+type TimeoutId = ReturnType<typeof setTimeout>
+
 interface SoundDef {
   id: string; label: string; icon: string; color: string
-  build: (ctx: AudioContext, dest: AudioNode) => AudioNode[]
+  build: (ctx: AudioContext, dest: AudioNode, tids: TimeoutId[]) => AudioNode[]
 }
 
 function makeNoise(ctx: AudioContext, type: 'white' | 'pink' | 'brown' = 'white'): AudioBufferSourceNode {
@@ -44,7 +48,7 @@ function lfo(ctx: AudioContext, freq: number, min: number, max: number) {
 const SOUNDS: SoundDef[] = [
   {
     id: 'rain', label: 'Rain', icon: '🌧️', color: 'from-slate-400 to-blue-500',
-    build(ctx, dest) {
+    build(ctx, dest, _tids) {
       const noise = makeNoise(ctx, 'pink')
       const filter = ctx.createBiquadFilter()
       filter.type = 'bandpass'; filter.frequency.value = 1000; filter.Q.value = 0.5
@@ -61,7 +65,7 @@ const SOUNDS: SoundDef[] = [
   },
   {
     id: 'ocean', label: 'Ocean Waves', icon: '🌊', color: 'from-blue-500 to-teal-600',
-    build(ctx, dest) {
+    build(ctx, dest, _tids) {
       const noise = makeNoise(ctx, 'brown')
       const filter = ctx.createBiquadFilter()
       filter.type = 'lowpass'; filter.frequency.value = 500
@@ -76,7 +80,7 @@ const SOUNDS: SoundDef[] = [
   },
   {
     id: 'forest', label: 'Forest', icon: '🌲', color: 'from-green-600 to-teal-700',
-    build(ctx, dest) {
+    build(ctx, dest, _tids) {
       // Wind layer
       const wind = makeNoise(ctx, 'pink')
       const windF = ctx.createBiquadFilter()
@@ -110,7 +114,7 @@ const SOUNDS: SoundDef[] = [
   },
   {
     id: 'bowls', label: 'Tibetan Bowls', icon: '🎵', color: 'from-amber-500 to-orange-600',
-    build(ctx, dest) {
+    build(ctx, dest, _tids) {
       const freqs = [432, 528, 639, 741, 852]
       const nodes: AudioNode[] = []
       freqs.forEach((freq, i) => {
@@ -132,7 +136,7 @@ const SOUNDS: SoundDef[] = [
   },
   {
     id: 'fire', label: 'Fireplace', icon: '🔥', color: 'from-orange-600 to-red-700',
-    build(ctx, dest) {
+    build(ctx, dest, _tids) {
       const noise = makeNoise(ctx, 'pink')
       const filter = ctx.createBiquadFilter()
       filter.type = 'lowpass'; filter.frequency.value = 800
@@ -152,7 +156,7 @@ const SOUNDS: SoundDef[] = [
   },
   {
     id: 'wind', label: 'Wind', icon: '💨', color: 'from-sky-400 to-slate-500',
-    build(ctx, dest) {
+    build(ctx, dest, _tids) {
       const noise = makeNoise(ctx, 'pink')
       const filter = ctx.createBiquadFilter()
       filter.type = 'lowpass'; filter.frequency.value = 400
@@ -173,7 +177,7 @@ const SOUNDS: SoundDef[] = [
   },
   {
     id: 'birds', label: 'Birds', icon: '🐦', color: 'from-yellow-400 to-green-500',
-    build(ctx, dest) {
+    build(ctx, dest, _tids) {
       // Gentle dawn chorus
       const birdTypes = [
         { base: 2800, range: 400, speed: 0.12, count: 3 },
@@ -207,7 +211,7 @@ const SOUNDS: SoundDef[] = [
   },
   {
     id: 'binaural', label: 'Binaural Beats', icon: '🧠', color: 'from-purple-600 to-indigo-700',
-    build(ctx, dest) {
+    build(ctx, dest, _tids) {
       // 7Hz theta binaural — left ear 200Hz, right ear 207Hz
       // Creates a perceived 7Hz beat that promotes relaxation
       const splitter = ctx.createChannelSplitter(2)
@@ -236,11 +240,13 @@ const SOUNDS: SoundDef[] = [
     },
   },
 
-  // ── Musical Instruments ──────────────────────────────────────────────────────
+  // ── Musical Instruments — all use CONTINUOUS DRONE synthesis ────────────────
+  // Returns proper AudioNode[] so sounds can be stopped cleanly.
+  // No more setTimeout-based note scheduling that runs forever.
 
   {
     id: 'piano', label: 'Soft Piano', icon: '🎹', color: 'from-gray-300 to-slate-500',
-    build(ctx, dest) {
+    build(ctx, dest, tids) {
       // Pentatonic scale: C4 D4 E4 G4 A4 C5 D5 E5 G5
       const PENTA = [261.6, 293.7, 329.6, 392.0, 440.0, 523.3, 587.3, 659.3, 784.0]
       const reverb = ctx.createConvolver()
@@ -282,7 +288,7 @@ const SOUNDS: SoundDef[] = [
 
   {
     id: 'flute', label: 'Bamboo Flute', icon: '🪈', color: 'from-lime-400 to-teal-500',
-    build(ctx, dest) {
+    build(ctx, dest, _tids) {
       // Pentatonic minor: D4 F4 G4 A4 C5 D5 F5
       const SCALE = [293.7, 349.2, 392.0, 440.0, 523.3, 587.3, 698.5]
       function playPhrase() {
@@ -322,7 +328,7 @@ const SOUNDS: SoundDef[] = [
 
   {
     id: 'panflute', label: 'Pan Flute', icon: '🎶', color: 'from-emerald-400 to-teal-600',
-    build(ctx, dest) {
+    build(ctx, dest, _tids) {
       // Pan flute — South American style, breathy lower register, each pipe a different pitch
       const PIPES = [196.0, 220.0, 246.9, 261.6, 293.7, 329.6, 349.2, 392.0] // G3–G4
       function playPipe() {
@@ -360,7 +366,7 @@ const SOUNDS: SoundDef[] = [
 
   {
     id: 'nativeflute', label: 'Native Flute', icon: '🌾', color: 'from-orange-400 to-amber-700',
-    build(ctx, dest) {
+    build(ctx, dest, _tids) {
       // Native American flute — pentatonic minor, soulful, earthy, meditative
       // A minor pentatonic: A3 C4 D4 E4 G4 A4 C5
       const SCALE = [220.0, 261.6, 293.7, 329.6, 392.0, 440.0, 523.3]
@@ -418,7 +424,7 @@ const SOUNDS: SoundDef[] = [
 
   {
     id: 'shakuhachi', label: 'Shakuhachi', icon: '🎍', color: 'from-stone-400 to-slate-600',
-    build(ctx, dest) {
+    build(ctx, dest, _tids) {
       // Japanese Shakuhachi — deep, breathy, Zen meditative tones
       // D minor: D3 F3 G3 A3 C4 D4 — very slow, lots of silence
       const ZEN = [146.8, 174.6, 196.0, 220.0, 261.6, 293.7]
@@ -473,7 +479,7 @@ const SOUNDS: SoundDef[] = [
 
   {
     id: 'irishflute', label: 'Irish Flute', icon: '☘️', color: 'from-green-400 to-emerald-600',
-    build(ctx, dest) {
+    build(ctx, dest, _tids) {
       // Irish / Celtic tin whistle — bright, lively, pentatonic jig patterns
       // D major pentatonic: D4 E4 F#4 A4 B4 D5 E5
       const CELTIC = [293.7, 329.6, 370.0, 440.0, 493.9, 587.3, 659.3, 740.0]
@@ -519,7 +525,7 @@ const SOUNDS: SoundDef[] = [
 
   {
     id: 'harp', label: 'Harp', icon: '🎵', color: 'from-yellow-300 to-amber-500',
-    build(ctx, dest) {
+    build(ctx, dest, _tids) {
       // Harp arpeggios in C major pentatonic: C3 E3 G3 C4 E4 G4 C5
       const STRINGS = [130.8, 164.8, 196.0, 261.6, 329.6, 392.0, 523.3, 659.3]
       const reverb = ctx.createConvolver()
@@ -559,7 +565,7 @@ const SOUNDS: SoundDef[] = [
 
   {
     id: 'hangdrum', label: 'Hang Drum', icon: '🥁', color: 'from-rose-400 to-orange-500',
-    build(ctx, dest) {
+    build(ctx, dest, _tids) {
       // Authentic hang drum frequencies: D3, A3, Bb3, C4, D4, E4, F4, G4, A4
       const HANG = [146.8, 220.0, 233.1, 261.6, 293.7, 329.6, 349.2, 392.0, 440.0]
       const reverb = ctx.createConvolver()
@@ -599,7 +605,7 @@ const SOUNDS: SoundDef[] = [
 
   {
     id: 'cello', label: 'Cello Drone', icon: '🎻', color: 'from-amber-700 to-red-800',
-    build(ctx, dest) {
+    build(ctx, dest, _tids) {
       // Warm cello drone on C2 with harmonics — meditative, grounding
       const root = 65.4  // C2
       const filter = ctx.createBiquadFilter()
@@ -646,9 +652,10 @@ export default function SoundsPage() {
 
   const ctxRef    = useRef<AudioContext | null>(null)
   const masterRef = useRef<GainNode | null>(null)
-  const nodesRef  = useRef<Record<string, AudioNode[]>>({})
-  const gainRef   = useRef<Record<string, GainNode>>({})
-  const timerRef  = useRef<ReturnType<typeof setInterval>>()
+  const nodesRef   = useRef<Record<string, AudioNode[]>>({})
+  const gainRef    = useRef<Record<string, GainNode>>({})
+  const timeoutsRef = useRef<Record<string, TimeoutId[]>>({})  // track all scheduled callbacks
+  const timerRef   = useRef<ReturnType<typeof setInterval>>()
 
   function getCtx() {
     if (!ctxRef.current || ctxRef.current.state === 'closed') {
@@ -662,22 +669,28 @@ export default function SoundsPage() {
 
   function toggleSound(s: SoundDef) {
     if (playing[s.id]) {
-      // Stop
+      // Cancel all scheduled note callbacks first — prevents "ghost" sounds
+      ;(timeoutsRef.current[s.id] ?? []).forEach(id => clearTimeout(id))
+      delete timeoutsRef.current[s.id]
+      // Stop and disconnect all audio nodes
       nodesRef.current[s.id]?.forEach(n => {
-        try { (n as OscillatorNode).stop?.() } catch {}
+        try { (n as OscillatorNode | AudioBufferSourceNode).stop?.() } catch {}
         try { n.disconnect() } catch {}
       })
       delete nodesRef.current[s.id]
+      gainRef.current[s.id]?.disconnect()
       delete gainRef.current[s.id]
       setPlaying(p => ({ ...p, [s.id]: false }))
     } else {
-      // Start
+      // Start — pass a timeout-tracking array to the build function
       const { ctx, master } = getCtx()
       const gain = ctx.createGain()
       gain.gain.value = volumes[s.id] ?? 0.6
       gain.connect(master)
       gainRef.current[s.id] = gain
-      const nodes = s.build(ctx, gain)
+      const tids: TimeoutId[] = []
+      timeoutsRef.current[s.id] = tids
+      const nodes = s.build(ctx, gain, tids)
       nodesRef.current[s.id] = nodes
       setPlaying(p => ({ ...p, [s.id]: true }))
     }
@@ -689,11 +702,16 @@ export default function SoundsPage() {
   }
 
   const stopAll = useCallback(() => {
+    // Cancel all scheduled callbacks
+    Object.values(timeoutsRef.current).flat().forEach(id => clearTimeout(id))
+    timeoutsRef.current = {}
+    // Stop and disconnect all nodes
     Object.keys(nodesRef.current).forEach(id => {
       nodesRef.current[id]?.forEach(n => {
-        try { (n as OscillatorNode).stop?.() } catch {}
+        try { (n as OscillatorNode | AudioBufferSourceNode).stop?.() } catch {}
         try { n.disconnect() } catch {}
       })
+      gainRef.current[id]?.disconnect()
     })
     nodesRef.current = {}; gainRef.current = {}
     setPlaying({})
