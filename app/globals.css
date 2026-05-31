@@ -210,3 +210,33 @@ a, button, [role="button"], input, select, textarea, label {
   100% { opacity: 0.30; border-color: rgba(232,160,32,0.55); }
 }
 .animate-arc-fire { animation: arc-fire 6s ease-in-out infinite; }
+
+/* ── Mobile performance: pause expensive infinite animations ───────────────
+   On small screens the constantly-running hero ring/bar/glow animations cause
+   continuous repaints that make the page feel sluggish and drain battery.
+   We keep them on desktop where there's GPU headroom, disable on phones. */
+@media (max-width: 640px) {
+  .animate-ring-outer,
+  .animate-ring-mid,
+  .animate-ring-inner,
+  .animate-core-breathe,
+  .animate-orb-breathe,
+  .animate-bar-1,
+  .animate-bar-2,
+  .animate-bar-3,
+  .animate-arc-fire,
+  .animate-ping,
+  .animate-marquee {
+    animation: none !important;
+  }
+}
+
+/* Respect users who prefer reduced motion (accessibility + perf) */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

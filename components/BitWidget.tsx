@@ -97,7 +97,7 @@ export function BitWidget() {
   }
 
   return (
-    <div ref={widgetRef} className="fixed bottom-5 right-5 z-[999] flex flex-col items-end gap-3">
+    <div ref={widgetRef} className="fixed bottom-5 right-5 z-[999] flex flex-col items-end gap-3 pointer-events-none">
 
       {/* ── Chat panel ───────────────────────────── */}
       <div
@@ -107,8 +107,8 @@ export function BitWidget() {
         aria-hidden={!open}
         className={`flex flex-col bg-white rounded-[24px] shadow-[0_8px_40px_rgba(0,0,0,0.18)] border border-teal-light overflow-hidden transition-all duration-300 origin-bottom-right
         ${open
-          ? 'opacity-100 scale-100 translate-y-0 w-[360px] h-[520px] sm:w-[380px] sm:h-[540px]'
-          : 'opacity-0 scale-90 translate-y-4 pointer-events-none w-[360px] h-[520px]'}`}>
+          ? 'opacity-100 scale-100 translate-y-0 w-[88vw] max-w-[380px] h-[70vh] max-h-[540px] pointer-events-auto'
+          : 'opacity-0 scale-90 translate-y-4 pointer-events-none w-0 h-0 overflow-hidden'}`}>
 
         {/* Header */}
         <div className="flex items-center gap-2.5 px-4 py-3 border-b border-teal-light bg-gradient-to-r from-teal-deep to-teal-dark flex-shrink-0">
@@ -218,7 +218,7 @@ export function BitWidget() {
       {/* ── Floating toggle button ────────────────── */}
       <button onClick={toggle}
         aria-label={open ? 'Close Bit chat' : 'Open Bit chat'}
-        className={`relative w-14 h-14 rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.20)] flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95
+        className={`pointer-events-auto relative w-14 h-14 rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.20)] flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95
           ${open ? 'bg-teal-dark' : 'bg-teal-deep'}`}>
         {!open && <span className="absolute inset-0 rounded-full bg-teal-mid/30 animate-ping" />}
         <div className={`transition-transform duration-300 ${open ? 'rotate-90 scale-90' : ''}`}>
