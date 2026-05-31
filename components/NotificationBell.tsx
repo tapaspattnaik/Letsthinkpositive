@@ -41,33 +41,70 @@ export function NotificationBell() {
   const [open,          setOpen]          = useState(false)
   const [notifications, setNotifications] = useState<Notification[]>([])
   const bellRef  = useRef<HTMLDivElement>(null)
-  // Store userId in a ref so fetchNotifications doesn't recreate when the
-  // session object reference changes (which previously caused an extra burst
-  // request on every session refetch / window focus).
-  const userIdRef = useRef<string | undefined>(undefined)
+  const userIdRef    = useRef<string | undefined>(undefined)
+  const failCountRef = useRef(0)                                    // consecutive failures → backoff
+  const lastFetchRef = useRef(0)                                    // throttle visibility-triggered fetches
+  const timerRef     = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const unread = notifications.filter(n => !n.read).length
 
   // Sync userId ref without triggering callback recreation
   useEffect(() => { userIdRef.current = session?.user?.id }, [session?.user?.id])
 
-  // Stable callback — never recreated; reads userId from ref
+  // Stable fetch — never recreated. Skips when tab hidden, backs off on failure.
   const fetchNotifications = useCallback(async () => {
     if (!userIdRef.current) return
+    // Never poll a backgrounded tab — this was the #1 source of request spam
+    if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return
+
+    lastFetchRef.current = Date.now()
     try {
       const res = await fetch('/api/notifications')
-      if (res.ok) setNotifications(await res.json())
-    } catch { /* swallow network errors */ }
-  }, []) // ← empty deps: stable across all renders
+      const ct  = res.headers.get('content-type') ?? ''
+      if (res.ok && ct.includes('application/json')) {
+        setNotifications(await res.json())
+        failCountRef.current = 0                                    // success → reset backoff
+      } else {
+        failCountRef.current = Math.min(failCountRef.current + 1, 6) // 503/HTML → back off
+      }
+    } catch {
+      failCountRef.current = Math.min(failCountRef.current + 1, 6)  // network error → back off
+    }
+  }, [])
 
-  // Fetch once when user first signs in, then every 3 minutes.
-  // No re-registration on session changes — the stable callback + ref handle that.
+  // Adaptive scheduler: 5-min base, exponential backoff on failure (up to ~30 min),
+  // paused entirely while the tab is hidden.
   const signedIn = !!session?.user?.id
   useEffect(() => {
     if (!signedIn) return
-    fetchNotifications()
-    const interval = setInterval(fetchNotifications, 3 * 60_000)
-    return () => clearInterval(interval)
+    let cancelled = false
+    const BASE = 5 * 60_000   // 5 minutes
+    const CAP  = 30 * 60_000  // never longer than 30 minutes between attempts
+
+    async function loop() {
+      if (cancelled) return
+      await fetchNotifications()
+      if (cancelled) return
+      const delay = Math.min(BASE * Math.pow(2, failCountRef.current), CAP)
+      timerRef.current = setTimeout(loop, delay)
+    }
+    loop()
+
+    // When the user returns to the tab, do one fresh check (throttled to once/min)
+    function onVisible() {
+      if (document.visibilityState !== 'visible') return
+      if (Date.now() - lastFetchRef.current < 60_000) return
+      failCountRef.current = 0
+      if (timerRef.current) clearTimeout(timerRef.current)
+      loop()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+
+    return () => {
+      cancelled = true
+      if (timerRef.current) clearTimeout(timerRef.current)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
   }, [signedIn, fetchNotifications])
 
   // Close on outside click
