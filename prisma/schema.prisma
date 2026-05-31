@@ -61,6 +61,7 @@ model User {
   galleryPosts       GalleryPost[]
   galleryHearts      GalleryHeart[]
   sleepLogs          SleepLog[]
+  savedQuotes        SavedQuote[]
 
   @@map("users")
 }
@@ -474,6 +475,22 @@ model SleepLog {
 
   @@unique([userId, date])
   @@map("sleep_logs")
+}
+
+// ── Saved Quotes ──────────────────────────────────────────────────────────
+
+model SavedQuote {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  text        String   @db.VarChar(500)
+  attribution String?  @db.VarChar(200)
+  source      String?  @db.VarChar(100)  // 'feed' | 'quotes' | 'user'
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, text(length: 100)])  // prevent saving same quote twice
+  @@map("saved_quotes")
 }
 
 // ── Password resets ───────────────────────────────────────────────────────

@@ -201,6 +201,13 @@ export function Navbar() {
               Home
             </Link>
           </li>
+          <li>
+            <Link href="/tools"
+              className={`px-3 py-2 rounded-lg text-[0.87rem] font-medium no-underline transition-colors
+                ${pathname === '/tools' ? 'text-teal-deep bg-teal-ghost' : 'text-charcoal hover:text-teal-deep hover:bg-teal-ghost'}`}>
+              All Tools
+            </Link>
+          </li>
 
           {NAV_GROUPS.map(group => (
             <li key={group.label} className="relative"
