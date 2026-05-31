@@ -5,7 +5,6 @@ const config: CapacitorConfig = {
   appName:  "Let's Think Positive",
   webDir:   'out',
 
-  // ── Remote URL — loads the live site so all features work instantly ───────
   server: {
     url:       'https://letsthinkpositive.com',
     cleartext: false,
@@ -14,36 +13,25 @@ const config: CapacitorConfig = {
       '*.letsthinkpositive.com',
       'accounts.google.com',
       '*.googleapis.com',
-      '*.pexels.com',
       '*.googleusercontent.com',
+      '*.pexels.com',
     ],
-    // Tell the WebView to use the live URL — prevents localhost fallback
-    hostname: 'letsthinkpositive.com',
   },
 
-  // ── Android ──────────────────────────────────────────────────────────────
   android: {
-    allowMixedContent:            false,
-    captureInput:                 true,
-    // Enable during development so Chrome DevTools can inspect the WebView
-    webContentsDebuggingEnabled:  true,
-    buildOptions: {
-      keystorePath:     undefined,
-      keystoreAlias:    undefined,
-      keystorePassword: undefined,
-    },
+    allowMixedContent:           false,
+    captureInput:                true,
+    webContentsDebuggingEnabled: true,  // allows chrome://inspect debugging
   },
 
-  // ── Plugins ──────────────────────────────────────────────────────────────
   plugins: {
     SplashScreen: {
-      launchShowDuration:            2000,
-      launchAutoHide:                true,
-      backgroundColor:               '#1A6B6B',
-      androidSplashResourceName:     'splash',
-      showSpinner:                   false,
-      splashFullScreen:              true,
-      splashImmersive:               true,
+      launchShowDuration:        1500,
+      launchAutoHide:            true,
+      backgroundColor:           '#1A6B6B',
+      showSpinner:               false,
+      splashFullScreen:          true,
+      splashImmersive:           true,
     },
     StatusBar: {
       style:           'DARK',
@@ -52,11 +40,7 @@ const config: CapacitorConfig = {
     },
     Keyboard: {
       resize:             'body',
-      style:              'DARK',
       resizeOnFullScreen: true,
-    },
-    PushNotifications: {
-      presentationOptions: ['badge', 'sound', 'alert'],
     },
   },
 }

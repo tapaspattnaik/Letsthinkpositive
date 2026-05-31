@@ -1,5 +1,6 @@
 package com.letsthinkpositive.app;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -8,32 +9,40 @@ import com.getcapacitor.BridgeActivity;
 public class MainActivity extends BridgeActivity {
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Enable WebView debugging in Chrome (chrome://inspect)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            WebView.setWebContentsDebuggingEnabled(true);
+        }
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
+    protected void onStart() {
+        super.onStart();
 
-        // Ensure WebView settings are correct for loading the live site
         WebView webView = getBridge().getWebView();
-        WebSettings settings = webView.getSettings();
+        WebSettings s   = webView.getSettings();
 
-        // Core settings needed to load Next.js properly
-        settings.setJavaScriptEnabled(true);
-        settings.setDomStorageEnabled(true);
-        settings.setLoadWithOverviewMode(true);
-        settings.setUseWideViewPort(true);
-        settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
-        settings.setCacheMode(WebSettings.LOAD_DEFAULT);
-        settings.setAllowFileAccess(false);
-        settings.setAllowContentAccess(true);
+        // Required for Next.js to load correctly
+        s.setJavaScriptEnabled(true);
+        s.setDomStorageEnabled(true);
+        s.setDatabaseEnabled(true);
 
-        // Modern UA — prevents sites serving a "lite" mobile version
-        String ua = settings.getUserAgentString();
-        if (!ua.contains("LetsThinkPositive")) {
-            settings.setUserAgentString(ua + " LetsThinkPositive/1.0");
-        }
+        // Proper mobile viewport
+        s.setUseWideViewPort(true);
+        s.setLoadWithOverviewMode(true);
+        s.setSupportZoom(false);
+
+        // Cache — use network when available, fall back to cache offline
+        s.setCacheMode(WebSettings.LOAD_DEFAULT);
+
+        // Allow cross-origin requests needed by Next.js assets
+        s.setAllowUniversalAccessFromFileURLs(false);
+        s.setAllowFileAccessFromFileURLs(false);
+
+        // Keep the standard Chrome UA — some servers block custom UAs
+        // We do NOT change it so the server serves the normal desktop/mobile site
     }
 }
