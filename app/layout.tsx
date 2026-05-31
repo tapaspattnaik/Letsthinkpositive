@@ -5,6 +5,7 @@ import { Footer } from '@/components/layout/Footer'
 import { SessionProvider } from '@/components/layout/SessionProvider'
 import { BitWidget } from '@/components/BitWidget'
 import { ConstructionBanner } from '@/components/layout/ConstructionBanner'
+import { HeaderHeight } from '@/components/layout/HeaderHeight'
 import './globals.css'
 
 const playfair = Playfair_Display({
@@ -68,8 +69,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           >
             Skip to main content
           </a>
-          <ConstructionBanner />
-          <Navbar />
+          {/* Single fixed header — banner + navbar stacked, no z-index clash */}
+          <div id="site-header" className="fixed top-0 left-0 right-0 z-50">
+            <ConstructionBanner />
+            <Navbar />
+          </div>
+          {/* Dynamically sets main padding-top = actual header height (navbar ± banner) */}
+          <HeaderHeight />
           <main id="main-content" className="pt-[72px]">
             {children}
           </main>

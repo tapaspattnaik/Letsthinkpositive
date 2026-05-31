@@ -77,9 +77,18 @@ html.dark select {
 /* Dropdown menus */
 html.dark [role="menu"] > div > div { background-color: var(--bg-card) !important; }
 
-/* Smooth transition for dark mode switch */
-html, html * { transition: background-color 0.25s ease, border-color 0.25s ease, color 0.2s ease; }
-html.dark [style*="background"] { transition: none; } /* skip inline backgrounds */
+/* Dark mode transition — scope to layout containers only, NOT all elements.
+   Applying transitions to `html *` caused severe mobile touch lag. */
+html body,
+html nav,
+html header,
+html footer,
+html main,
+html aside,
+html section,
+html article {
+  transition: background-color 0.25s ease, border-color 0.15s ease, color 0.2s ease;
+}
 
 html { scroll-behavior: smooth; }
 

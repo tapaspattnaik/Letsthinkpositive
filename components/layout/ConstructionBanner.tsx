@@ -43,7 +43,7 @@ export function ConstructionBanner() {
   if (dismissed) return null
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[60] bg-gradient-to-r from-teal-deep via-[#1a6b6b] to-teal-dark text-white shadow-md">
+    <div className="w-full bg-gradient-to-r from-teal-deep via-[#1a6b6b] to-teal-dark text-white shadow-md">
       {/* Marquee row */}
       <div className="overflow-hidden border-b border-white/10 py-1.5 relative">
         <div className="flex whitespace-nowrap animate-marquee">

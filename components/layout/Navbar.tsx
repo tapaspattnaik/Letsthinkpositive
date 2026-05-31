@@ -178,7 +178,7 @@ export function Navbar() {
       ═══════════════════════════════════════════════════════ */}
       <nav
         ref={navRef}
-        className="fixed top-0 left-0 right-0 z-50 bg-ivory border-b border-teal-light shadow-[0_1px_12px_rgba(26,107,107,0.08)] h-[72px] flex items-center justify-between px-4 sm:px-[5%]"
+        className="relative z-auto bg-ivory border-b border-teal-light shadow-[0_1px_12px_rgba(26,107,107,0.08)] h-[72px] flex items-center justify-between px-4 sm:px-[5%]"
       >
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3 no-underline hover:opacity-85 transition-opacity flex-shrink-0">
@@ -422,7 +422,7 @@ export function Navbar() {
 
         {/* Drawer panel — slides from right */}
         <div
-          className={`fixed top-0 right-0 bottom-0 z-[46] w-[88vw] max-w-[340px] bg-white flex flex-col shadow-2xl transition-transform duration-300 ease-in-out ${drawerOpen ? 'translate-x-0' : 'translate-x-full'}`}
+          className={`fixed top-0 right-0 bottom-0 z-[46] w-[88vw] max-w-[340px] bg-white flex flex-col shadow-2xl transition-transform duration-300 ease-in-out ${drawerOpen ? 'translate-x-0 pointer-events-auto' : 'translate-x-full pointer-events-none'}`}
         >
           {/* Drawer header */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-teal-light/60 bg-gradient-to-r from-teal-deep to-teal-dark flex-shrink-0 h-[72px]">
