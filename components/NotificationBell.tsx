@@ -40,24 +40,35 @@ export function NotificationBell() {
   const { data: session } = useSession()
   const [open,          setOpen]          = useState(false)
   const [notifications, setNotifications] = useState<Notification[]>([])
-  const bellRef = useRef<HTMLDivElement>(null)
+  const bellRef  = useRef<HTMLDivElement>(null)
+  // Store userId in a ref so fetchNotifications doesn't recreate when the
+  // session object reference changes (which previously caused an extra burst
+  // request on every session refetch / window focus).
+  const userIdRef = useRef<string | undefined>(undefined)
 
   const unread = notifications.filter(n => !n.read).length
 
+  // Sync userId ref without triggering callback recreation
+  useEffect(() => { userIdRef.current = session?.user?.id }, [session?.user?.id])
+
+  // Stable callback — never recreated; reads userId from ref
   const fetchNotifications = useCallback(async () => {
-    if (!session?.user?.id) return
+    if (!userIdRef.current) return
     try {
       const res = await fetch('/api/notifications')
       if (res.ok) setNotifications(await res.json())
     } catch { /* swallow network errors */ }
-  }, [session?.user?.id])
+  }, []) // ← empty deps: stable across all renders
 
-  // Fetch on mount + poll every 2 minutes (reduced from 30s to ease DB pressure)
+  // Fetch once when user first signs in, then every 3 minutes.
+  // No re-registration on session changes — the stable callback + ref handle that.
+  const signedIn = !!session?.user?.id
   useEffect(() => {
+    if (!signedIn) return
     fetchNotifications()
-    const interval = setInterval(fetchNotifications, 120_000)
+    const interval = setInterval(fetchNotifications, 3 * 60_000)
     return () => clearInterval(interval)
-  }, [fetchNotifications])
+  }, [signedIn, fetchNotifications])
 
   // Close on outside click
   useEffect(() => {
