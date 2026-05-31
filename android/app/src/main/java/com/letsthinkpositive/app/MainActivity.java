@@ -12,37 +12,37 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Enable WebView debugging in Chrome (chrome://inspect)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            WebView.setWebContentsDebuggingEnabled(true);
-        }
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
+        // Enable Chrome DevTools debugging via chrome://inspect
+        WebView.setWebContentsDebuggingEnabled(true);
 
         WebView webView = getBridge().getWebView();
-        WebSettings s   = webView.getSettings();
+        WebSettings s = webView.getSettings();
 
-        // Required for Next.js to load correctly
+        // ── Core settings for Next.js ──────────────────────────────────────
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
         s.setDatabaseEnabled(true);
 
-        // Proper mobile viewport
+        // ── Viewport ──────────────────────────────────────────────────────
         s.setUseWideViewPort(true);
         s.setLoadWithOverviewMode(true);
         s.setSupportZoom(false);
+        s.setTextZoom(100); // prevent system font-size scaling breaking layout
 
-        // Cache — use network when available, fall back to cache offline
-        s.setCacheMode(WebSettings.LOAD_DEFAULT);
+        // ── Cache — always fetch fresh (fix stale cached broken pages) ─────
+        s.setCacheMode(WebSettings.LOAD_NO_CACHE);
 
-        // Allow cross-origin requests needed by Next.js assets
-        s.setAllowUniversalAccessFromFileURLs(false);
-        s.setAllowFileAccessFromFileURLs(false);
+        // ── Set a modern Chrome UA so the server sends the full site ───────
+        // Default WebView UA can cause servers to send a stripped-down page
+        String chromeUA = "Mozilla/5.0 (Linux; Android 14; Pixel 8) "
+            + "AppleWebKit/537.36 (KHTML, like Gecko) "
+            + "Chrome/124.0.0.0 Mobile Safari/537.36";
+        s.setUserAgentString(chromeUA);
 
-        // Keep the standard Chrome UA — some servers block custom UAs
-        // We do NOT change it so the server serves the normal desktop/mobile site
+        // ── Encoding ───────────────────────────────────────────────────────
+        s.setDefaultTextEncodingName("UTF-8");
+
+        // ── Media ─────────────────────────────────────────────────────────
+        s.setMediaPlaybackRequiresUserGesture(false);
     }
 }
