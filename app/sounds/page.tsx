@@ -321,6 +321,203 @@ const SOUNDS: SoundDef[] = [
   },
 
   {
+    id: 'panflute', label: 'Pan Flute', icon: '🎶', color: 'from-emerald-400 to-teal-600',
+    build(ctx, dest) {
+      // Pan flute — South American style, breathy lower register, each pipe a different pitch
+      const PIPES = [196.0, 220.0, 246.9, 261.6, 293.7, 329.6, 349.2, 392.0] // G3–G4
+      function playPipe() {
+        const freq = PIPES[Math.floor(Math.random() * PIPES.length)]
+        const dur  = 0.6 + Math.random() * 1.2
+        const t    = ctx.currentTime
+        // Pan flute = more noise/air than bamboo, wider vibrato, lower pitch
+        const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = freq
+        const o2 = ctx.createOscillator(); o2.type = 'sine'; o2.frequency.value = freq * 1.5
+        // Heavy breath (pan flute characteristic)
+        const noise = makeNoise(ctx, 'white')
+        const noiseF = ctx.createBiquadFilter(); noiseF.type = 'bandpass'
+        noiseF.frequency.value = freq * 1.8; noiseF.Q.value = 2
+        const noiseG = ctx.createGain(); noiseG.gain.value = 0.08
+        // Wide, slow vibrato
+        const vib = ctx.createOscillator(); vib.frequency.value = 4.2
+        const vibG = ctx.createGain(); vibG.gain.value = freq * 0.022
+        vib.connect(vibG); vibG.connect(o.frequency)
+        const g = ctx.createGain(); const g2 = ctx.createGain(); g2.gain.value = 0.15
+        g.gain.setValueAtTime(0, t)
+        g.gain.linearRampToValueAtTime(0.25, t + 0.12)
+        g.gain.setValueAtTime(0.22, t + dur - 0.15)
+        g.gain.linearRampToValueAtTime(0, t + dur)
+        noise.connect(noiseF); noiseF.connect(noiseG); noiseG.connect(dest)
+        o.connect(g); o2.connect(g2); g2.connect(g); g.connect(dest)
+        o.start(t); o2.start(t); vib.start(t); noise.start()
+        o.stop(t + dur + 0.1); o2.stop(t + dur + 0.1); vib.stop(t + dur + 0.1)
+        setTimeout(() => { try { noise.stop() } catch {} }, (dur + 0.3) * 1000)
+        setTimeout(playPipe, (dur + 0.3 + Math.random() * 1.5) * 1000)
+      }
+      playPipe()
+      return []
+    },
+  },
+
+  {
+    id: 'nativeflute', label: 'Native Flute', icon: '🌾', color: 'from-orange-400 to-amber-700',
+    build(ctx, dest) {
+      // Native American flute — pentatonic minor, soulful, earthy, meditative
+      // A minor pentatonic: A3 C4 D4 E4 G4 A4 C5
+      const SCALE = [220.0, 261.6, 293.7, 329.6, 392.0, 440.0, 523.3]
+      const reverb = ctx.createConvolver()
+      const irBuf = ctx.createBuffer(2, ctx.sampleRate * 2, ctx.sampleRate)
+      for (let c = 0; c < 2; c++) {
+        const d = irBuf.getChannelData(c)
+        for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 1.8) * 0.4
+      }
+      reverb.buffer = irBuf
+      const rvG = ctx.createGain(); rvG.gain.value = 0.3; reverb.connect(rvG); rvG.connect(dest)
+
+      function playMotive() {
+        // Native flute often plays 2-3 note phrases with long sustains and silence
+        const notes = [
+          SCALE[Math.floor(Math.random() * 4)],
+          SCALE[Math.floor(Math.random() * 4) + 2],
+        ]
+        let t = ctx.currentTime
+        notes.forEach((freq, ni) => {
+          const dur = 0.8 + Math.random() * 1.4
+          const o  = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = freq
+          const o2 = ctx.createOscillator(); o2.type = 'sine'; o2.frequency.value = freq * 2
+          // Earthy growl via triangle
+          const o3 = ctx.createOscillator(); o3.type = 'triangle'; o3.frequency.value = freq
+          // Slow deep vibrato — characteristic of Native American flute
+          const vib  = ctx.createOscillator(); vib.frequency.value = 3.8 + Math.random() * 1.2
+          const vibG = ctx.createGain(); vibG.gain.value = freq * 0.018
+          vib.connect(vibG); vibG.connect(o.frequency)
+          // breath noise
+          const noise = makeNoise(ctx, 'pink')
+          const nF = ctx.createBiquadFilter(); nF.type = 'bandpass'; nF.frequency.value = freq; nF.Q.value = 4
+          const nG = ctx.createGain(); nG.gain.value = 0.06
+          const g = ctx.createGain(); const g2 = ctx.createGain(); g2.gain.value = 0.2
+          const g3 = ctx.createGain(); g3.gain.value = 0.3
+          g.gain.setValueAtTime(0, t)
+          g.gain.linearRampToValueAtTime(0.2, t + 0.15)
+          g.gain.setValueAtTime(0.18, t + dur - 0.2)
+          g.gain.linearRampToValueAtTime(0, t + dur)
+          o.connect(g); o2.connect(g2); g2.connect(g); o3.connect(g3); g3.connect(g)
+          g.connect(dest); g.connect(reverb)
+          noise.connect(nF); nF.connect(nG); nG.connect(dest)
+          o.start(t); o2.start(t); o3.start(t); vib.start(t); noise.start()
+          const stopT = t + dur + 0.1
+          o.stop(stopT); o2.stop(stopT); o3.stop(stopT); vib.stop(stopT)
+          setTimeout(() => { try { noise.stop() } catch {} }, (stopT - ctx.currentTime + 0.2) * 1000)
+          t += dur + 0.05 + Math.random() * 0.2
+        })
+        setTimeout(playMotive, (t - ctx.currentTime + 2 + Math.random() * 4) * 1000)
+      }
+      playMotive()
+      return []
+    },
+  },
+
+  {
+    id: 'shakuhachi', label: 'Shakuhachi', icon: '🎍', color: 'from-stone-400 to-slate-600',
+    build(ctx, dest) {
+      // Japanese Shakuhachi — deep, breathy, Zen meditative tones
+      // D minor: D3 F3 G3 A3 C4 D4 — very slow, lots of silence
+      const ZEN = [146.8, 174.6, 196.0, 220.0, 261.6, 293.7]
+      const reverb = ctx.createConvolver()
+      const irBuf = ctx.createBuffer(2, ctx.sampleRate * 3, ctx.sampleRate)
+      for (let c = 0; c < 2; c++) {
+        const d = irBuf.getChannelData(c)
+        for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 1.2) * 0.6
+      }
+      reverb.buffer = irBuf
+      const rvG = ctx.createGain(); rvG.gain.value = 0.5; reverb.connect(rvG); rvG.connect(dest)
+
+      function zenNote() {
+        const freq = ZEN[Math.floor(Math.random() * ZEN.length)]
+        const dur  = 1.5 + Math.random() * 2.5  // long, held notes
+        const t    = ctx.currentTime
+        // Shakuhachi = very breathy, dark tone with strong attack noise
+        const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = freq
+        const o2 = ctx.createOscillator(); o2.type = 'sine'; o2.frequency.value = freq * 1.5 // 3rd partial weak
+        // Very strong initial breath burst
+        const noise = makeNoise(ctx, 'white')
+        const nF1 = ctx.createBiquadFilter(); nF1.type = 'bandpass'; nF1.frequency.value = freq * 0.9; nF1.Q.value = 1.5
+        const nG = ctx.createGain()
+        nG.gain.setValueAtTime(0.25, t)
+        nG.gain.exponentialRampToValueAtTime(0.05, t + 0.3) // breath fades to tone
+        nG.gain.exponentialRampToValueAtTime(0.03, t + dur)
+        // Slow pitch bend (meri/kari technique)
+        o.frequency.setValueAtTime(freq * 0.97, t)
+        o.frequency.linearRampToValueAtTime(freq, t + 0.4)
+        if (Math.random() > 0.5) {
+          o.frequency.setValueAtTime(freq, t + dur * 0.7)
+          o.frequency.linearRampToValueAtTime(freq * 0.94, t + dur)
+        }
+        const g = ctx.createGain(); const g2 = ctx.createGain(); g2.gain.value = 0.12
+        g.gain.setValueAtTime(0, t)
+        g.gain.linearRampToValueAtTime(0.28, t + 0.08)
+        g.gain.setValueAtTime(0.22, t + dur - 0.3)
+        g.gain.exponentialRampToValueAtTime(0.001, t + dur)
+        o.connect(g); o2.connect(g2); g2.connect(g)
+        g.connect(dest); g.connect(reverb)
+        noise.connect(nF1); nF1.connect(nG); nG.connect(dest); nG.connect(reverb)
+        o.start(t); o2.start(t); noise.start()
+        o.stop(t + dur + 0.2); o2.stop(t + dur + 0.2)
+        setTimeout(() => { try { noise.stop() } catch {} }, (dur + 0.5) * 1000)
+        // Long silence between notes — Zen minimalism
+        setTimeout(zenNote, (dur + 3 + Math.random() * 6) * 1000)
+      }
+      zenNote()
+      return []
+    },
+  },
+
+  {
+    id: 'irishflute', label: 'Irish Flute', icon: '☘️', color: 'from-green-400 to-emerald-600',
+    build(ctx, dest) {
+      // Irish / Celtic tin whistle — bright, lively, pentatonic jig patterns
+      // D major pentatonic: D4 E4 F#4 A4 B4 D5 E5
+      const CELTIC = [293.7, 329.6, 370.0, 440.0, 493.9, 587.3, 659.3, 740.0]
+      function playPhrase() {
+        // Celtic phrases are faster with more ornamentation
+        const noteCount = 3 + Math.floor(Math.random() * 5)
+        let delay = 0
+        for (let i = 0; i < noteCount; i++) {
+          const freq = CELTIC[Math.floor(Math.random() * CELTIC.length)]
+          const dur  = 0.15 + Math.random() * 0.35  // shorter notes, brighter feel
+          const t    = ctx.currentTime + delay
+          const o  = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = freq
+          const o2 = ctx.createOscillator(); o2.type = 'triangle'; o2.frequency.value = freq * 2
+          const o3 = ctx.createOscillator(); o3.type = 'sine'; o3.frequency.value = freq * 3
+          // Light, fast vibrato — Irish style
+          const vib  = ctx.createOscillator(); vib.frequency.value = 7 + Math.random() * 2
+          const vibG = ctx.createGain(); vibG.gain.value = freq * 0.008
+          vib.connect(vibG); vibG.connect(o.frequency)
+          const g = ctx.createGain(); const g2 = ctx.createGain(); g2.gain.value = 0.25
+          const g3 = ctx.createGain(); g3.gain.value = 0.06
+          g.gain.setValueAtTime(0, t)
+          g.gain.linearRampToValueAtTime(0.22, t + 0.025)
+          g.gain.setValueAtTime(0.20, t + dur - 0.04)
+          g.gain.linearRampToValueAtTime(0, t + dur)
+          // Occasional grace note ornament
+          if (Math.random() > 0.6 && i < noteCount - 1) {
+            const graceFreq = freq * 1.12
+            o.frequency.setValueAtTime(graceFreq, t)
+            o.frequency.setValueAtTime(freq, t + 0.04)
+          }
+          o.connect(g); o2.connect(g2); g2.connect(g); o3.connect(g3); g3.connect(g)
+          g.connect(dest); o.start(t); o2.start(t); o3.start(t); vib.start(t)
+          const s = t + dur + 0.05
+          o.stop(s); o2.stop(s); o3.stop(s); vib.stop(s)
+          delay += dur + 0.02 + Math.random() * 0.05
+        }
+        setTimeout(playPhrase, (delay + 0.8 + Math.random() * 2.5) * 1000)
+      }
+      playPhrase()
+      return []
+    },
+  },
+
+  {
     id: 'harp', label: 'Harp', icon: '🎵', color: 'from-yellow-300 to-amber-500',
     build(ctx, dest) {
       // Harp arpeggios in C major pentatonic: C3 E3 G3 C4 E4 G4 C5
@@ -538,7 +735,7 @@ export default function SoundsPage() {
           <div className="mb-2">
             <p className="text-[0.72rem] font-bold text-text-xlight uppercase tracking-widest mb-3">🌿 Nature & Ambience</p>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {SOUNDS.filter(s => !['piano','flute','harp','hangdrum','cello'].includes(s.id)).map(s => (
+              {SOUNDS.filter(s => !['piano','flute','panflute','nativeflute','shakuhachi','irishflute','harp','hangdrum','cello'].includes(s.id)).map(s => (
               <div key={s.id} className={`bg-white rounded-[24px] border overflow-hidden transition-all hover:-translate-y-1 hover:shadow-lift
                 ${playing[s.id] ? 'border-teal-mid shadow-lift' : 'border-teal-light shadow-card'}`}>
                 <button
@@ -582,8 +779,37 @@ export default function SoundsPage() {
           {/* Instruments section */}
           <div className="mt-8 mb-6">
             <p className="text-[0.72rem] font-bold text-text-xlight uppercase tracking-widest mb-3">🎵 Musical Instruments</p>
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-              {SOUNDS.filter(s => ['piano','flute','harp','hangdrum','cello'].includes(s.id)).map(s => (
+
+            {/* Flutes subsection */}
+            <p className="text-[0.65rem] text-text-xlight font-semibold uppercase tracking-widest mb-2 mt-1">🪈 Flutes</p>
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-5">
+              {SOUNDS.filter(s => ['flute','panflute','nativeflute','shakuhachi','irishflute'].includes(s.id)).map(s => (
+                <div key={s.id} className={`bg-white rounded-[20px] border overflow-hidden transition-all hover:-translate-y-1 hover:shadow-lift
+                  ${playing[s.id] ? 'border-teal-mid shadow-lift' : 'border-teal-light shadow-card'}`}>
+                  <button type="button" onClick={() => toggleSound(s)} aria-pressed={playing[s.id] ?? false}
+                    className="w-full pt-4 px-4 pb-2.5 flex flex-col items-center relative">
+                    {playing[s.id] && <div className={`absolute inset-0 bg-gradient-to-b ${s.color} opacity-10`} />}
+                    <span className={`text-[2rem] block mb-1.5 transition-transform duration-300 ${playing[s.id] ? 'scale-110' : ''}`}>{s.icon}</span>
+                    <p className={`text-[0.78rem] font-semibold text-center leading-tight mb-1 ${playing[s.id] ? 'text-teal-deep' : 'text-text-mid'}`}>{s.label}</p>
+                    {playing[s.id]
+                      ? <span className="flex items-center gap-1 text-[0.62rem] font-bold text-teal-mid"><span className="w-1.5 h-1.5 rounded-full bg-teal-mid animate-pulse" />ON</span>
+                      : <span className="text-[0.62rem] text-text-xlight">▶ Play</span>}
+                  </button>
+                  {playing[s.id] && (
+                    <div className="px-3 pb-3">
+                      <input type="range" min={0} max={1} step={0.05} value={volumes[s.id] ?? 0.6}
+                        onChange={e => setVolume(s.id, parseFloat(e.target.value))}
+                        className="w-full accent-teal-mid h-1.5" />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Other instruments subsection */}
+            <p className="text-[0.65rem] text-text-xlight font-semibold uppercase tracking-widest mb-2">🎹 Other Instruments</p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {SOUNDS.filter(s => ['piano','harp','hangdrum','cello'].includes(s.id)).map(s => (
                 <div key={s.id} className={`bg-white rounded-[24px] border overflow-hidden transition-all hover:-translate-y-1 hover:shadow-lift
                   ${playing[s.id] ? 'border-teal-mid shadow-lift' : 'border-teal-light shadow-card'}`}>
                   <button
