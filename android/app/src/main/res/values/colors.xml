@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- letsthinkpositive brand colours -->
+    <color name="colorPrimary">#1A6B6B</color>
+    <color name="colorPrimaryDark">#0F4040</color>
+    <color name="colorAccent">#E8A020</color>
+    <color name="colorBackground">#F8F8F4</color>
+    <color name="splashBackground">#1A6B6B</color>
+</resources>

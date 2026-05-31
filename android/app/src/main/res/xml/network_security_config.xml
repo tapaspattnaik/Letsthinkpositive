@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Production: only HTTPS to letsthinkpositive.com -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">letsthinkpositive.com</domain>
+    </domain-config>
+</network-security-config>

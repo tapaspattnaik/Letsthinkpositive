@@ -775,6 +775,7 @@ export default function SoundsPage() {
               </div>
             ))}
           </div>
+          </div>{/* end nature section */}
 
           {/* Instruments section */}
           <div className="mt-8 mb-6">

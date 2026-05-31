@@ -11,12 +11,25 @@
     "postinstall": "prisma generate",
     "start": "node server.js",
     "lint": "next lint",
-    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
+    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts",
+    "android:sync": "npx cap sync android",
+    "android:open": "npx cap open android",
+    "android:run": "npx cap run android",
+    "android:build": "cd android && gradlew assembleDebug && echo 'APK: android/app/build/outputs/apk/debug/app-debug.apk'"
   },
   "prisma": {
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
   },
   "dependencies": {
+    "@capacitor/android": "^8.3.4",
+    "@capacitor/app": "^8.1.0",
+    "@capacitor/cli": "^8.3.4",
+    "@capacitor/core": "^8.3.4",
+    "@capacitor/haptics": "^8.0.2",
+    "@capacitor/keyboard": "^8.0.3",
+    "@capacitor/push-notifications": "^8.1.1",
+    "@capacitor/splash-screen": "^8.0.1",
+    "@capacitor/status-bar": "^8.0.2",
     "@prisma/client": "^5.22.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
