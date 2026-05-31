@@ -6,6 +6,7 @@ import { SessionProvider } from '@/components/layout/SessionProvider'
 import { BitWidget } from '@/components/BitWidget'
 import { ConstructionBanner } from '@/components/layout/ConstructionBanner'
 import { HeaderHeight } from '@/components/layout/HeaderHeight'
+import { BottomNav } from '@/components/layout/BottomNav'
 import './globals.css'
 
 const playfair = Playfair_Display({
@@ -76,10 +77,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
           {/* Dynamically sets main padding-top = actual header height (navbar ± banner) */}
           <HeaderHeight />
-          <main id="main-content" className="pt-[72px]">
+          <main id="main-content" className="pt-[72px] pb-[60px] lg:pb-0">
             {children}
           </main>
-          <Footer />
+          {/* Bottom nav — mobile only, hidden on lg+ */}
+          <BottomNav />
+          {/* Footer hidden on mobile — bottom nav replaces it */}
+          <div className="hidden lg:block"><Footer /></div>
           <BitWidget />
         </SessionProvider>
       </body>

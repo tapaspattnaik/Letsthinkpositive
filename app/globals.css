@@ -105,6 +105,42 @@ a, button, [role="button"], input, select, textarea, label {
   touch-action: manipulation;
 }
 
+/* ── Mobile App Feel ──────────────────────────────────────────────────────
+   These rules make the web app feel like a native app on mobile:
+   - No text selection outside inputs (prevents accidental highlight on tap)
+   - Momentum scrolling on iOS
+   - Hide tap highlight flash (replaced by active:scale transitions)
+   - Minimum 44px tap targets (Apple HIG standard)
+   - Safe area support for notch / home bar
+*/
+@media (max-width: 1024px) {
+  body {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
+
+  /* Prevent text selection on non-input elements */
+  p, h1, h2, h3, h4, h5, h6, span, div, section, article, nav, header {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Allow selection in inputs and content areas */
+  input, textarea, [contenteditable], .allow-select {
+    -webkit-user-select: text !important;
+    user-select: text !important;
+  }
+
+  /* Remove tap highlight */
+  * { -webkit-tap-highlight-color: transparent; }
+
+  /* Minimum tap target size */
+  a, button { min-height: 44px; }
+
+  /* Safe area bottom padding for home bar */
+  .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+}
+
 /* Section label line decoration */
 .section-label::before {
   content: '';
