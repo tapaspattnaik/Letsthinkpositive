@@ -105,6 +105,11 @@ a, button, [role="button"], input, select, textarea, label {
   touch-action: manipulation;
 }
 
+/* Hide skip-link on mobile — it's a keyboard accessibility feature for desktop */
+@media (max-width: 1024px) {
+  .sr-only { display: none !important; }
+}
+
 /* ── Mobile App Feel ──────────────────────────────────────────────────────
    These rules make the web app feel like a native app on mobile:
    - No text selection outside inputs (prevents accidental highlight on tap)
