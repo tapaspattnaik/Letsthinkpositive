@@ -7,6 +7,7 @@ import Link from 'next/link'
 interface Circle {
   id: number; slug: string; name: string; description: string
   icon: string; memberCount: number; postCount: number; isMember: boolean
+  memberRole?: string  // 'admin' | 'member' | undefined
 }
 
 const ICON_OPTIONS = ['🌿','💛','🧘','🌙','🔥','💙','🌸','🏃','📓','🎨','🌍','💪','🌱','🎵','🍃','✨','🤝','💬','🦋','☀️']
@@ -18,6 +19,7 @@ export default function CirclesPage() {
   const [leaving,       setLeaving]       = useState<string | null>(null)
   const [confirmLeave,  setConfirmLeave]  = useState<string | null>(null)
   const [loading,       setLoading]       = useState(true)
+  const [joinError,     setJoinError]     = useState<string | null>(null)
 
   // Create circle modal state
   const [showCreate,   setShowCreate]   = useState(false)
@@ -28,10 +30,20 @@ export default function CirclesPage() {
   const [creating,     setCreating]     = useState(false)
   const [createErr,    setCreateErr]    = useState('')
 
-  const fetchCircles = () =>
-    fetch('/api/circles').then(r => r.json()).then(d => { if (Array.isArray(d)) setCircles(d); setLoading(false) })
+  const fetchCircles = async () => {
+    try {
+      const res = await fetch('/api/circles')
+      const ct  = res.headers.get('content-type') ?? ''
+      if (res.ok && ct.includes('application/json')) {
+        const d = await res.json()
+        if (Array.isArray(d)) setCircles(d)
+      }
+    } catch { /* network error — keep existing circles */ }
+    finally { setLoading(false) }
+  }
 
-  useEffect(() => { fetchCircles() }, [session])
+  // Re-fetch when session is confirmed so isMember reflects the logged-in user
+  useEffect(() => { fetchCircles() }, [session?.user?.id])
 
   async function createCircle(e: React.FormEvent) {
     e.preventDefault()
@@ -54,9 +66,22 @@ export default function CirclesPage() {
   async function join(slug: string) {
     if (!session) return
     setJoining(slug)
-    await fetch(`/api/circles/${slug}/join`, { method: 'POST' })
-    await fetchCircles()
-    setJoining(null)
+    setJoinError(null)
+    try {
+      const res  = await fetch(`/api/circles/${slug}/join`, { method: 'POST' })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setJoinError(data.error || 'Could not join. Please try again.')
+        setTimeout(() => setJoinError(null), 4000)
+      } else {
+        await fetchCircles()
+      }
+    } catch {
+      setJoinError('Network error. Please check your connection.')
+      setTimeout(() => setJoinError(null), 4000)
+    } finally {
+      setJoining(null)
+    }
   }
 
   async function leave(slug: string) {
@@ -102,6 +127,13 @@ export default function CirclesPage() {
           </div>
         </div>
       </section>
+
+      {/* Join error toast */}
+      {joinError && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-red-600 text-white px-6 py-3 rounded-full shadow-lift text-[0.88rem] font-semibold animate-fade-in">
+          ⚠️ {joinError}
+        </div>
+      )}
 
       <div className="max-w-6xl mx-auto py-14 px-[5%]">
         {loading ? (
@@ -152,26 +184,26 @@ export default function CirclesPage() {
                       className="flex-1 text-center bg-teal-deep text-white py-3 rounded-full font-semibold text-[0.9rem] no-underline hover:bg-teal-dark transition-colors">
                       Enter Circle →
                     </Link>
-                    {confirmLeave === c.slug ? (
+                    {/* Admins/creators see "Owner" badge instead of Leave */}
+                    {c.memberRole === 'admin' ? (
+                      <span className="px-4 py-3 rounded-full bg-amber/15 text-amber text-[0.78rem] font-bold flex items-center">
+                        👑 Owner
+                      </span>
+                    ) : confirmLeave === c.slug ? (
                       <div className="flex items-center gap-1.5">
                         <button
                           onClick={() => { setConfirmLeave(null); leave(c.slug) }}
                           disabled={leaving === c.slug}
-                          aria-label={`Confirm leaving ${c.name}`}
                           className="px-3 py-2 rounded-full border border-red-300 bg-red-50 text-red-500 text-[0.78rem] font-semibold hover:bg-red-100 disabled:opacity-50 transition-colors">
                           Leave
                         </button>
-                        <button
-                          onClick={() => setConfirmLeave(null)}
-                          aria-label="Cancel leaving circle"
+                        <button onClick={() => setConfirmLeave(null)}
                           className="px-3 py-2 rounded-full border border-teal-light text-text-mid text-[0.78rem] font-semibold hover:bg-teal-ghost transition-colors">
                           Cancel
                         </button>
                       </div>
                     ) : (
-                      <button
-                        onClick={() => setConfirmLeave(c.slug)}
-                        aria-label={`Leave ${c.name}`}
+                      <button onClick={() => setConfirmLeave(c.slug)}
                         className="px-4 py-3 rounded-full border border-red-200 text-red-400 text-[0.82rem] font-semibold hover:bg-red-50 hover:border-red-300 transition-colors">
                         Leave
                       </button>

@@ -10,18 +10,22 @@ export async function GET() {
     orderBy: { id: 'asc' },
     include: {
       _count:  { select: { members: true, posts: true } },
-      members: userId ? { where: { userId }, select: { id: true } } : false,
+      members: userId ? { where: { userId }, select: { id: true, role: true } } : false,
     },
   })
 
-  return NextResponse.json(circles.map(c => ({
-    ...c,
-    memberCount: c._count.members,
-    postCount:   c._count.posts,
-    isMember:    userId ? (c.members as {id:number}[]).length > 0 : false,
-    members:     undefined,
-    _count:      undefined,
-  })))
+  return NextResponse.json(circles.map(c => {
+    const memberRecord = userId ? (c.members as {id:number; role:string}[])[0] : undefined
+    return {
+      ...c,
+      memberCount: c._count.members,
+      postCount:   c._count.posts,
+      isMember:    !!memberRecord,
+      memberRole:  memberRecord?.role ?? null,
+      members:     undefined,
+      _count:      undefined,
+    }
+  }))
 }
 
 // POST — create a new circle (any authenticated user)
