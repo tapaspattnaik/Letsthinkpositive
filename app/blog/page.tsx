@@ -1,10 +1,48 @@
 import Link from 'next/link'
-import { getAllPosts } from '@/lib/posts'
+import { getAllPosts, PostMeta } from '@/lib/posts'
 import { BlogFilter } from '@/components/blog/BlogFilter'
+import { prisma } from '@/lib/db'
 
-export default function BlogPage() {
-  // getAllPosts uses Node.js `fs` — safe here because this is a SERVER component
-  const posts = getAllPosts()
+export const dynamic = 'force-dynamic'  // always fetch fresh approved posts
+
+export default async function BlogPage() {
+  // 1. Filesystem MDX posts (editorial / Tapas-written)
+  const fsPosts: PostMeta[] = getAllPosts()
+
+  // 2. User-submitted posts that have been approved by admin
+  let userPosts: PostMeta[] = []
+  try {
+    const dbPosts = await prisma.userBlogPost.findMany({
+      where:   { status: 'approved' },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        slug:      true,
+        title:     true,
+        excerpt:   true,
+        category:  true,
+        createdAt: true,
+        user: { select: { name: true } },
+      },
+    })
+    userPosts = dbPosts.map(p => ({
+      slug:    p.slug ?? `user-post-${p.title.toLowerCase().replace(/\s+/g, '-').slice(0, 40)}`,
+      title:   p.title,
+      date:    p.createdAt.toISOString().slice(0, 10),
+      tag:     p.category,
+      author:  p.user?.name ?? 'Community Member',
+      excerpt: p.excerpt ?? '',
+    }))
+  } catch {
+    // DB unavailable — fall back to filesystem-only posts gracefully
+  }
+
+  // 3. Merge, de-duplicate by slug, sort newest first
+  const seen   = new Set<string>()
+  const allPosts: PostMeta[] = [...userPosts, ...fsPosts].filter(p => {
+    if (seen.has(p.slug)) return false
+    seen.add(p.slug)
+    return true
+  })
 
   return (
     <>
@@ -38,7 +76,7 @@ export default function BlogPage() {
           </div>
 
           {/* Filter buttons + filtered post grid — client island */}
-          <BlogFilter posts={posts} />
+          <BlogFilter posts={allPosts} />
         </div>
       </section>
     </>

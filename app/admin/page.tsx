@@ -58,7 +58,9 @@ function timeAgo(iso: string) {
 }
 
 export default function AdminPage() {
-  const { data: session, status } = useSession()
+  // required:true → NextAuth auto-redirects to /login?callbackUrl=/admin if not signed in
+  // Eliminates the manual redirect race that was causing the spinner to hang
+  const { data: session, status } = useSession({ required: true })
   const router = useRouter()
 
   const [section,     setSection]     = useState<AdminSection>('reports')
@@ -169,14 +171,12 @@ export default function AdminPage() {
   }, [])
 
   useEffect(() => {
-    if (status === 'loading') return
-    if (!session) { router.push('/login'); return }
+    if (status !== 'authenticated') return
     // loadReports acts as the admin gate — 403 redirects to home
     loadReports(filter)
     loadPendingCount()
-    // Pending count loaded separately, silently (no redirect on failure)
     loadBpPendingCount()
-  }, [status, session, filter, loadReports, loadPendingCount, loadBpPendingCount, router])
+  }, [status, filter, loadReports, loadPendingCount, loadBpPendingCount])
 
   useEffect(() => {
     if (section === 'comments') loadComments(cmtFilter)
@@ -246,7 +246,7 @@ export default function AdminPage() {
     setTimeout(() => setStoryMsg(''), 4000)
   }
 
-  if (status === 'loading') return (
+  if (status !== 'authenticated') return (
     <div className="min-h-screen flex items-center justify-center pt-[72px]">
       <div className="flex gap-1.5">{[0,1,2].map(i => <span key={i} className="w-2 h-2 rounded-full bg-teal-mid animate-bounce" style={{ animationDelay: `${i*150}ms` }} />)}</div>
     </div>

@@ -1,20 +1,44 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { getPost, getAllPostSlugs, getAllPosts } from '@/lib/posts'
+import { getPost, getAllPostSlugs, getAllPosts, Post } from '@/lib/posts'
 import { BlogInteractions } from '@/components/blog/BlogInteractions'
 import { BlogSidebar }     from '@/components/blog/BlogSidebar'
+import { prisma } from '@/lib/db'
+
+export const dynamic = 'force-dynamic'
+
+// Helper: look up a post in the DB if not found in filesystem
+async function getDbPost(slug: string): Promise<Post | null> {
+  try {
+    const p = await prisma.userBlogPost.findFirst({
+      where: { slug, status: 'approved' },
+      include: { user: { select: { name: true } } },
+    })
+    if (!p) return null
+    return {
+      slug:        p.slug ?? slug,
+      title:       p.title,
+      date:        p.createdAt.toISOString().slice(0, 10),
+      tag:         p.category,
+      author:      p.user?.name ?? 'Community Member',
+      excerpt:     p.excerpt ?? '',
+      contentHtml: p.body, // already HTML from the submit parser
+    }
+  } catch { return null }
+}
 
 export async function generateStaticParams() {
   return getAllPostSlugs().map(slug => ({ slug }))
 }
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const post = await getPost(params.slug)
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params
+  const post = (await getPost(slug)) ?? (await getDbPost(slug))
   if (!post) return {}
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') || 'https://letsthinkpositive.com'
-  const pageUrl = `${siteUrl}/blog/${params.slug}`
+  const pageUrl = `${siteUrl}/blog/${slug}`
 
   return {
     title: post.title,
@@ -33,14 +57,14 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       title: post.title,
       description: post.excerpt,
     },
-    alternates: {
-      canonical: pageUrl,
-    },
+    alternates: { canonical: pageUrl },
   }
 }
 
-export default async function PostPage({ params }: { params: { slug: string } }) {
-  const post     = await getPost(params.slug)
+export default async function PostPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  // Try filesystem first, then DB (approved user posts)
+  const post     = (await getPost(slug)) ?? (await getDbPost(slug))
   if (!post) notFound()
 
   const allPosts = getAllPosts()
@@ -88,13 +112,13 @@ export default async function PostPage({ params }: { params: { slug: string } })
 
           {/* Like, Comment, Share */}
           <div className="mt-10">
-            <BlogInteractions slug={params.slug} title={post.title} />
+            <BlogInteractions slug={slug} title={post.title} />
           </div>
         </div>
 
         {/* Sticky right sidebar — desktop only */}
         <BlogSidebar
-          slug={params.slug}
+          slug={slug}
           title={post.title}
           tag={post.tag}
           allPosts={allPosts}
