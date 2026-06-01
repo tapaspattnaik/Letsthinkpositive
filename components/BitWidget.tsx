@@ -97,7 +97,9 @@ export function BitWidget() {
   }
 
   return (
-    <div ref={widgetRef} className="fixed bottom-5 right-5 z-[999] flex flex-col items-end gap-3 pointer-events-none">
+    {/* On mobile: bottom-[76px] sits above the 60px bottom nav + 16px gap
+        On desktop (lg+): bottom-5 normal position */}
+    <div ref={widgetRef} className="fixed bottom-[76px] lg:bottom-5 right-5 z-[999] flex flex-col items-end gap-3 pointer-events-none">
 
       {/* ── Chat panel ───────────────────────────── */}
       <div

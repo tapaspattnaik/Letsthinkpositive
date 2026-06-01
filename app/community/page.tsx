@@ -538,7 +538,7 @@ export default function CommunityPage() {
         <button
           onClick={() => openForm('story')}
           aria-label="Share a story"
-          className="fixed bottom-6 right-5 z-40 sm:hidden w-14 h-14 bg-teal-deep text-white rounded-full shadow-lift flex items-center justify-center hover:bg-teal-dark hover:scale-105 active:scale-95 transition-all">
+          className="fixed bottom-[76px] right-5 z-40 sm:hidden w-14 h-14 bg-teal-deep text-white rounded-full shadow-lift flex items-center justify-center hover:bg-teal-dark hover:scale-105 active:scale-95 transition-all">
           <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
           </svg>
