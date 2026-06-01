@@ -22,7 +22,21 @@ interface BlogComment {
   user?: { id: number; name: string; avatarUrl?: string } | null
 }
 
-type AdminSection = 'reports' | 'comments' | 'story'
+interface UserBlogPost {
+  id: number
+  title: string
+  excerpt: string
+  body: string
+  category: string
+  subCategory?: string
+  status: string
+  createdAt: string
+  slug?: string
+  images: string // JSON array
+  user: { id: number; name: string; email: string; avatarUrl?: string | null }
+}
+
+type AdminSection = 'reports' | 'comments' | 'blog-posts' | 'story'
 
 interface FeaturedStory {
   id: number
@@ -47,7 +61,7 @@ export default function AdminPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
 
-  const [section,     setSection]     = useState<AdminSection>('reports')
+  const [section,     setSection]     = useState<AdminSection>('blog-posts')
 
   // ── Reports ──────────────────────────────────────────────────────
   const [reports,     setReports]     = useState<Report[]>([])
@@ -64,6 +78,14 @@ export default function AdminPage() {
   const [cmtLoading,  setCmtLoading]  = useState(false)
   const [cmtPending,  setCmtPending]  = useState(0)
 
+  // ── User Blog Posts ───────────────────────────────────────────────
+  const [blogPosts,       setBlogPosts]       = useState<UserBlogPost[]>([])
+  const [bpFilter,        setBpFilter]        = useState<'pending' | 'approved' | 'rejected' | 'all'>('pending')
+  const [bpLoading,       setBpLoading]       = useState(false)
+  const [bpPending,       setBpPending]       = useState(0)
+  const [bpExpanded,      setBpExpanded]      = useState<number | null>(null)
+  const [bpSubmitting,    setBpSubmitting]    = useState<number | null>(null)
+
   // ── Story of the Week ────────────────────────────────────────────
   const [storyLoading,    setStoryLoading]    = useState(false)
   const [currentStory,    setCurrentStory]    = useState<FeaturedStory | null>(null)
@@ -71,6 +93,40 @@ export default function AdminPage() {
   const [storyPostId,     setStoryPostId]     = useState('')
   const [storyPostType,   setStoryPostType]   = useState<'community' | 'blog'>('community')
   const [storyMsg,        setStoryMsg]        = useState('')
+
+  const loadBlogPosts = useCallback(async (f: string) => {
+    setBpLoading(true)
+    const res  = await fetch(`/api/admin/blog-posts?status=${f}`)
+    if (res.status === 403) { router.push('/'); return }
+    const data = await res.json()
+    setBlogPosts(Array.isArray(data) ? data : [])
+    setBpLoading(false)
+  }, [router])
+
+  const loadBpPendingCount = useCallback(async () => {
+    try {
+      const res  = await fetch('/api/admin/blog-posts?status=pending')
+      const data = await res.json()
+      if (Array.isArray(data)) setBpPending(data.length)
+    } catch { /* ignore */ }
+  }, [])
+
+  async function handleBlogPost(id: number, action: 'approve' | 'reject') {
+    setBpSubmitting(id)
+    const res = await fetch('/api/admin/blog-posts', {
+      method:  'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ id, action }),
+    })
+    if (res.ok) {
+      setToast(action === 'approve' ? '✅ Post approved & published!' : '✗ Post rejected')
+      setBpExpanded(null)
+      loadBlogPosts(bpFilter)
+      loadBpPendingCount()
+      setTimeout(() => setToast(''), 3000)
+    }
+    setBpSubmitting(null)
+  }
 
   const loadCurrentStory = useCallback(async () => {
     setStoryLoading(true)
@@ -115,11 +171,16 @@ export default function AdminPage() {
     if (!session) { router.push('/login'); return }
     loadReports(filter)
     loadPendingCount()
-  }, [status, session, filter, loadReports, loadPendingCount, router])
+    loadBpPendingCount()
+  }, [status, session, filter, loadReports, loadPendingCount, loadBpPendingCount, router])
 
   useEffect(() => {
     if (section === 'comments') loadComments(cmtFilter)
   }, [section, cmtFilter, loadComments])
+
+  useEffect(() => {
+    if (section === 'blog-posts') loadBlogPosts(bpFilter)
+  }, [section, bpFilter, loadBlogPosts])
 
   useEffect(() => {
     if (section === 'story') loadCurrentStory()
@@ -206,6 +267,16 @@ export default function AdminPage() {
           </div>
           {/* Section tabs */}
           <div className="flex gap-2">
+            <button onClick={() => setSection('blog-posts')}
+              className={`px-4 py-1.5 rounded-full text-[0.82rem] font-semibold transition-all flex items-center gap-1.5
+                ${section === 'blog-posts' ? 'bg-teal-deep text-white' : 'border border-teal-light text-text-mid hover:bg-teal-ghost'}`}>
+              ✍️ Blog Posts
+              {bpPending > 0 && (
+                <span className="bg-red-500 text-white text-[0.65rem] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                  {bpPending}
+                </span>
+              )}
+            </button>
             <button onClick={() => setSection('reports')}
               className={`px-4 py-1.5 rounded-full text-[0.82rem] font-semibold transition-all flex items-center gap-1.5
                 ${section === 'reports' ? 'bg-teal-deep text-white' : 'border border-teal-light text-text-mid hover:bg-teal-ghost'}`}>
@@ -231,6 +302,143 @@ export default function AdminPage() {
       </div>
 
       <div className="max-w-5xl mx-auto px-[5%] py-8">
+
+        {/* ── Blog Posts review ────────────────────────────────────── */}
+        {section === 'blog-posts' && (
+          <>
+            <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+              <div>
+                <h2 className="font-display font-bold text-[1.1rem] text-charcoal">User Blog Post Submissions</h2>
+                <p className="text-text-xlight text-[0.78rem] mt-0.5">Review, preview and approve or reject posts before they go live</p>
+              </div>
+              <div className="flex gap-2">
+                {(['pending', 'approved', 'rejected', 'all'] as const).map(f => (
+                  <button key={f} onClick={() => setBpFilter(f)}
+                    className={`px-3 py-1.5 rounded-full text-[0.78rem] font-semibold capitalize transition-all
+                      ${bpFilter === f ? 'bg-teal-deep text-white' : 'border border-teal-light text-text-mid hover:bg-teal-ghost'}`}>
+                    {f}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {bpLoading ? (
+              <div className="flex justify-center py-12"><div className="flex gap-1.5">{[0,1,2].map(i => <span key={i} className="w-2 h-2 rounded-full bg-teal-mid animate-bounce" style={{ animationDelay: `${i*150}ms` }} />)}</div></div>
+            ) : blogPosts.length === 0 ? (
+              <div className="text-center py-16 bg-white rounded-[20px] border border-teal-light">
+                <p className="text-[2rem] mb-3">✍️</p>
+                <p className="text-text-mid">No {bpFilter === 'all' ? '' : bpFilter} blog posts</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {blogPosts.map(post => {
+                  const images = (() => { try { return JSON.parse(post.images) as string[] } catch { return [] } })()
+                  const isExpanded = bpExpanded === post.id
+                  const statusColor = post.status === 'approved' ? 'bg-teal-ghost text-teal-deep border-teal-light'
+                    : post.status === 'rejected' ? 'bg-red-50 text-red-600 border-red-200'
+                    : 'bg-amber/15 text-amber border-amber/40'
+
+                  return (
+                    <div key={post.id} className="bg-white rounded-[20px] border border-teal-light shadow-card overflow-hidden">
+                      {/* Header row */}
+                      <div className="flex items-start gap-4 p-5">
+                        {/* Author avatar */}
+                        <div className="w-10 h-10 rounded-full overflow-hidden bg-teal-ghost flex items-center justify-center flex-shrink-0 mt-0.5">
+                          {post.user.avatarUrl
+                            ? <img src={post.user.avatarUrl} alt={post.user.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                            : <span className="font-bold text-teal-deep text-[0.9rem]">{post.user.name.charAt(0)}</span>
+                          }
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-3 flex-wrap">
+                            <div>
+                              <h3 className="font-display font-bold text-charcoal text-[1rem] leading-snug">{post.title}</h3>
+                              <p className="text-text-xlight text-[0.72rem] mt-0.5">
+                                by <span className="font-semibold text-teal-deep">{post.user.name}</span>
+                                <span className="mx-1">·</span>{post.user.email}
+                                <span className="mx-1">·</span>{timeAgo(post.createdAt)}
+                              </p>
+                            </div>
+                            <span className={`text-[0.68rem] font-bold px-2.5 py-1 rounded-full border capitalize flex-shrink-0 ${statusColor}`}>
+                              {post.status}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-2 mt-2 flex-wrap">
+                            <span className="text-[0.7rem] bg-teal-ghost text-teal-deep px-2 py-0.5 rounded-full font-medium">{post.category}</span>
+                            {post.subCategory && <span className="text-[0.7rem] bg-teal-ghost/60 text-teal-mid px-2 py-0.5 rounded-full">{post.subCategory}</span>}
+                            {images.length > 0 && <span className="text-[0.7rem] text-text-xlight">📎 {images.length} image{images.length > 1 ? 's' : ''}</span>}
+                          </div>
+
+                          {post.excerpt && (
+                            <p className="text-text-mid text-[0.83rem] mt-2 leading-[1.6] line-clamp-2">{post.excerpt}</p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Action bar */}
+                      <div className="flex items-center gap-3 px-5 pb-4 pt-0 border-t border-teal-light/40 mt-1 pt-3">
+                        <button onClick={() => setBpExpanded(isExpanded ? null : post.id)}
+                          className="flex items-center gap-1.5 text-[0.8rem] font-semibold text-teal-mid hover:text-teal-deep transition-colors">
+                          {isExpanded ? '▲ Hide' : '▼ Read full post'}
+                        </button>
+                        <div className="flex-1" />
+                        {post.status === 'pending' && (
+                          <>
+                            <button
+                              onClick={() => handleBlogPost(post.id, 'reject')}
+                              disabled={bpSubmitting === post.id}
+                              className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-red-200 text-red-500 text-[0.8rem] font-semibold hover:bg-red-50 disabled:opacity-50 transition-colors">
+                              ✗ Reject
+                            </button>
+                            <button
+                              onClick={() => handleBlogPost(post.id, 'approve')}
+                              disabled={bpSubmitting === post.id}
+                              className="flex items-center gap-1.5 px-5 py-2 rounded-full bg-teal-deep text-white text-[0.8rem] font-semibold hover:bg-teal-dark disabled:opacity-50 transition-colors">
+                              {bpSubmitting === post.id
+                                ? <><span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />Processing…</>
+                                : '✓ Approve & Publish'}
+                            </button>
+                          </>
+                        )}
+                        {post.status === 'approved' && (
+                          <button onClick={() => handleBlogPost(post.id, 'reject')} disabled={bpSubmitting === post.id}
+                            className="px-4 py-2 rounded-full border border-red-200 text-red-500 text-[0.78rem] font-semibold hover:bg-red-50 disabled:opacity-50 transition-colors">
+                            Unpublish
+                          </button>
+                        )}
+                        {post.status === 'rejected' && (
+                          <button onClick={() => handleBlogPost(post.id, 'approve')} disabled={bpSubmitting === post.id}
+                            className="px-4 py-2 rounded-full bg-teal-ghost border border-teal-mid text-teal-deep text-[0.78rem] font-semibold hover:bg-teal-light/30 disabled:opacity-50 transition-colors">
+                            Re-approve
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Expanded body */}
+                      {isExpanded && (
+                        <div className="border-t border-teal-light px-5 py-5 bg-ivory/50">
+                          {images.length > 0 && (
+                            <div className="flex gap-3 mb-4 overflow-x-auto pb-2">
+                              {images.map((url, i) => (
+                                <img key={i} src={url} alt="" className="h-32 rounded-[12px] object-cover flex-shrink-0" />
+                              ))}
+                            </div>
+                          )}
+                          <div
+                            className="prose prose-sm max-w-none text-text-mid text-[0.88rem] leading-[1.75]"
+                            dangerouslySetInnerHTML={{ __html: post.body }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </>
+        )}
 
         {/* ── Reports section ──────────────────────────────────────── */}
         {section === 'reports' && (
