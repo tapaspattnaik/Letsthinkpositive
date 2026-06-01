@@ -7,6 +7,7 @@ import { BitWidget } from '@/components/BitWidget'
 import { ConstructionBanner } from '@/components/layout/ConstructionBanner'
 import { HeaderHeight } from '@/components/layout/HeaderHeight'
 import { BottomNav } from '@/components/layout/BottomNav'
+import { AppLoader } from '@/components/layout/AppLoader'
 import './globals.css'
 
 const playfair = Playfair_Display({
@@ -63,6 +64,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${playfair.variable} ${dmSans.variable} ${dmSerif.variable}`} suppressHydrationWarning>
       <body className="font-body" suppressHydrationWarning>
         <SessionProvider>
+          {/* Loading overlay — hides unstyled flash while CSS downloads on mobile */}
+          <AppLoader />
           {/* Skip-to-content — visible on focus for keyboard/screen-reader users */}
           <a
             href="#main-content"
