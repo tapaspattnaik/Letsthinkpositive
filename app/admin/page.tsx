@@ -61,7 +61,7 @@ export default function AdminPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
 
-  const [section,     setSection]     = useState<AdminSection>('blog-posts')
+  const [section,     setSection]     = useState<AdminSection>('reports')
 
   // ── Reports ──────────────────────────────────────────────────────
   const [reports,     setReports]     = useState<Report[]>([])
@@ -96,12 +96,14 @@ export default function AdminPage() {
 
   const loadBlogPosts = useCallback(async (f: string) => {
     setBpLoading(true)
-    const res  = await fetch(`/api/admin/blog-posts?status=${f}`)
-    if (res.status === 403) { router.push('/'); return }
-    const data = await res.json()
-    setBlogPosts(Array.isArray(data) ? data : [])
+    try {
+      const res  = await fetch(`/api/admin/blog-posts?status=${f}`)
+      if (!res.ok) { setBpLoading(false); return }
+      const data = await res.json()
+      setBlogPosts(Array.isArray(data) ? data : [])
+    } catch { /* ignore */ }
     setBpLoading(false)
-  }, [router])
+  }, [])
 
   const loadBpPendingCount = useCallback(async () => {
     try {
@@ -169,8 +171,10 @@ export default function AdminPage() {
   useEffect(() => {
     if (status === 'loading') return
     if (!session) { router.push('/login'); return }
+    // loadReports acts as the admin gate — 403 redirects to home
     loadReports(filter)
     loadPendingCount()
+    // Pending count loaded separately, silently (no redirect on failure)
     loadBpPendingCount()
   }, [status, session, filter, loadReports, loadPendingCount, loadBpPendingCount, router])
 
