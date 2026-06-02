@@ -110,10 +110,18 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
           <span className="block text-[0.72rem] font-bold tracking-[0.15em] uppercase text-amber-soft mb-4">{post.tag}</span>
           <h1 className="font-display text-[clamp(1.8rem,3.5vw,2.8rem)] font-bold leading-snug mb-5">{post.title}</h1>
           <p className="text-white/70 text-[1rem] leading-[1.8] mb-6">{post.excerpt}</p>
-          <div className="flex items-center gap-3 text-[0.82rem] text-white/55">
+          <div className="flex items-center gap-3 text-[0.82rem] text-white/55 flex-wrap">
             <span>By {post.author}</span>
             <span>·</span>
             <span>{new Date(post.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+            <span>·</span>
+            <span className="flex items-center gap-1">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              Views tracked below
+            </span>
           </div>
         </div>
       </section>

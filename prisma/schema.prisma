@@ -258,6 +258,17 @@ model BlogComment {
   @@map("blog_comments")
 }
 
+model BlogView {
+  id        Int      @id @default(autoincrement())
+  slug      String   @db.VarChar(200)
+  ipHash    String   @db.VarChar(64)   // hashed IP so views are unique per visitor
+  createdAt DateTime @default(now())
+
+  @@unique([slug, ipHash])  // one view per visitor per post
+  @@index([slug])
+  @@map("blog_views")
+}
+
 // ── Post reports ─────────────────────────────────────────────────────────
 
 model PostReport {

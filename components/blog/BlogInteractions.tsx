@@ -26,6 +26,7 @@ export function BlogInteractions({ slug, title }: { slug: string; title: string 
   const [likes,     setLikes]     = useState(0)
   const [likedByMe, setLikedByMe] = useState(false)
   const [comments,  setComments]  = useState<Comment[]>([])
+  const [views,     setViews]     = useState(0)
   const [showForm,  setShowForm]  = useState(false)
   const [body,      setBody]      = useState('')
   const [author,    setAuthor]    = useState('')
@@ -37,8 +38,11 @@ export function BlogInteractions({ slug, title }: { slug: string; title: string 
   const siteUrl = typeof window !== 'undefined' ? window.location.href : `https://letsthinkpositive.com/blog/${slug}`
 
   useEffect(() => {
+    // Fetch likes, comments, and track + get view count
     fetch(`/api/blog/${slug}/like`).then(r => r.json()).then(d => { setLikes(d.count); setLikedByMe(d.likedByMe) })
     fetch(`/api/blog/${slug}/comments`).then(r => r.json()).then(setComments)
+    // Record this view and get updated count
+    fetch(`/api/blog/${slug}/view`, { method: 'POST' }).then(r => r.json()).then(d => setViews(d.views))
   }, [slug])
 
   async function toggleLike() {
@@ -71,19 +75,41 @@ export function BlogInteractions({ slug, title }: { slug: string; title: string 
   return (
     <div className="mt-12 border-t border-teal-light pt-10">
 
-      {/* Like + Share row */}
+      {/* Stats bar — views, likes, comments at a glance */}
+      <div className="flex items-center gap-5 mb-6 pb-5 border-b border-teal-light/60 flex-wrap">
+        <div className="flex items-center gap-1.5 text-text-xlight text-[0.82rem]">
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          <span><strong className="text-charcoal">{views.toLocaleString()}</strong> {views === 1 ? 'read' : 'reads'}</span>
+        </div>
+        <div className="flex items-center gap-1.5 text-text-xlight text-[0.82rem]">
+          <span>❤️</span>
+          <span><strong className="text-charcoal">{likes}</strong> {likes === 1 ? 'like' : 'likes'}</span>
+        </div>
+        <div className="flex items-center gap-1.5 text-text-xlight text-[0.82rem]">
+          <span>💬</span>
+          <span><strong className="text-charcoal">{comments.length}</strong> {comments.length === 1 ? 'comment' : 'comments'}</span>
+        </div>
+      </div>
+
+      {/* Action row — Like + Share */}
       <div className="flex flex-wrap items-center gap-4 mb-10">
-        {/* Like */}
+        {/* Like / Appreciate */}
         <button onClick={toggleLike}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-full border text-[0.88rem] font-semibold transition-all
-            ${likedByMe ? 'bg-red-50 border-red-300 text-red-500' : 'border-teal-light text-text-mid hover:border-red-300 hover:text-red-400'}`}>
-          {likedByMe ? '❤️' : '🤍'} {likes} {likes === 1 ? 'like' : 'likes'}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-full border text-[0.88rem] font-semibold transition-all hover:scale-105 active:scale-95
+            ${likedByMe
+              ? 'bg-red-50 border-red-300 text-red-500 shadow-sm'
+              : 'border-teal-light text-text-mid hover:border-red-300 hover:text-red-400'}`}>
+          <span className={`transition-transform ${likedByMe ? 'scale-110' : ''}`}>{likedByMe ? '❤️' : '🤍'}</span>
+          {likedByMe ? 'Appreciated!' : 'Appreciate'} · {likes}
         </button>
 
         {/* Comment toggle */}
         <button onClick={() => { setShowForm(s => !s); setTimeout(() => formRef.current?.scrollIntoView({ behavior: 'smooth' }), 100) }}
           className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-teal-light text-text-mid text-[0.88rem] font-semibold hover:border-teal-mid hover:text-teal-deep transition-all">
-          💬 {comments.length} {comments.length === 1 ? 'comment' : 'comments'}
+          💬 Leave a comment {comments.length > 0 && `· ${comments.length}`}
         </button>
 
         {/* Share buttons */}
