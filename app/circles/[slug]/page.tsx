@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, use } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
@@ -19,7 +19,8 @@ interface Post {
 }
 interface CircleInfo { id: number; slug: string; name: string; description: string; icon: string; memberCount: number; isMember: boolean }
 
-export default function CirclePage({ params }: { params: { slug: string } }) {
+export default function CirclePage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = use(params)
   const { data: session, status } = useSession()
   const router = useRouter()
 
@@ -34,18 +35,18 @@ export default function CirclePage({ params }: { params: { slug: string } }) {
   const loadCircle = useCallback(async () => {
     const res = await fetch('/api/circles')
     const all = await res.json()
-    const found = Array.isArray(all) ? all.find((c: CircleInfo) => c.slug === params.slug) : null
+    const found = Array.isArray(all) ? all.find((c: CircleInfo) => c.slug === slug) : null
     setCircle(found ?? null)
     return found
-  }, [params.slug])
+  }, [slug])
 
   const loadPosts = useCallback(async () => {
-    const res = await fetch(`/api/circles/${params.slug}/posts`)
+    const res = await fetch(`/api/circles/${slug}/posts`)
     if (res.status === 403 || res.status === 401) { setLoading(false); return }
     const data = await res.json()
     if (Array.isArray(data)) setPosts(data.map((p: Post) => ({ ...p, showComments: false, newComment: '' })))
     setLoading(false)
-  }, [params.slug])
+  }, [slug])
 
   useEffect(() => {
     if (status === 'loading') return
@@ -54,7 +55,7 @@ export default function CirclePage({ params }: { params: { slug: string } }) {
 
   async function join() {
     if (!session) { router.push('/login'); return }
-    await fetch(`/api/circles/${params.slug}/join`, { method: 'POST' })
+    await fetch(`/api/circles/${slug}/join`, { method: 'POST' })
     await loadCircle()
     loadPosts()
   }
@@ -63,7 +64,7 @@ export default function CirclePage({ params }: { params: { slug: string } }) {
     e.preventDefault()
     if (!body.trim()) return
     setPosting(true)
-    const res  = await fetch(`/api/circles/${params.slug}/posts`, {
+    const res  = await fetch(`/api/circles/${slug}/posts`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body:   JSON.stringify({ body }),
     })
@@ -73,7 +74,7 @@ export default function CirclePage({ params }: { params: { slug: string } }) {
   }
 
   async function toggleLike(postId: number) {
-    const res  = await fetch(`/api/circles/${params.slug}/posts/${postId}/like`, { method: 'POST' })
+    const res  = await fetch(`/api/circles/${slug}/posts/${postId}/like`, { method: 'POST' })
     const data = await res.json()
     setPosts(p => p.map(post => post.id === postId ? { ...post, likeCount: data.count, likedByMe: data.liked } : post))
   }
@@ -81,7 +82,7 @@ export default function CirclePage({ params }: { params: { slug: string } }) {
   async function submitComment(postId: number, comment: string) {
     if (!comment.trim()) return
     setPosts(p => p.map(post => post.id === postId ? { ...post, postingComment: true } : post))
-    const res  = await fetch(`/api/circles/${params.slug}/posts/${postId}/comment`, {
+    const res  = await fetch(`/api/circles/${slug}/posts/${postId}/comment`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body:   JSON.stringify({ body: comment }),
     })

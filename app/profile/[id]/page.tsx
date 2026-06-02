@@ -6,16 +6,18 @@ import { TIER_STYLES } from '@/lib/badges'
 import { FollowButton } from '@/components/FollowButton'
 import type { Metadata } from 'next'
 
-interface Props { params: { id: string } }
+export const dynamic = 'force-dynamic'
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const user = await prisma.user.findUnique({ where: { id: Number(params.id) } })
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params
+  const user = await prisma.user.findUnique({ where: { id: Number(id) } })
   if (!user) return { title: 'Member not found' }
   return { title: `${user.name} — letsthinkpositive`, description: user.bio ?? undefined }
 }
 
-export default async function PublicProfilePage({ params }: Props) {
-  const id = Number(params.id)
+export default async function PublicProfilePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id: idStr } = await params
+  const id = Number(idStr)
   if (isNaN(id)) notFound()
 
   const user = await prisma.user.findUnique({

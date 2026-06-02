@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, use } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { LtpLogo } from '@/components/ui/LtpLogo'
 
-export default function ResetPasswordPage({ params }: { params: { token: string } }) {
+export default function ResetPasswordPage({ params }: { params: Promise<{ token: string }> }) {
+  const { token } = use(params)
   const router = useRouter()
   const [password,  setPassword]  = useState('')
   const [confirm,   setConfirm]   = useState('')
@@ -25,7 +26,7 @@ export default function ResetPasswordPage({ params }: { params: { token: string 
       const res = await fetch('/api/auth/reset-password', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ token: params.token, password }),
+        body:    JSON.stringify({ token: token, password }),
       })
       const data = await res.json()
       if (!res.ok) { setError(data.error ?? 'Something went wrong.'); return }
