@@ -30,15 +30,23 @@ export async function GET(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   if (!await requireAdmin()) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
-  const { id, action, adminNote } = await req.json()
+  const { id, action } = await req.json()
   if (!id || !['approve', 'reject'].includes(action))
     return NextResponse.json({ error: 'id and action (approve|reject) required' }, { status: 400 })
 
   const newStatus = action === 'approve' ? 'approved' : 'rejected'
 
+  // Ensure every approved post has a valid URL slug
+  const existing = await prisma.userBlogPost.findUnique({ where: { id: Number(id) } })
+  const slug = existing?.slug ?? (
+    existing?.title
+      ? existing.title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-').slice(0, 80) + '-' + Date.now()
+      : `post-${id}-${Date.now()}`
+  )
+
   const post = await prisma.userBlogPost.update({
     where: { id: Number(id) },
-    data:  { status: newStatus },
+    data:  { status: newStatus, slug },
   })
 
   return NextResponse.json({ ok: true, post })
