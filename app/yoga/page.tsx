@@ -34,7 +34,7 @@ const YOGA_TYPES: YogaType[] = [
     tagline: 'The foundation of all yoga — calm, gentle, grounding.',
     difficulty: 'Beginner',
     duration: '30–60 min',
-    image: 'https://images.pexels.com/photos/3822906/pexels-photo-3822906.jpeg?auto=compress&cs=tinysrgb&w=800',
+    image: 'https://images.pexels.com/photos/317157/pexels-photo-317157.jpeg?auto=compress&cs=tinysrgb&w=800',
     description: 'Hatha yoga is the starting point for most yoga traditions. It focuses on basic postures (asanas) and breathing (pranayama) at a gentle pace, making it ideal for beginners seeking balance, flexibility, and peace of mind.',
     steps: [
       'Begin in Mountain Pose (Tadasana) — stand tall, feet together, arms at sides.',
@@ -64,7 +64,7 @@ const YOGA_TYPES: YogaType[] = [
     tagline: 'Breath-linked movement — dynamic, creative, flowing.',
     difficulty: 'Intermediate',
     duration: '45–75 min',
-    image: 'https://images.pexels.com/photos/1552242/pexels-photo-1552242.jpeg?auto=compress&cs=tinysrgb&w=800',
+    image: 'https://images.pexels.com/photos/4498482/pexels-photo-4498482.jpeg?auto=compress&cs=tinysrgb&w=800',
     description: 'Vinyasa yoga links movement with breath in a continuous, flowing sequence. No two classes are the same — it\'s creative, energising, and builds both strength and flexibility. Often called "Flow" yoga.',
     steps: [
       'Start with 3 rounds of Sun Salutation A (Surya Namaskar A) to warm the body.',
@@ -94,7 +94,7 @@ const YOGA_TYPES: YogaType[] = [
     tagline: 'Deep, still, restorative — for joints and connective tissue.',
     difficulty: 'All levels',
     duration: '45–90 min',
-    image: 'https://images.pexels.com/photos/3759659/pexels-photo-3759659.jpeg?auto=compress&cs=tinysrgb&w=800',
+    image: 'https://images.pexels.com/photos/6740823/pexels-photo-6740823.jpeg?auto=compress&cs=tinysrgb&w=800',
     description: 'Yin yoga involves holding passive poses for 3–5 minutes, targeting the deep connective tissues — fascia, ligaments, and joints. It is profoundly relaxing, meditative, and complementary to more active practices.',
     steps: [
       'Begin lying in Constructive Rest — knees bent, feet flat, hands on belly.',
@@ -123,7 +123,7 @@ const YOGA_TYPES: YogaType[] = [
     tagline: 'Energy, breath & mantra — the yoga of awareness.',
     difficulty: 'All levels',
     duration: '60–90 min',
-    image: 'https://images.pexels.com/photos/3820393/pexels-photo-3820393.jpeg?auto=compress&cs=tinysrgb&w=800',
+    image: 'https://images.pexels.com/photos/3094230/pexels-photo-3094230.jpeg?auto=compress&cs=tinysrgb&w=800',
     description: 'Kundalini yoga combines dynamic exercises (kriyas), breathwork (pranayama), chanting, and meditation to awaken dormant energy at the base of the spine. It is deeply transformative and spiritual in nature.',
     steps: [
       'Open with Tuning In — chant "Ong Namo Guru Dev Namo" 3 times to set intention.',
@@ -153,7 +153,7 @@ const YOGA_TYPES: YogaType[] = [
     tagline: 'A fixed, powerful sequence — discipline meets devotion.',
     difficulty: 'Advanced',
     duration: '60–120 min',
-    image: 'https://images.pexels.com/photos/2294354/pexels-photo-2294354.jpeg?auto=compress&cs=tinysrgb&w=800',
+    image: 'https://images.pexels.com/photos/4498418/pexels-photo-4498418.jpeg?auto=compress&cs=tinysrgb&w=800',
     description: 'Ashtanga is a rigorous, set sequence of poses practised in the same order every time. It builds heat (tapas), purifies the body through sweat, and demands commitment. The Primary Series alone takes 90 minutes.',
     steps: [
       'Sun Salutation A — 5 rounds. Sun Salutation B — 5 rounds. This is the foundation.',
@@ -183,7 +183,7 @@ const YOGA_TYPES: YogaType[] = [
     tagline: 'Supported, still, deeply healing — rest as practice.',
     difficulty: 'All levels',
     duration: '45–75 min',
-    image: 'https://images.pexels.com/photos/3757952/pexels-photo-3757952.jpeg?auto=compress&cs=tinysrgb&w=800',
+    image: 'https://images.pexels.com/photos/3822621/pexels-photo-3822621.jpeg?auto=compress&cs=tinysrgb&w=800',
     description: 'Restorative yoga uses props — bolsters, blankets, blocks, and straps — to support the body in passive poses for 5–20 minutes each. There is no muscular effort; the nervous system heals through complete surrender.',
     steps: [
       'Gather props: 2 blankets, 1 bolster or firm pillow, 2 yoga blocks.',
