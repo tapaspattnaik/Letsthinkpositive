@@ -349,20 +349,19 @@ export default function KindnessMapPage() {
         </div>
 
         {/* ── Map container ── */}
-        <div className="max-w-[1000px] mx-auto mb-12"
+        <div className="max-w-[1000px] mx-auto mb-4"
           style={{ boxShadow: '0 8px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(168,216,208,0.15)', borderRadius: 24 }}>
           {/* KindnessWorldMap is dynamically imported with ssr:false */}
           <KindnessWorldMap acts={acts} />
-          </div>
-
-          <p
-            className="text-center mt-3 text-sm opacity-60"
-            style={{ color: '#A8D8D0', fontFamily: 'DM Sans, sans-serif' }}
-          >
-            You are looking at {acts.length} act{acts.length !== 1 ? 's' : ''} of kindness from around the world.
-            Hover any dot to read the story.
-          </p>
         </div>
+
+        <p
+          className="text-center mb-10 text-sm opacity-60"
+          style={{ color: '#A8D8D0', fontFamily: 'DM Sans, sans-serif' }}
+        >
+          You are looking at {acts.length} act{acts.length !== 1 ? 's' : ''} of kindness from around the world.
+          Hover any dot to read the story.
+        </p>
 
         {/* ── Two-column layout for form + recent acts ── */}
         <div className="max-w-[900px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
