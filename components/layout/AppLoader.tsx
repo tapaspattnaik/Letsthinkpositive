@@ -14,47 +14,41 @@ export function AppLoader() {
   const [visible, setVisible] = useState(true)
 
   useEffect(() => {
-    let rafId: number
-    let fallbackId: ReturnType<typeof setTimeout>
-
-    // Verify Tailwind CSS has ACTUALLY loaded by checking for a known CSS
-    // custom property from globals.css (--teal-deep: #1A6B6B).
-    // document.readyState === 'complete' fires too early on Hostinger cold
-    // starts — the CSS file may still be in-flight when readyState fires.
+    // Check if Tailwind CSS has loaded by detecting a known CSS custom property
     function cssLoaded(): boolean {
       try {
-        const v = getComputedStyle(document.documentElement)
-          .getPropertyValue('--teal-deep').trim()
-        return v.length > 0
+        return getComputedStyle(document.documentElement)
+          .getPropertyValue('--teal-deep').trim().length > 0
       } catch { return false }
     }
 
-    function tryHide() {
-      if (cssLoaded()) {
+    // Hide immediately if CSS is already present (warm page load / navigation)
+    if (cssLoaded()) { setVisible(false); return }
+
+    // Otherwise poll — but STOP BLOCKING CLICKS after 800ms regardless.
+    // This prevents the AppLoader permanently blocking interaction if the
+    // CSS variable check fails (e.g. dark mode race, browser quirks).
+    let cancelled = false
+    let attempts  = 0
+    const MAX_ATTEMPTS = 60  // ~1 second at 60fps
+
+    function poll() {
+      if (cancelled) return
+      attempts++
+      if (cssLoaded() || attempts >= MAX_ATTEMPTS) {
         setVisible(false)
       } else {
-        rafId = requestAnimationFrame(tryHide) // retry next frame
+        requestAnimationFrame(poll)
       }
     }
 
-    function onLoad() {
-      rafId = requestAnimationFrame(tryHide)
-    }
+    // Start polling after next paint
+    requestAnimationFrame(poll)
 
-    if (document.readyState === 'complete') {
-      onLoad()
-    } else {
-      window.addEventListener('load', onLoad)
-    }
+    // Absolute hard ceiling — 3 seconds max, then always hide
+    const fallback = setTimeout(() => { cancelled = true; setVisible(false) }, 3000)
 
-    // Hard ceiling — never block the page forever
-    fallbackId = setTimeout(() => setVisible(false), 6000)
-
-    return () => {
-      cancelAnimationFrame(rafId)
-      clearTimeout(fallbackId)
-      window.removeEventListener('load', onLoad)
-    }
+    return () => { cancelled = true; clearTimeout(fallback) }
   }, [])
 
   if (!visible) return null

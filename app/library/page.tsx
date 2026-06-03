@@ -40,7 +40,7 @@ export default function LibraryPage({
       </section>
 
       {/* Category Filter */}
-      <section className="bg-ivory border-b border-teal-light sticky top-[72px] z-30 py-4 px-[5%]">
+      <section className="bg-ivory border-b border-teal-light sticky top-[72px] z-[30] py-4 px-[5%]" style={{ top: 'var(--header-h, 72px)' }}>
         <div className="max-w-6xl mx-auto flex gap-2 flex-wrap">
           <Link href="/library"
             className={`px-4 py-1.5 rounded-full text-[0.82rem] font-medium transition-all no-underline ${
