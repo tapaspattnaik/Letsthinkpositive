@@ -84,6 +84,7 @@ const NAV_GROUPS: NavGroup[] = [
     icon: '💛',
     items: [
       { href: '/quiz',              label: 'Wellness Quiz',  desc: 'Get your personal plan',         icon: '🎯' },
+      { href: '/tribe',             label: 'My Tribe',       desc: 'Your connections & feed',        icon: '🌿' },
       { href: '/community',         label: 'Community',      desc: 'Stories & sharing',              icon: '💬' },
       { href: '/community/gallery', label: 'Gallery',       desc: 'Good deeds & activities',        icon: '📸' },
       { href: '/circles',           label: 'Circles',       desc: 'Private group spaces',           icon: '🔒' },
