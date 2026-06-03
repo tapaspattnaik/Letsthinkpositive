@@ -6,7 +6,9 @@ const { createServer } = require('http')
 const { parse } = require('url')
 const next = require('next')
 
-const dev  = process.env.NODE_ENV !== 'production'
+// Default to production — only use dev mode if explicitly set to 'development'
+// Using !== 'production' means an unset NODE_ENV would trigger dev mode (wrong)
+const dev  = process.env.NODE_ENV === 'development'
 const port = parseInt(process.env.PORT || '3000', 10)
 
 // Limit concurrent connections to prevent process count explosion on shared hosting
