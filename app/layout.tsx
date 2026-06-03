@@ -62,6 +62,16 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${playfair.variable} ${dmSans.variable} ${dmSerif.variable}`} suppressHydrationWarning>
+      {/* Minimal critical CSS — ensures the page is never completely unstyled
+          even if the Tailwind stylesheet fails to load on Hostinger cold start */}
+      <head>
+        <style dangerouslySetInnerHTML={{ __html: `
+          :root { --teal-deep: #1A6B6B; --ivory: #F8F8F4; }
+          body { background: var(--ivory); margin: 0; font-family: system-ui, sans-serif; }
+          * { box-sizing: border-box; }
+          a { color: var(--teal-deep); }
+        `}} />
+      </head>
       <body className="font-body" suppressHydrationWarning>
         <SessionProvider>
           {/* Loading overlay — hides unstyled flash while CSS downloads on mobile */}

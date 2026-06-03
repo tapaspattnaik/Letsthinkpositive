@@ -14,22 +14,46 @@ export function AppLoader() {
   const [visible, setVisible] = useState(true)
 
   useEffect(() => {
-    // Hide after document + all stylesheets are ready
-    function hide() {
-      setVisible(false)
+    let rafId: number
+    let fallbackId: ReturnType<typeof setTimeout>
+
+    // Verify Tailwind CSS has ACTUALLY loaded by checking for a known CSS
+    // custom property from globals.css (--teal-deep: #1A6B6B).
+    // document.readyState === 'complete' fires too early on Hostinger cold
+    // starts — the CSS file may still be in-flight when readyState fires.
+    function cssLoaded(): boolean {
+      try {
+        const v = getComputedStyle(document.documentElement)
+          .getPropertyValue('--teal-deep').trim()
+        return v.length > 0
+      } catch { return false }
+    }
+
+    function tryHide() {
+      if (cssLoaded()) {
+        setVisible(false)
+      } else {
+        rafId = requestAnimationFrame(tryHide) // retry next frame
+      }
+    }
+
+    function onLoad() {
+      rafId = requestAnimationFrame(tryHide)
     }
 
     if (document.readyState === 'complete') {
-      // Already fully loaded (e.g. fast desktop)
-      hide()
+      onLoad()
     } else {
-      window.addEventListener('load', hide)
-      // Fallback: hide after 4 seconds no matter what
-      const fallback = setTimeout(hide, 4000)
-      return () => {
-        window.removeEventListener('load', hide)
-        clearTimeout(fallback)
-      }
+      window.addEventListener('load', onLoad)
+    }
+
+    // Hard ceiling — never block the page forever
+    fallbackId = setTimeout(() => setVisible(false), 6000)
+
+    return () => {
+      cancelAnimationFrame(rafId)
+      clearTimeout(fallbackId)
+      window.removeEventListener('load', onLoad)
     }
   }, [])
 
