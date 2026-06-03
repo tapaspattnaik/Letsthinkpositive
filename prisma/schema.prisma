@@ -61,6 +61,7 @@ model User {
   galleryPosts       GalleryPost[]
   galleryHearts      GalleryHeart[]
   sleepLogs          SleepLog[]
+  assessments        WellnessAssessment[]
   savedQuotes        SavedQuote[]
 
   @@map("users")
@@ -502,6 +503,24 @@ model SavedQuote {
 
   @@unique([userId, text(length: 100)])  // prevent saving same quote twice
   @@map("saved_quotes")
+}
+
+// ── Wellness Assessments (psychometric tests) ────────────────────────────
+
+model WellnessAssessment {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  testKey   String   @db.VarChar(30)   // phq9 | gad7 | pss10 | compassion | resilience | perma
+  score     Int
+  band      String   @db.VarChar(30)   // minimal | mild | moderate | severe | high | low etc.
+  answers   String   @db.Text          // JSON array of answer indices
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, testKey])
+  @@index([userId, createdAt])
+  @@map("wellness_assessments")
 }
 
 // ── Password resets ───────────────────────────────────────────────────────
