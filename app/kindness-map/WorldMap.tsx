@@ -43,8 +43,8 @@ export default function WorldMap({ acts }: Props) {
 
           {/* Countries */}
           <Geographies geography={GEO_URL}>
-            {({ geographies }: { geographies: any[] }) =>
-              geographies.map((geo: any) => (
+            {({ geographies }) =>
+              geographies.map(geo => (
                 <Geography
                   key={geo.rsmKey}
                   geography={geo}
@@ -63,7 +63,7 @@ export default function WorldMap({ acts }: Props) {
             <Marker
               key={act.id}
               coordinates={[act.lng, act.lat]}
-              onMouseEnter={(e: any) => {
+              onMouseEnter={(e) => {
                 const rect = (e.target as SVGElement).closest('svg')?.getBoundingClientRect()
                 const cx = (e.clientX - (rect?.left ?? 0))
                 const cy = (e.clientY - (rect?.top ?? 0))

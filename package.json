@@ -59,5 +59,8 @@
     "together-ai": "^0.7.0",
     "ts-node": "^10.9.2",
     "typescript": "^5"
+  },
+  "devDependencies": {
+    "@types/react-simple-maps": "^3.0.6"
   }
 }
