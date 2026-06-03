@@ -1,11 +1,17 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { ComposableMap, Geographies, Geography, Marker } = require('react-simple-maps')
+import dynamic from 'next/dynamic'
 
-// Natural Earth GeoJSON — free, built into react-simple-maps
-const GEO_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'
+// WorldMap wrapped in a dynamic import so react-simple-maps (which uses
+// browser-only APIs) never runs on the server and avoids SSR hydration issues.
+const KindnessWorldMap = dynamic(() => import('./WorldMap'), { ssr: false,
+  loading: () => (
+    <div className="w-full flex items-center justify-center" style={{ aspectRatio: '2/1', background: '#0a2a2a' }}>
+      <p className="text-sm animate-pulse" style={{ color: '#A8D8D0', fontFamily: 'DM Sans, sans-serif' }}>Loading map…</p>
+    </div>
+  ),
+})
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -343,74 +349,10 @@ export default function KindnessMapPage() {
         </div>
 
         {/* ── Map container ── */}
-        <div className="max-w-[1000px] mx-auto mb-12">
-          <div
-            className="relative overflow-hidden rounded-[24px] w-full"
-            style={{
-              background: '#0a2a2a',
-              boxShadow: '0 8px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(168,216,208,0.15)',
-            }}
-          >
-            {/* Proper world map using react-simple-maps */}
-            <ComposableMap
-              projection="geoNaturalEarth1"
-              projectionConfig={{ scale: 160, center: [0, 10] }}
-              style={{ width: '100%', height: 'auto', display: 'block' }}
-            >
-              {/* Ocean background */}
-              <rect x={-800} y={-600} width={2400} height={1200} fill="#0d3535" />
-
-              <Geographies geography={GEO_URL}>
-                {({ geographies }: { geographies: any[] }) =>
-                  geographies.map((geo: any) => (
-                    <Geography
-                      key={geo.rsmKey}
-                      geography={geo}
-                      style={{
-                        default: { fill: '#1a5050', stroke: '#2D9B8A', strokeWidth: 0.4, outline: 'none' },
-                        hover:   { fill: '#206060', stroke: '#2D9B8A', strokeWidth: 0.6, outline: 'none' },
-                        pressed: { fill: '#1a5050', outline: 'none' },
-                      }}
-                    />
-                  ))
-                }
-              </Geographies>
-
-              {/* Kindness dots as SVG markers */}
-              {acts.map((act, i) => (
-                <Marker key={act.id} coordinates={[act.lng, act.lat]}>
-                  <circle r={6} fill="rgba(232,160,32,0.25)" />
-                  <circle r={4} fill="#E8A020" opacity={0.9}>
-                    <animate attributeName="r" from="4" to="10" dur="2s" begin={`${(i % 6) * 0.4}s`} repeatCount="indefinite" />
-                    <animate attributeName="opacity" from="0.9" to="0" dur="2s" begin={`${(i % 6) * 0.4}s`} repeatCount="indefinite" />
-                  </circle>
-                  <circle r={3.5} fill="#F5C96A" />
-                  <title>{act.city}, {act.country}: {act.act}</title>
-                </Marker>
-              ))}
-            </ComposableMap>
-
-            {/* Loading overlay */}
-            {loading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-[#0a2a2a]/80">
-                <p className="text-sm animate-pulse" style={{ color: '#A8D8D0', fontFamily: 'DM Sans, sans-serif' }}>
-                  Loading acts of kindness…
-                </p>
-              </div>
-            )}
-
-            {/* Legend */}
-            <div className="absolute bottom-3 right-3 flex items-center gap-2 px-3 py-1.5 rounded-full"
-              style={{ background: 'rgba(15,64,64,0.85)', border: '1px solid rgba(168,216,208,0.2)', backdropFilter: 'blur(6px)' }}>
-              <span className="block rounded-full" style={{ width: 8, height: 8, background: '#E8A020', boxShadow: '0 0 6px rgba(232,160,32,0.8)' }} />
-              <span className="text-[11px]" style={{ color: '#A8D8D0', fontFamily: 'DM Sans, sans-serif' }}>= one act of kindness</span>
-            </div>
-
-            {/* Count overlay */}
-            <div className="absolute top-3 left-3 px-3 py-1.5 rounded-full text-[11px]"
-              style={{ background: 'rgba(15,64,64,0.85)', border: '1px solid rgba(168,216,208,0.2)', color: '#A8D8D0', fontFamily: 'DM Sans, sans-serif' }}>
-              {acts.length} acts on the map
-            </div>
+        <div className="max-w-[1000px] mx-auto mb-12"
+          style={{ boxShadow: '0 8px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(168,216,208,0.15)', borderRadius: 24 }}>
+          {/* KindnessWorldMap is dynamically imported with ssr:false */}
+          <KindnessWorldMap acts={acts} />
           </div>
 
           <p
