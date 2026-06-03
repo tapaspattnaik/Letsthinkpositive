@@ -10,14 +10,33 @@ interface Comment {
   user?: { id: number; name: string; avatarUrl?: string } | null
 }
 
+// Friendly share copy per platform — each feels native to that platform's tone
+function shareText(title: string, url: string, platform: string): string {
+  const site = 'letsthinkpositive.com'
+  switch (platform) {
+    case 'twitter':
+      return `✨ "${title}"\n\nThis really resonated with me 💛 Found it on ${site}\n\n${url}\n\n#MentalWellness #PositiveThinking #Mindfulness`
+    case 'whatsapp':
+      return `Hey 👋 I came across something that might help you too:\n\n*"${title}"*\n\nReally worth a read 🌿\n👉 ${url}\n\n(from letsthinkpositive.com)`
+    case 'linkedin':
+      return `Just read a really thoughtful piece: "${title}"\n\nIt's a good reminder that small mindset shifts can make a big difference. Sharing in case it's useful for anyone else going through something similar.\n\n${url}\n\n#Wellbeing #MentalHealth #PersonalGrowth`
+    case 'telegram':
+      return `📖 Read this and thought of you:\n\n"${title}"\n\nIt's worth a few minutes of your time 🌿\n${url}`
+    default:
+      return `"${title}" — worth a read 💛\n${url}`
+  }
+}
+
 const SHARE_PLATFORMS = [
-  { name: 'X / Twitter', icon: '𝕏', color: 'hover:bg-black hover:text-white',
-    url: (title: string, url: string) => `https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}` },
-  { name: 'WhatsApp',    icon: '💬', color: 'hover:bg-[#25D366] hover:text-white',
-    url: (title: string, url: string) => `https://wa.me/?text=${encodeURIComponent(title + ' ' + url)}` },
-  { name: 'LinkedIn',    icon: 'in', color: 'hover:bg-[#0077B5] hover:text-white',
-    url: (_: string, url: string) => `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}` },
-  { name: 'Facebook',    icon: 'f',  color: 'hover:bg-[#1877F2] hover:text-white',
+  { name: 'X / Twitter', icon: '𝕏', color: 'hover:bg-black hover:text-white',    key: 'twitter',
+    url: (title: string, url: string) => `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText(title, url, 'twitter'))}` },
+  { name: 'WhatsApp',    icon: '💬', color: 'hover:bg-[#25D366] hover:text-white', key: 'whatsapp',
+    url: (title: string, url: string) => `https://wa.me/?text=${encodeURIComponent(shareText(title, url, 'whatsapp'))}` },
+  { name: 'LinkedIn',    icon: 'in', color: 'hover:bg-[#0077B5] hover:text-white', key: 'linkedin',
+    url: (title: string, url: string) => `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}&summary=${encodeURIComponent(shareText(title, url, 'linkedin'))}` },
+  { name: 'Telegram',    icon: '✈️', color: 'hover:bg-[#26A5E4] hover:text-white', key: 'telegram',
+    url: (title: string, url: string) => `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(shareText(title, url, 'telegram'))}` },
+  { name: 'Facebook',    icon: 'f',  color: 'hover:bg-[#1877F2] hover:text-white', key: 'facebook',
     url: (_: string, url: string) => `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}` },
 ]
 

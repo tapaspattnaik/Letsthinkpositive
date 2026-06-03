@@ -116,37 +116,41 @@ export default function QuoteCreatorPage() {
 
   const handleReset = () => { setQuote(''); setAttribution(''); setStyleId(1); setPhotoId(PHOTO_TEMPLATES[0].id); setBgMode('color'); setStep(1) }
 
-  const siteUrl = 'https://letsthinkpositive.com/quotes'
-  const shareText = attribution
-    ? `"${quote}" — ${attribution.replace(/^—\s*/, '')}\n\nCreate your own at letsthinkpositive.com 🌿`
-    : `"${quote}"\n\nCreate your own at letsthinkpositive.com 🌿`
+  const siteUrl  = 'https://letsthinkpositive.com/quotes'
+  const credit   = attribution ? attribution.replace(/^—\s*/, '') : ''
+  const quoteLine = credit ? `"${quote}" — ${credit}` : `"${quote}"`
+
+  // Platform-specific friendly share copy
+  const shareText = `${quoteLine}\n\nCreate your own quote card at letsthinkpositive.com 🌿`
 
   function shareTwitter() {
-    const text = attribution
-      ? `"${quote}" — ${attribution.replace(/^—\s*/, '')} | letsthinkpositive.com`
-      : `"${quote}" | letsthinkpositive.com`
-    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(siteUrl)}&hashtags=letsthinkpositive,mindfulness,positivity`, '_blank', 'width=600,height=400')
+    const text = `✨ ${quoteLine}\n\nThis one hit different 💛\n\n#Mindfulness #Positivity #letsthinkpositive`
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(siteUrl)}`, '_blank', 'width=600,height=400')
   }
 
   function shareWhatsApp() {
-    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`, '_blank')
+    const text = `Hey 👋 came across this quote and thought of you:\n\n${quoteLine}\n\nMade it on letsthinkpositive.com — you can make your own too 🌿\n${siteUrl}`
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank')
   }
 
   function shareFacebook() {
-    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(siteUrl)}&quote=${encodeURIComponent(shareText)}`, '_blank', 'width=600,height=400')
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(siteUrl)}&quote=${encodeURIComponent(quoteLine)}`, '_blank', 'width=600,height=400')
   }
 
   function shareLinkedIn() {
-    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(siteUrl)}`, '_blank', 'width=600,height=500')
+    const text = `Words worth carrying:\n\n${quoteLine}\n\nCreated on letsthinkpositive.com — a space for mental wellness and positive thinking.`
+    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(siteUrl)}&summary=${encodeURIComponent(text)}`, '_blank', 'width=600,height=500')
   }
 
   function shareTelegram() {
-    window.open(`https://t.me/share/url?url=${encodeURIComponent(siteUrl)}&text=${encodeURIComponent(shareText)}`, '_blank')
+    const text = `📖 ${quoteLine}\n\nCreate your own quote card 👇\n${siteUrl}`
+    window.open(`https://t.me/share/url?url=${encodeURIComponent(siteUrl)}&text=${encodeURIComponent(text)}`, '_blank')
   }
 
   async function copyText() {
     try {
-      await navigator.clipboard.writeText(shareText)
+      const full = `${quoteLine}\n\n— via letsthinkpositive.com`
+      await navigator.clipboard.writeText(full)
       setCopied(true)
       setTimeout(() => setCopied(false), 2500)
     } catch { /* fallback */ }
