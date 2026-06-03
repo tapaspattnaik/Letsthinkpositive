@@ -149,6 +149,8 @@ export default function ProfilePage() {
   const [feed,        setFeed]        = useState<FeedPost[]>([])
   const [feedLoading, setFeedLoading] = useState(false)
   const [feedFilter,  setFeedFilter]  = useState<'all' | 'community' | 'circles'>('all')
+  const [tribeFollowing, setTribeFollowing] = useState<{id:number;name:string;avatarUrl:string|null}[]>([])
+  const [tribeFollowers, setTribeFollowers] = useState<{id:number;name:string;avatarUrl:string|null}[]>([])
   const [editing,     setEditing]     = useState(false)
   const [form,        setForm]        = useState({ name: '', phone: '', bio: '' })
   const [selected,    setSelected]    = useState<string[]>([])
@@ -185,6 +187,13 @@ export default function ProfilePage() {
     fetch('/api/circles').then(r => r.json()).then(data => {
       if (Array.isArray(data)) setCircles(data.filter((c: Circle) => c.isMember))
     })
+    // Fetch tribe (following + followers)
+    fetch('/api/tribe').then(r => r.ok ? r.json() : null).then(data => {
+      if (data) {
+        setTribeFollowing(data.following ?? [])
+        setTribeFollowers(data.followers ?? [])
+      }
+    }).catch(() => {})
   }, [status])
 
   async function saveProfile() {
@@ -397,7 +406,7 @@ export default function ProfilePage() {
               { value: profile.currentStreak ?? 0, label: 'Day Streak',       icon: '🔥', color: 'text-orange-500' },
               { value: profile.badges.length,       label: 'Badges Earned',   icon: '🏅', color: 'text-amber'      },
               { value: completedChallenges,          label: 'Challenges Done', icon: '🏆', color: 'text-teal-deep'  },
-              { value: memberDays,                   label: 'Days as Member',  icon: '🌱', color: 'text-green-600'  },
+              { value: tribeFollowing.length,        label: 'Tribe',           icon: '🌿', color: 'text-teal-mid'   },
             ].map(s => (
               <div key={s.label} className="bg-white rounded-[18px] p-4 text-center shadow-card border border-teal-light/60 hover:shadow-lift transition-shadow">
                 <span className="text-[1.4rem] block mb-1">{s.icon}</span>
@@ -597,6 +606,83 @@ export default function ProfilePage() {
               <Link href={(profile.currentStreak ?? 0) === 0 ? '/mood' : '/breathing'}
                 className="inline-block bg-white/15 hover:bg-white/25 text-white text-[0.78rem] font-semibold px-4 py-2 rounded-full no-underline transition-colors border border-white/20">
                 {(profile.currentStreak ?? 0) === 0 ? 'Log Mood →' : 'Breathe Now →'}
+              </Link>
+            </div>
+
+            {/* My Tribe mini section */}
+            <div className="bg-white rounded-[20px] p-4 shadow-card border border-teal-light/60">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-bold text-charcoal text-[0.88rem]">🌿 My Tribe</h3>
+                <Link href="/tribe" className="text-teal-mid text-[0.72rem] font-semibold no-underline hover:text-teal-deep transition-colors">
+                  View all →
+                </Link>
+              </div>
+
+              {/* Connected (following) */}
+              <div className="mb-3">
+                <p className="text-[0.65rem] font-bold text-text-xlight uppercase tracking-widest mb-2">
+                  Connected · {tribeFollowing.length}
+                </p>
+                {tribeFollowing.length === 0 ? (
+                  <p className="text-text-xlight text-[0.75rem]">Not connected with anyone yet.</p>
+                ) : (
+                  <div className="flex flex-wrap gap-1.5">
+                    {tribeFollowing.slice(0, 8).map(u => (
+                      <Link key={u.id} href={`/profile/${u.id}`} title={u.name} className="no-underline">
+                        {u.avatarUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={u.avatarUrl} alt={u.name} referrerPolicy="no-referrer"
+                            className="w-8 h-8 rounded-full object-cover border-2 border-white shadow-sm hover:scale-110 transition-transform" />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-teal-mid to-teal-deep flex items-center justify-center text-white font-bold text-[0.7rem] border-2 border-white shadow-sm hover:scale-110 transition-transform">
+                            {u.name.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                      </Link>
+                    ))}
+                    {tribeFollowing.length > 8 && (
+                      <div className="w-8 h-8 rounded-full bg-teal-ghost border-2 border-white flex items-center justify-center text-teal-deep text-[0.62rem] font-bold">
+                        +{tribeFollowing.length - 8}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Followers */}
+              <div>
+                <p className="text-[0.65rem] font-bold text-text-xlight uppercase tracking-widest mb-2">
+                  Following you · {tribeFollowers.length}
+                </p>
+                {tribeFollowers.length === 0 ? (
+                  <p className="text-text-xlight text-[0.75rem]">No one following you yet.</p>
+                ) : (
+                  <div className="flex flex-wrap gap-1.5">
+                    {tribeFollowers.slice(0, 8).map(u => (
+                      <Link key={u.id} href={`/profile/${u.id}`} title={u.name} className="no-underline">
+                        {u.avatarUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={u.avatarUrl} alt={u.name} referrerPolicy="no-referrer"
+                            className="w-8 h-8 rounded-full object-cover border-2 border-white shadow-sm hover:scale-110 transition-transform" />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber/60 to-amber flex items-center justify-center text-white font-bold text-[0.7rem] border-2 border-white shadow-sm hover:scale-110 transition-transform">
+                            {u.name.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                      </Link>
+                    ))}
+                    {tribeFollowers.length > 8 && (
+                      <div className="w-8 h-8 rounded-full bg-amber/10 border-2 border-white flex items-center justify-center text-amber text-[0.62rem] font-bold">
+                        +{tribeFollowers.length - 8}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <Link href="/tribe?tab=discover"
+                className="mt-3 flex items-center justify-center gap-1.5 w-full border border-teal-light text-teal-deep text-[0.75rem] font-semibold py-2 rounded-full no-underline hover:bg-teal-ghost transition-colors">
+                ✨ Discover more members
               </Link>
             </div>
 
