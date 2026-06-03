@@ -17,6 +17,23 @@ interface DbPostResult extends Post {
   dbAuthor?: DbAuthor
 }
 
+// Helper: look up an author from the DB by name (for filesystem posts)
+async function getAuthorByName(name: string): Promise<DbAuthor | null> {
+  try {
+    const u = await prisma.user.findFirst({
+      where: { name: { contains: name } },
+      select: {
+        id: true, name: true, bio: true, avatarUrl: true,
+        interests: true, currentStreak: true,
+        _count: { select: { badges: true } },
+      },
+    })
+    if (!u) return null
+    return { id: u.id, name: u.name, bio: u.bio, avatarUrl: u.avatarUrl,
+      interests: u.interests, currentStreak: u.currentStreak, badges: u._count.badges }
+  } catch { return null }
+}
+
 // Helper: look up a post in the DB if not found in filesystem
 async function getDbPost(slug: string): Promise<DbPostResult | null> {
   try {
@@ -94,7 +111,11 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
   const dbResult = fsPost ? null : await getDbPost(slug)
   const post     = fsPost ?? dbResult
   if (!post) notFound()
+
+  // For DB posts: author from the user record
+  // For filesystem posts: try to find the author in the DB by name
   const dbAuthor = (dbResult as DbPostResult | null)?.dbAuthor
+    ?? (fsPost ? await getAuthorByName(fsPost.author) : null)
 
   const allPosts = getAllPosts()
 
@@ -152,79 +173,94 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
             <BlogInteractions slug={slug} title={post.title} />
           </div>
 
-          {/* ── Author snapshot — shown for user-submitted posts ── */}
-          {dbAuthor && (
-            <div className="mt-10 bg-gradient-to-br from-teal-ghost to-white border border-teal-light rounded-[24px] p-6">
-              <p className="text-[0.7rem] font-bold text-text-xlight uppercase tracking-widest mb-4">About the Author</p>
+          {/* ── About the Author — auto-generated for every post ──── */}
+          <div className="mt-10 bg-gradient-to-br from-teal-ghost via-white to-teal-ghost/30 border border-teal-light rounded-[24px] overflow-hidden">
+            {/* Header strip */}
+            <div className="bg-gradient-to-r from-teal-deep to-teal-dark px-6 py-3 flex items-center gap-2">
+              <span className="text-amber text-[0.72rem] font-bold uppercase tracking-widest">✍️ About the Author</span>
+            </div>
+
+            <div className="p-6">
               <div className="flex items-start gap-4">
                 {/* Avatar */}
                 <div className="flex-shrink-0">
-                  {dbAuthor.avatarUrl ? (
+                  {dbAuthor?.avatarUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={dbAuthor.avatarUrl} alt={dbAuthor.name} referrerPolicy="no-referrer"
-                      className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-sm" />
+                      className="w-[72px] h-[72px] rounded-full object-cover border-3 border-white shadow-lift" />
                   ) : (
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-teal-mid to-teal-deep flex items-center justify-center text-white font-display font-bold text-[1.6rem] border-2 border-white shadow-sm">
-                      {dbAuthor.name.charAt(0).toUpperCase()}
+                    <div className="w-[72px] h-[72px] rounded-full bg-gradient-to-br from-teal-mid to-teal-deep flex items-center justify-center text-white font-display font-bold text-[1.8rem] shadow-lift border-3 border-white">
+                      {(dbAuthor?.name ?? post.author).charAt(0).toUpperCase()}
                     </div>
                   )}
                 </div>
 
                 {/* Info */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-3 flex-wrap mb-2">
-                    <h3 className="font-display font-bold text-charcoal text-[1.1rem]">{dbAuthor.name}</h3>
-                    {dbAuthor.currentStreak > 0 && (
-                      <span className="flex items-center gap-1 bg-amber/15 text-amber text-[0.72rem] font-bold px-2.5 py-0.5 rounded-full">
-                        🔥 {dbAuthor.currentStreak}-day streak
+                  {/* Name + badges */}
+                  <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                    <h3 className="font-display font-bold text-charcoal text-[1.1rem]">
+                      {dbAuthor?.name ?? post.author}
+                    </h3>
+                    {dbAuthor && dbAuthor.currentStreak > 0 && (
+                      <span className="bg-amber/15 text-amber text-[0.68rem] font-bold px-2.5 py-0.5 rounded-full">
+                        🔥 {dbAuthor.currentStreak}d streak
                       </span>
                     )}
-                    {dbAuthor.badges > 0 && (
-                      <span className="flex items-center gap-1 bg-teal-ghost text-teal-deep text-[0.72rem] font-bold px-2.5 py-0.5 rounded-full">
+                    {dbAuthor && dbAuthor.badges > 0 && (
+                      <span className="bg-teal-ghost text-teal-deep text-[0.68rem] font-bold px-2.5 py-0.5 rounded-full">
                         🏅 {dbAuthor.badges} badge{dbAuthor.badges !== 1 ? 's' : ''}
+                      </span>
+                    )}
+                    {!dbAuthor && (
+                      <span className="bg-amber/15 text-amber text-[0.68rem] font-semibold px-2.5 py-0.5 rounded-full">
+                        Founder
                       </span>
                     )}
                   </div>
 
-                  {dbAuthor.bio && (
-                    <p className="text-text-mid text-[0.9rem] leading-[1.75] mb-3">{dbAuthor.bio}</p>
-                  )}
+                  {/* Bio */}
+                  {dbAuthor?.bio ? (
+                    <p className="text-text-mid text-[0.88rem] leading-[1.75] mb-3">{dbAuthor.bio}</p>
+                  ) : !dbAuthor ? (
+                    <p className="text-text-mid text-[0.88rem] leading-[1.75] mb-3">
+                      Tapas Pattanaik is the founder of letsthinkpositive.com — a wellness platform built from lived experience. He writes on mental wellbeing, resilience, and living with intention.
+                    </p>
+                  ) : null}
 
                   {/* Interests */}
-                  {dbAuthor.interests && (
-                    <div className="flex flex-wrap gap-1.5">
+                  {dbAuthor?.interests && (
+                    <div className="flex flex-wrap gap-1.5 mb-3">
                       {dbAuthor.interests.split(',').filter(Boolean).slice(0, 5).map(i => (
-                        <span key={i} className="bg-white border border-teal-light text-teal-deep text-[0.72rem] font-medium px-2.5 py-0.5 rounded-full">
+                        <span key={i} className="bg-white border border-teal-light text-teal-deep text-[0.7rem] font-medium px-2.5 py-0.5 rounded-full">
                           {i.trim()}
                         </span>
                       ))}
                     </div>
                   )}
 
-                  <Link href={`/profile/${dbAuthor.id}`}
-                    className="inline-flex items-center gap-1.5 mt-3 text-teal-mid text-[0.82rem] font-semibold no-underline hover:text-teal-deep transition-colors">
-                    View profile →
-                  </Link>
+                  {/* Profile link */}
+                  {dbAuthor ? (
+                    <Link href={`/profile/${dbAuthor.id}`}
+                      className="inline-flex items-center gap-1.5 bg-teal-deep text-white text-[0.8rem] font-semibold px-4 py-2 rounded-full no-underline hover:bg-teal-dark transition-colors shadow-sm">
+                      View {dbAuthor.name.split(' ')[0]}&apos;s profile →
+                    </Link>
+                  ) : (
+                    <div className="flex gap-2 flex-wrap">
+                      <Link href="/about"
+                        className="inline-flex items-center gap-1.5 bg-teal-deep text-white text-[0.8rem] font-semibold px-4 py-2 rounded-full no-underline hover:bg-teal-dark transition-colors shadow-sm">
+                        About Tapas →
+                      </Link>
+                      <Link href="/profile"
+                        className="inline-flex items-center gap-1.5 border border-teal-light text-teal-deep text-[0.8rem] font-semibold px-4 py-2 rounded-full no-underline hover:bg-teal-ghost transition-colors">
+                        View profile
+                      </Link>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
-          )}
-
-          {/* Author credit for filesystem posts (Tapas-written) */}
-          {!dbAuthor && (
-            <div className="mt-10 flex items-center gap-4 bg-teal-ghost/50 border border-teal-light rounded-[20px] px-6 py-4">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-teal-mid to-teal-deep flex items-center justify-center text-white font-bold text-[1.2rem] flex-shrink-0">
-                T
-              </div>
-              <div>
-                <p className="font-bold text-charcoal text-[0.95rem]">{post.author}</p>
-                <p className="text-text-xlight text-[0.78rem]">Founder · letsthinkpositive.com</p>
-                <Link href="/about" className="text-teal-mid text-[0.78rem] font-semibold no-underline hover:text-teal-deep transition-colors mt-0.5 inline-block">
-                  Meet Tapas →
-                </Link>
-              </div>
-            </div>
-          )}
+          </div>
         </div>
 
         {/* Sticky right sidebar — desktop only */}
