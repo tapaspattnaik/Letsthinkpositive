@@ -67,16 +67,75 @@ const CHALLENGE_META: Record<string, { icon: string; title: string; totalDays: n
   'journal-14':      { icon: '📓', title: '14-Day Gratitude Journaling', totalDays: 14, color: 'from-teal-ghost to-white'   },
 }
 
-const QUICK_TOOLS = [
-  { href: '/mood',         icon: '📊', label: 'Mood',        bg: 'bg-blue-50',   iconBg: 'bg-blue-100'   },
-  { href: '/habits',       icon: '🎯', label: 'Habits',      bg: 'bg-orange-50', iconBg: 'bg-orange-100' },
-  { href: '/journal',      icon: '📓', label: 'Journal',     bg: 'bg-teal-ghost',iconBg: 'bg-teal-light/40' },
-  { href: '/breathing',    icon: '🌬️', label: 'Breathe',     bg: 'bg-sky-50',    iconBg: 'bg-sky-100'    },
-  { href: '/meditation',   icon: '🧘', label: 'Meditate',    bg: 'bg-purple-50', iconBg: 'bg-purple-100' },
-  { href: '/challenges',   icon: '🏆', label: 'Challenges',  bg: 'bg-amber/10',  iconBg: 'bg-amber/20'   },
-  { href: '/affirmation',  icon: '💌', label: 'Affirm',      bg: 'bg-pink-50',   iconBg: 'bg-pink-100'   },
-  { href: '/notifications',icon: '🔔', label: 'Alerts',      bg: 'bg-green-50',  iconBg: 'bg-green-100'  },
+// All tools organised by category for the profile dashboard
+const TOOL_CATEGORIES = [
+  {
+    label: '🪞 Reflect & Track',
+    tools: [
+      { href: '/mood',      icon: '📊', label: 'Mood',       bg: 'bg-blue-50',     iconBg: 'bg-blue-100'      },
+      { href: '/journal',   icon: '📓', label: 'Journal',    bg: 'bg-teal-ghost',  iconBg: 'bg-teal-light/40' },
+      { href: '/sleep',     icon: '🌙', label: 'Sleep',      bg: 'bg-indigo-50',   iconBg: 'bg-indigo-100'    },
+      { href: '/water',     icon: '💧', label: 'Water',      bg: 'bg-sky-50',      iconBg: 'bg-sky-100'       },
+      { href: '/calendar',  icon: '📅', label: 'Calendar',   bg: 'bg-teal-ghost',  iconBg: 'bg-teal-light/40' },
+      { href: '/snapshot',  icon: '📈', label: 'Snapshot',   bg: 'bg-green-50',    iconBg: 'bg-green-100'     },
+      { href: '/intention', icon: '🌅', label: 'Intention',  bg: 'bg-amber/10',    iconBg: 'bg-amber/20'      },
+      { href: '/habits',    icon: '🎯', label: 'Habits',     bg: 'bg-orange-50',   iconBg: 'bg-orange-100'    },
+    ],
+  },
+  {
+    label: '🧘 Calm & Heal',
+    tools: [
+      { href: '/breathing',  icon: '🌬️', label: 'Breathe',   bg: 'bg-sky-50',     iconBg: 'bg-sky-100'     },
+      { href: '/meditation', icon: '🧘', label: 'Meditate',  bg: 'bg-purple-50',  iconBg: 'bg-purple-100'  },
+      { href: '/sounds',     icon: '🎧', label: 'Sounds',    bg: 'bg-slate-50',   iconBg: 'bg-slate-100'   },
+      { href: '/coach',      icon: '🌿', label: 'Coach',     bg: 'bg-teal-ghost', iconBg: 'bg-teal-light/40'},
+      { href: '/yoga',       icon: '🧘‍♀️', label: 'Yoga',     bg: 'bg-green-50',   iconBg: 'bg-green-100'   },
+      { href: '/reframe',    icon: '🧠', label: 'Reframe',   bg: 'bg-violet-50',  iconBg: 'bg-violet-100'  },
+    ],
+  },
+  {
+    label: '💪 Grow',
+    tools: [
+      { href: '/challenges',    icon: '🏆', label: 'Challenges',  bg: 'bg-amber/10',  iconBg: 'bg-amber/20'   },
+      { href: '/habits-lab',    icon: '⚡', label: 'Habits Lab',  bg: 'bg-yellow-50', iconBg: 'bg-yellow-100' },
+      { href: '/wisdom-coaching',icon:'👴', label: 'Wisdom',      bg: 'bg-purple-50', iconBg: 'bg-purple-100' },
+      { href: '/quiz',          icon: '🎯', label: 'Wellness Quiz',bg:'bg-rose-50',   iconBg: 'bg-rose-100'   },
+    ],
+  },
+  {
+    label: '🎨 Create',
+    tools: [
+      { href: '/affirmation',  icon: '💌', label: 'Affirmation', bg: 'bg-pink-50',   iconBg: 'bg-pink-100'   },
+      { href: '/quotes',       icon: '🎨', label: 'Quotes',      bg: 'bg-amber/10',  iconBg: 'bg-amber/20'   },
+      { href: '/vision-board', icon: '⭐', label: 'Vision Board',bg: 'bg-purple-50', iconBg: 'bg-purple-100' },
+      { href: '/drawing',      icon: '✏️', label: 'Drawing',     bg: 'bg-orange-50', iconBg: 'bg-orange-100' },
+    ],
+  },
+  {
+    label: '🌿 Wellbeing',
+    tools: [
+      { href: '/positive-eating', icon: '🥗', label: 'Eat Well',  bg: 'bg-green-50', iconBg: 'bg-green-100' },
+      { href: '/happy-foods',     icon: '😊', label: 'Happy Foods',bg:'bg-amber/10',  iconBg: 'bg-amber/20'  },
+      { href: '/kids',            icon: '🌈', label: 'Kids Zone', bg: 'bg-pink-50',  iconBg: 'bg-pink-100'  },
+    ],
+  },
+  {
+    label: '💛 Community',
+    tools: [
+      { href: '/tribe',          icon: '🌿', label: 'My Tribe',   bg: 'bg-teal-ghost', iconBg: 'bg-teal-light/40' },
+      { href: '/community',      icon: '💛', label: 'Community',  bg: 'bg-amber/10',   iconBg: 'bg-amber/20'      },
+      { href: '/circles',        icon: '🔒', label: 'Circles',    bg: 'bg-teal-ghost', iconBg: 'bg-teal-light/40' },
+      { href: '/gratitude-wall', icon: '🙏', label: 'Gratitude',  bg: 'bg-rose-50',    iconBg: 'bg-rose-100'      },
+      { href: '/kindness-map',   icon: '🗺️', label: 'Kindness',   bg: 'bg-blue-50',    iconBg: 'bg-blue-100'      },
+      { href: '/community/gallery',icon:'📸',label: 'Gallery',    bg: 'bg-purple-50',  iconBg: 'bg-purple-100'    },
+      { href: '/search',         icon: '🔍', label: 'Search',     bg: 'bg-slate-50',   iconBg: 'bg-slate-100'     },
+      { href: '/notifications',  icon: '🔔', label: 'Alerts',     bg: 'bg-green-50',   iconBg: 'bg-green-100'     },
+    ],
+  },
 ]
+
+// Flat list still used for backward compat in a few spots
+const QUICK_TOOLS = TOOL_CATEGORIES.flatMap(c => c.tools).slice(0, 8)
 
 type Tab = 'overview' | 'badges' | 'challenges' | 'circles'
 
@@ -483,18 +542,30 @@ export default function ProfilePage() {
           {/* ── LEFT SIDEBAR ──────────────────────────────────────── */}
           <div className="space-y-4">
 
-            {/* Quick tools */}
+            {/* All Wellness Tools — categorised */}
             <div className="bg-white rounded-[24px] p-5 shadow-card border border-teal-light/60">
-              <h3 className="font-display font-bold text-charcoal text-[1rem] mb-4">Your Wellness Tools</h3>
-              <div className="grid grid-cols-4 gap-2">
-                {QUICK_TOOLS.map(({ href, icon, label, bg, iconBg }) => (
-                  <Link key={href} href={href}
-                    className={`flex flex-col items-center gap-2 p-2.5 rounded-[14px] no-underline ${bg} hover:scale-105 transition-all group`}>
-                    <div className={`w-10 h-10 rounded-[10px] ${iconBg} flex items-center justify-center text-[1.3rem] shadow-sm`}>
-                      {icon}
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-display font-bold text-charcoal text-[1rem]">Your Wellness Tools</h3>
+                <Link href="/tools" className="text-teal-mid text-[0.72rem] font-semibold no-underline hover:text-teal-deep transition-colors">
+                  All →
+                </Link>
+              </div>
+              <div className="space-y-4">
+                {TOOL_CATEGORIES.map(cat => (
+                  <div key={cat.label}>
+                    <p className="text-[0.6rem] font-bold text-text-xlight uppercase tracking-widest mb-2">{cat.label}</p>
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {cat.tools.map(({ href, icon, label, bg, iconBg }) => (
+                        <Link key={href} href={href}
+                          className={`flex flex-col items-center gap-1.5 p-2 rounded-[12px] no-underline ${bg} hover:scale-105 transition-all group`}>
+                          <div className={`w-8 h-8 rounded-[8px] ${iconBg} flex items-center justify-center text-[1.1rem]`}>
+                            {icon}
+                          </div>
+                          <span className="text-[0.56rem] font-semibold text-charcoal leading-tight text-center line-clamp-1">{label}</span>
+                        </Link>
+                      ))}
                     </div>
-                    <span className="text-[0.62rem] font-semibold text-charcoal leading-tight text-center">{label}</span>
-                  </Link>
+                  </div>
                 ))}
               </div>
             </div>
