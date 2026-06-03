@@ -112,18 +112,38 @@ function timeAgo(d: string) {
 }
 
 export default function TribePage() {
-  const { data: session, status } = useSession({ required: true })
+  const { data: session, status } = useSession()
   const [data,    setData]    = useState<TribeData | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [tab,     setTab]     = useState<Tab>('feed')
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      window.location.href = '/login?callbackUrl=/tribe'
+    }
+  }, [status])
 
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await fetch('/api/tribe')
-      if (res.ok) setData(await res.json())
-    } catch { /* ignore */ }
-    setLoading(false)
+      const controller = new AbortController()
+      const tid = setTimeout(() => controller.abort(), 12000) // 12s timeout
+      const res = await fetch('/api/tribe', { signal: controller.signal })
+      clearTimeout(tid)
+      if (res.ok) {
+        const d = await res.json()
+        setData(d)
+      } else {
+        // Non-ok (401, 503 etc) — show empty state rather than infinite spinner
+        setData({ following: [], followers: [], suggestions: [], feed: [] })
+      }
+    } catch {
+      // Timeout or network error — show empty state
+      setData({ following: [], followers: [], suggestions: [], feed: [] })
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
   useEffect(() => {
@@ -190,11 +210,12 @@ export default function TribePage() {
           ))}
         </div>
 
-        {loading && (
-          <div className="flex justify-center py-16">
+        {(loading || status === 'loading') && (
+          <div className="flex flex-col items-center justify-center py-16 gap-3">
             <div className="flex gap-1.5">
               {[0,1,2].map(i => <span key={i} className="w-3 h-3 rounded-full bg-teal-mid animate-bounce" style={{ animationDelay: `${i*150}ms` }} />)}
             </div>
+            <p className="text-text-xlight text-[0.8rem]">Loading your tribe…</p>
           </div>
         )}
 
