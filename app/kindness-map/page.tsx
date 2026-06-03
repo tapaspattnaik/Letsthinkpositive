@@ -361,8 +361,8 @@ export default function KindnessMapPage() {
               <rect x={-800} y={-600} width={2400} height={1200} fill="#0d3535" />
 
               <Geographies geography={GEO_URL}>
-                {({ geographies }) =>
-                  geographies.map(geo => (
+                {({ geographies }: { geographies: any[] }) =>
+                  geographies.map((geo: any) => (
                     <Geography
                       key={geo.rsmKey}
                       geography={geo}
