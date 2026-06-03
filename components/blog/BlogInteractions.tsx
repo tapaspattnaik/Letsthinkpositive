@@ -133,7 +133,53 @@ export function BlogInteractions({ slug, title }: { slug: string; title: string 
 
         {/* Share buttons */}
         <div className="flex items-center gap-2 ml-auto flex-wrap">
-          <span className="text-[0.78rem] text-text-xlight mr-1">Share:</span>
+          {/* 📤 Native share with image (works on mobile — WhatsApp, Instagram, etc.) */}
+          <button
+            onClick={async () => {
+              try {
+                // Build a simple share card as canvas
+                const { default: html2canvas } = await import('html2canvas')
+                const el = document.createElement('div')
+                el.style.cssText = `
+                  position:fixed;left:-9999px;top:0;
+                  width:600px;padding:48px 40px;
+                  background:linear-gradient(135deg,#0F4040,#1A6B6B);
+                  border-radius:24px;font-family:system-ui,sans-serif;
+                `
+                el.innerHTML = `
+                  <p style="color:#A8D8D0;font-size:12px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 16px">letsthinkpositive.com</p>
+                  <p style="color:#ffffff;font-size:26px;font-weight:700;line-height:1.35;margin:0 0 20px">${title}</p>
+                  <p style="color:rgba(255,255,255,0.65);font-size:13px;margin:0">${siteUrl}</p>
+                `
+                document.body.appendChild(el)
+                const canvas = await html2canvas(el, { scale: 2, backgroundColor: null, logging: false })
+                document.body.removeChild(el)
+                canvas.toBlob(async blob => {
+                  if (!blob) return
+                  const file = new File([blob], 'post-share.png', { type: 'image/png' })
+                  if (navigator.canShare?.({ files: [file] })) {
+                    await navigator.share({
+                      files: [file],
+                      title,
+                      text: `"${title}" on letsthinkpositive.com`,
+                      url: siteUrl,
+                    })
+                  } else {
+                    // Fallback: open share menu
+                    const link = document.createElement('a')
+                    link.download = 'post-share.png'
+                    link.href = canvas.toDataURL('image/png')
+                    link.click()
+                  }
+                }, 'image/png')
+              } catch { /* ignore */ }
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-teal-light text-text-mid text-[0.75rem] font-semibold hover:border-teal-mid hover:bg-teal-ghost transition-all"
+            title="Share as image (WhatsApp, Instagram, etc.)">
+            📤 Share image
+          </button>
+
+          <span className="text-[0.78rem] text-text-xlight">or:</span>
           {SHARE_PLATFORMS.map(p => (
             <a key={p.name} href={p.url(title, siteUrl)} target="_blank" rel="noopener noreferrer"
               className={`w-8 h-8 rounded-full border border-teal-light flex items-center justify-center text-[0.75rem] font-bold text-text-mid transition-all ${p.color}`}
