@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useRef, useCallback, useEffect } from 'react'
-import { LANG_STORAGE_KEY } from '@/lib/languages'
+import { useState, useRef, useCallback } from 'react'
+import { useLanguage } from '@/context/LanguageContext'
 
 export interface Message { role: 'user' | 'assistant'; content: string }
 
@@ -11,16 +11,14 @@ export function useBitChat() {
   const [streaming, setStreaming] = useState(false)
 
   // Refs — keep stable, never stale, no re-render on update
+  const { language } = useLanguage()   // live — updates when user changes language
+
   const messagesRef  = useRef<Message[]>([])
   const moodRef      = useRef('')
   const streamingRef = useRef(false)
   const abortRef     = useRef<AbortController | null>(null)
-  const languageRef  = useRef('en')
-
-  useEffect(() => {
-    const saved = localStorage.getItem(LANG_STORAGE_KEY)
-    if (saved) languageRef.current = saved
-  }, [])
+  const languageRef  = useRef(language)
+  languageRef.current = language       // always current, no stale closure
 
   // Keep refs in sync with state
   const syncMessages = (next: Message[]) => {

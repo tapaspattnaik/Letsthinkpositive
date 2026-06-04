@@ -25,9 +25,24 @@ export function getLanguage(code: string): Language {
 
 export const LANG_STORAGE_KEY = 'ltp_language'
 
-// System prompt suffix for AI routes
+// System prompt PREFIX for AI routes — placed BEFORE the main prompt so the
+// model sees it first and reliably follows it (Llama ignores instructions buried at the end)
 export function languageInstruction(langCode: string): string {
   if (!langCode || langCode === 'en') return ''
   const lang = getLanguage(langCode)
-  return `\n\nIMPORTANT: You must respond entirely in ${lang.english} (${lang.label}). Do not switch to English at any point. Use natural, warm, conversational ${lang.english}.`
+  return `[LANGUAGE INSTRUCTION — HIGHEST PRIORITY]
+You MUST respond ONLY in ${lang.english} (${lang.label}). This is mandatory.
+- Every word of your response must be in ${lang.english}
+- Do NOT write any English words or sentences
+- Use warm, natural, conversational ${lang.english}
+- If you are unsure of a term, use the closest ${lang.english} equivalent
+[END LANGUAGE INSTRUCTION]
+
+`
+}
+
+// Returns the instruction as a prefix to prepend to system prompts
+export function withLanguage(systemPrompt: string, langCode: string): string {
+  const instruction = languageInstruction(langCode)
+  return instruction ? instruction + systemPrompt : systemPrompt
 }

@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import Groq from 'groq-sdk'
-import { languageInstruction } from '@/lib/languages'
+import { withLanguage } from '@/lib/languages'
 
 const encoder = new TextEncoder()
 function sseText(text: string) { return encoder.encode(`data: ${JSON.stringify({ text })}\n\n`) }
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     const stream = await groq.chat.completions.create({
       model:       'llama-3.3-70b-versatile',
       messages: [
-        { role: 'system', content: REFRAME_SYSTEM_PROMPT + languageInstruction(language) },
+        { role: 'system', content: withLanguage(REFRAME_SYSTEM_PROMPT, language) },
         { role: 'user',   content: thought.trim() },
       ],
       max_tokens:  320,

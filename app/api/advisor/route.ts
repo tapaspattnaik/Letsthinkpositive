@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import Groq from 'groq-sdk'
 import { ADVISOR_SYSTEM_PROMPT } from '@/lib/together'
-import { languageInstruction } from '@/lib/languages'
+import { withLanguage } from '@/lib/languages'
 
 const encoder = new TextEncoder()
 function sseText(text: string) { return encoder.encode(`data: ${JSON.stringify({ text })}\n\n`) }
@@ -30,11 +30,10 @@ export async function POST(req: NextRequest) {
   try {
     const { messages, mood, language } = await req.json()
 
-    const systemContent = [
-      ADVISOR_SYSTEM_PROMPT,
-      mood ? `The user's current mood: ${mood}. Tailor your opening tone accordingly.` : '',
-      languageInstruction(language),
-    ].filter(Boolean).join('\n\n')
+    const basePrompt = mood
+      ? `${ADVISOR_SYSTEM_PROMPT}\n\nThe user's current mood: ${mood}. Tailor your opening tone accordingly.`
+      : ADVISOR_SYSTEM_PROMPT
+    const systemContent = withLanguage(basePrompt, language)
 
     const groq = new Groq({ apiKey })
 

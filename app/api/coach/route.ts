@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import Groq from 'groq-sdk'
-import { languageInstruction } from '@/lib/languages'
+import { withLanguage } from '@/lib/languages'
 
 const COACH_SYSTEM_PROMPT = `You are the Calm Coach — a warm, encouraging wellness companion on letsthinkpositive.com.
 
@@ -63,11 +63,10 @@ export async function POST(req: NextRequest) {
       return new Response('Messages required', { status: 400 })
     }
 
-    const systemContent = [
-      COACH_SYSTEM_PROMPT,
-      category ? `The user has selected focus area: ${category}. Tailor your responses to this theme.` : '',
-      languageInstruction(language),
-    ].filter(Boolean).join('\n\n')
+    const basePrompt = category
+      ? `${COACH_SYSTEM_PROMPT}\n\nThe user has selected focus area: ${category}. Tailor your responses to this theme.`
+      : COACH_SYSTEM_PROMPT
+    const systemContent = withLanguage(basePrompt, language)
 
     // Use 8b-instant for most topics (higher rate limit, sub-200ms first token)
     // Only use 70B for deep reflection/wisdom topics where nuance matters more
