@@ -12,7 +12,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # ── Quick CI type-check (catches errors before hitting the server) ──
+      # ── Quick CI check (catches errors before touching the server) ──────
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -34,7 +34,7 @@ jobs:
           NEXTAUTH_URL:         https://letsthinkpositive.com
         run: npx tsc --noEmit
 
-      # ── Deploy: pull + build + restart on Hostinger ────────────────────
+      # ── Deploy on Hostinger ─────────────────────────────────────────────
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -42,26 +42,31 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key:      ${{ secrets.SSH_KEY }}
           port:     ${{ secrets.SSH_PORT }}
-          timeout:  300s
+          timeout:  600s
           script: |
             set -e
             cd ${{ secrets.APP_DIR }}
 
-            echo "── Pull latest code ──"
+            echo "── [1/6] Pull latest code ──"
             git pull origin main
 
-            echo "── Install dependencies ──"
-            npm install --legacy-peer-deps
+            echo "── [2/6] Install dependencies ──"
+            # --foreground-scripts=false prevents postinstall workers spawning in bg
+            npm install --legacy-peer-deps --foreground-scripts=false
 
-            echo "── Generate Prisma client ──"
+            echo "── [3/6] Generate Prisma client ──"
             npx prisma generate
 
-            echo "── Build Next.js app ──"
-            NODE_ENV=production npm run build
+            echo "── [4/6] Stop app before build (frees resources during compile) ──"
+            pm2 stop letsthinkpositive || true
 
-            echo "── Restart process ──"
-            pm2 restart letsthinkpositive --update-env \
-              || pm2 start server.js --name letsthinkpositive --update-env
+            echo "── [5/6] Build (limited to 2 workers) ──"
+            # NODE_OPTIONS caps memory; cpus:2 in next.config limits static gen workers
+            NODE_ENV=production NODE_OPTIONS="--max-old-space-size=768" npm run build
+
+            echo "── [6/6] Start / restart app ──"
+            pm2 start server.js --name letsthinkpositive --update-env \
+              || pm2 restart letsthinkpositive --update-env
             pm2 save
 
             echo "── Deploy complete ✓ ──"
