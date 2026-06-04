@@ -28,7 +28,7 @@ export function BitWidget() {
   const inputRef   = useRef<HTMLTextAreaElement>(null)
   const prevCount  = useRef(0)
 
-  const { messages, mood, setMood, streaming, send } = useBitChat()
+  const { messages, mood, setMood, streaming, send, clear } = useBitChat()
 
   // ── Close on outside click ──────────────────────────────────
   useEffect(() => {
@@ -172,26 +172,43 @@ export function BitWidget() {
             </div>
           )}
 
-          {messages.map((m, i) => (
-            <div key={i} className={`flex gap-2 ${m.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-              {m.role === 'assistant' && (
-                <div className="flex-shrink-0 w-[20px] h-[20px] rounded-full bg-teal-ghost flex items-center justify-center mt-1">
-                  <LtpLogo size={14} />
+          {messages.map((m, i) => {
+            const isLastAssistant = i === messages.length - 1 && m.role === 'assistant'
+            const isError = m.content.includes('lot of love') || m.content.includes('try again') || m.content.includes('went wrong')
+            return (
+              <div key={i} className={`flex gap-2 ${m.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+                {m.role === 'assistant' && (
+                  <div className="flex-shrink-0 w-[20px] h-[20px] rounded-full bg-teal-ghost flex items-center justify-center mt-1">
+                    <LtpLogo size={14} />
+                  </div>
+                )}
+                <div className={`max-w-[82%] px-3 py-2 text-[0.82rem] leading-[1.75] rounded-[14px] ${
+                  m.role === 'user'
+                    ? 'bg-teal-deep text-white rounded-tr-sm'
+                    : 'bg-teal-ghost text-text-mid rounded-tl-sm'
+                }`}>
+                  {m.content || (streaming && isLastAssistant
+                    ? <span className="inline-flex gap-1 items-center">
+                        {[0,150,300].map(d => <span key={d} className="w-1 h-1 rounded-full bg-teal-mid animate-bounce" style={{ animationDelay: `${d}ms` }} />)}
+                      </span>
+                    : '')}
+                  {isLastAssistant && isError && !streaming && (
+                    <button
+                      onClick={() => {
+                        const lastUser = [...messages].reverse().find(msg => msg.role === 'user')
+                        if (lastUser) { clear(); setTimeout(() => send(lastUser.content), 50) }
+                      }}
+                      className="mt-1.5 flex items-center gap-1 text-[0.71rem] text-teal-deep hover:text-teal-dark font-medium transition-colors">
+                      <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h5M20 20v-5h-5M4 9a9 9 0 0 1 15-1.8M20 15a9 9 0 0 1-15 1.8"/>
+                      </svg>
+                      Try again
+                    </button>
+                  )}
                 </div>
-              )}
-              <div className={`max-w-[82%] px-3 py-2 text-[0.82rem] leading-[1.75] rounded-[14px] ${
-                m.role === 'user'
-                  ? 'bg-teal-deep text-white rounded-tr-sm'
-                  : 'bg-teal-ghost text-text-mid rounded-tl-sm'
-              }`}>
-                {m.content || (streaming && i === messages.length - 1
-                  ? <span className="inline-flex gap-1 items-center">
-                      {[0,150,300].map(d => <span key={d} className="w-1 h-1 rounded-full bg-teal-mid animate-bounce" style={{ animationDelay: `${d}ms` }} />)}
-                    </span>
-                  : '')}
               </div>
-            </div>
-          ))}
+            )
+          })}
           <div ref={bottomRef} />
         </div>
 

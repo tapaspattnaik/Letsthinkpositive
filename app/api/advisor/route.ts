@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
     ]
 
     const stream = await groq.chat.completions.create({
-      model:       'llama-3.3-70b-versatile',
+      model:       'llama-3.1-8b-instant',  // fast small model — ideal for 2-4 sentence replies
       messages:    groqMessages,
       max_tokens:  280,
       temperature: 0.7,
