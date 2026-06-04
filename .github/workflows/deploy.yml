@@ -1,67 +1,67 @@
-name: Build & Deploy
+name: Deploy to Hostinger
 
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
+      # ── Quick CI type-check (catches errors before hitting the server) ──
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Install deps (CI)
+        run: npm ci --legacy-peer-deps
 
-      - name: Generate Prisma client
+      - name: Prisma generate (CI)
         run: npx prisma generate
 
-      - name: Build Next.js app
+      - name: TypeScript check
         env:
-          TOGETHER_API_KEY:     ${{ secrets.TOGETHER_API_KEY }}
+          GEMINI_API_KEY:       ${{ secrets.GEMINI_API_KEY }}
           NEXT_PUBLIC_SITE_URL: https://letsthinkpositive.com
           DATABASE_URL:         mysql://placeholder:placeholder@localhost:3306/placeholder
           NEXTAUTH_SECRET:      ${{ secrets.NEXTAUTH_SECRET }}
           NEXTAUTH_URL:         https://letsthinkpositive.com
-        run: npm run build
+        run: npx tsc --noEmit
 
-  deploy:
-    # Only deploy on push to main (not on pull requests)
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Deploy via SSH key
+      # ── Deploy: pull + build + restart on Hostinger ────────────────────
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host:    ${{ secrets.SSH_HOST }}
+          host:     ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
-          key:     ${{ secrets.SSH_KEY }}
-          port:    ${{ secrets.SSH_PORT || '65002' }}
+          key:      ${{ secrets.SSH_KEY }}
+          port:     ${{ secrets.SSH_PORT }}
+          timeout:  300s
           script: |
             set -e
             cd ${{ secrets.APP_DIR }}
-            echo "==> Pulling latest code..."
+
+            echo "── Pull latest code ──"
             git pull origin main
-            echo "==> Installing production dependencies..."
-            npm install --production
-            echo "==> Generating Prisma client..."
+
+            echo "── Install dependencies ──"
+            npm install --legacy-peer-deps
+
+            echo "── Generate Prisma client ──"
             npx prisma generate
-            echo "==> Running database migrations..."
-            npx prisma migrate deploy
-            echo "==> Seeding badges..."
-            npx prisma db seed || true
-            echo "==> Restarting app..."
-            pm2 restart letsthinkpositive || pm2 start server.js --name letsthinkpositive
-            echo "==> Done ✓"
+
+            echo "── Build Next.js app ──"
+            NODE_ENV=production npm run build
+
+            echo "── Restart process ──"
+            pm2 restart letsthinkpositive --update-env \
+              || pm2 start server.js --name letsthinkpositive --update-env
+            pm2 save
+
+            echo "── Deploy complete ✓ ──"
