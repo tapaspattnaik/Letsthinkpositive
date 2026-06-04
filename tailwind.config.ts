@@ -71,7 +71,20 @@ const config: Config = {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    // Hide scrollbar utility — used in horizontal scroll strips
+    function({ addUtilities }: { addUtilities: (u: Record<string, Record<string, string>>) => void }) {
+      addUtilities({
+        '.no-scrollbar': {
+          '-ms-overflow-style': 'none',
+          'scrollbar-width': 'none',
+        },
+        '.no-scrollbar::-webkit-scrollbar': {
+          display: 'none',
+        },
+      })
+    },
+  ],
   safelist: [
     'w-[680px]', 'w-[280px]',
     'grid-cols-3', 'grid-cols-4', 'grid-cols-5',
