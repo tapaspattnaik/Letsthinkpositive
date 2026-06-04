@@ -66,6 +66,11 @@ export async function POST(req: NextRequest) {
       ? `${COACH_SYSTEM_PROMPT}\n\nThe user has selected focus area: ${category}. Tailor your responses to this theme.`
       : COACH_SYSTEM_PROMPT
 
+    // Use 8b-instant for most topics (higher rate limit, sub-200ms first token)
+    // Only use 70B for deep reflection/wisdom topics where nuance matters more
+    const deepCategories = ['reflection', 'calm']
+    const model = deepCategories.includes(category) ? 'llama-3.3-70b-versatile' : 'llama-3.1-8b-instant'
+
     const groqMessages = [
       { role: 'system' as const, content: systemContent },
       ...messages.map((m: { role: string; content: string }) => ({
@@ -81,7 +86,7 @@ export async function POST(req: NextRequest) {
       async start(controller) {
         try {
           const stream = await groq.chat.completions.create({
-            model:       'llama-3.3-70b-versatile',
+            model,
             messages:    groqMessages,
             max_tokens:  800,
             temperature: 0.75,

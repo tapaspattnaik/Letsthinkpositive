@@ -149,7 +149,12 @@ export default function CoachPage() {
         }
       }
 
-      // ── Streaming done: one final React render with full content ──
+      // ── Streaming done: clear DOM ref FIRST, then one final React render ──
+      // Clearing the streaming div before setMessages prevents a 1-frame
+      // overlap where the direct DOM text AND the React-rendered text both
+      // appear in the same paint → causes the duplicate message bug.
+      if (streamingDivRef.current) streamingDivRef.current.textContent = ''
+
       const finalText = accRef.current
       const finalMessages = messagesRef.current.map((m, i) =>
         i === messagesRef.current.length - 1
@@ -376,9 +381,10 @@ export default function CoachPage() {
                       <p className="leading-[1.7]">{msg.content}</p>
                     ) : null}
 
-                    {msg.error && i === messages.length - 1 && !streaming && (
+                    {i === messages.length - 1 && !streaming && msg.role === 'assistant' &&
+                      (msg.error || msg.content.includes('busy') || msg.content.includes('try again')) && (
                       <button onClick={retryLast}
-                        className="mt-2.5 flex items-center gap-1.5 text-[0.75rem] font-medium text-red-500 hover:text-red-700 transition-colors">
+                        className="mt-2.5 flex items-center gap-1.5 text-[0.75rem] font-medium text-teal-deep hover:text-teal-dark transition-colors">
                         <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h5M20 20v-5h-5M4 9a9 9 0 0 1 15-1.8M20 15a9 9 0 0 1-15 1.8"/>
                         </svg>
