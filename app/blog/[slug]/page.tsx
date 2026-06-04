@@ -2,8 +2,9 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { getPost, getAllPostSlugs, getAllPosts, Post } from '@/lib/posts'
-import { BlogInteractions } from '@/components/blog/BlogInteractions'
-import { BlogSidebar }     from '@/components/blog/BlogSidebar'
+import { BlogInteractions }  from '@/components/blog/BlogInteractions'
+import { BlogSidebar }      from '@/components/blog/BlogSidebar'
+import { TranslateBanner }  from '@/components/TranslateBanner'
 import { prisma } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
@@ -152,6 +153,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
 
         {/* Main column */}
         <div>
+          <TranslateBanner />
           <article
             className="prose prose-lg max-w-none
               prose-headings:font-display prose-headings:text-charcoal

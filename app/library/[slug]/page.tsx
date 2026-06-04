@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { getArticle, getAllArticleSlugs, getAllArticles } from '@/lib/library'
+import { TranslateBanner } from '@/components/TranslateBanner'
 
 export const dynamic = 'force-dynamic'
 
@@ -63,6 +64,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
 
       {/* Content */}
       <article className="max-w-[760px] mx-auto py-16 px-[5%]">
+        <TranslateBanner />
         <div
           className="prose prose-lg max-w-none
             prose-headings:font-display prose-headings:text-charcoal
