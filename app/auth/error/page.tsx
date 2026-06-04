@@ -42,6 +42,12 @@ const ERRORS: Record<string, { title: string; message: string; action: string; h
     action:  'Try again →',
     href:    '/login',
   },
+  AccountBlocked: {
+    title:   'Account suspended',
+    message: 'Your account has been suspended due to a violation of our community guidelines. If you believe this is an error, please contact our support team.',
+    action:  'Contact support →',
+    href:    '/contact',
+  },
   SessionRequired: {
     title:   'Sign in required',
     message: 'You need to be signed in to access that page.',

@@ -270,7 +270,11 @@ export default function AdminPage() {
             <p className="text-[0.75rem] text-text-xlight mt-0.5">Manage reports, comments and community content</p>
           </div>
           {/* Section tabs */}
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
+            <button onClick={() => router.push('/admin/users')}
+              className="px-4 py-1.5 rounded-full text-[0.82rem] font-semibold transition-all flex items-center gap-1.5 border border-purple-200 text-purple-700 hover:bg-purple-50 bg-white">
+              👥 Users
+            </button>
             <button onClick={() => setSection('blog-posts')}
               className={`px-4 py-1.5 rounded-full text-[0.82rem] font-semibold transition-all flex items-center gap-1.5
                 ${section === 'blog-posts' ? 'bg-teal-deep text-white' : 'border border-teal-light text-text-mid hover:bg-teal-ghost'}`}>

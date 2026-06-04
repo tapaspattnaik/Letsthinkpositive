@@ -27,8 +27,18 @@ export const authOptions: NextAuthOptions = {
         if (!credentials?.email || !credentials?.password) return null
         const user = await prisma.user.findUnique({ where: { email: credentials.email } })
         if (!user || !user.password) return null
+
+        // Check if account is blocked
+        if (user.blocked) {
+          throw new Error(`BLOCKED:${user.blockedReason ?? 'Your account has been suspended. Please contact support.'}`)
+        }
+
         const valid = await bcrypt.compare(credentials.password, user.password)
         if (!valid) return null
+
+        // Update last login time
+        await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } }).catch(() => {})
+
         return { id: String(user.id), name: user.name, email: user.email, image: user.avatarUrl ?? null }
       },
     }),
@@ -38,21 +48,31 @@ export const authOptions: NextAuthOptions = {
       // Handle Google sign-in — upsert the user in our DB
       if (account?.provider === 'google' && user.email) {
         const existing = await prisma.user.findUnique({ where: { email: user.email } })
+
+        // Block Google sign-in for blocked accounts
+        if (existing?.blocked) {
+          return `/auth/error?error=AccountBlocked&reason=${encodeURIComponent(existing.blockedReason ?? 'Account suspended')}`
+        }
+
         if (!existing) {
           await prisma.user.create({
             data: {
-              name:      user.name  ?? 'Member',
-              email:     user.email,
-              googleId:  user.id,
-              avatarUrl: user.image ?? null,
-              interests: '',
+              name:        user.name  ?? 'Member',
+              email:       user.email,
+              googleId:    user.id,
+              avatarUrl:   user.image ?? null,
+              interests:   '',
+              lastLoginAt: new Date(),
             },
           })
-        } else if (!existing.googleId) {
-          // Link Google to existing account
+        } else {
           await prisma.user.update({
             where: { id: existing.id },
-            data:  { googleId: user.id, avatarUrl: existing.avatarUrl ?? user.image ?? null },
+            data:  {
+              googleId:    existing.googleId ?? user.id,
+              avatarUrl:   existing.avatarUrl ?? user.image ?? null,
+              lastLoginAt: new Date(),
+            },
           })
         }
       }

@@ -24,14 +24,21 @@ model User {
   password  String?  @db.VarChar(255)
   googleId  String?  @unique @db.VarChar(255)
   phone     String?  @db.VarChar(20)
-  bio       String?  @db.VarChar(400)   // short author bio shown on blog posts
-  website   String?  @db.VarChar(500)   // personal website / LinkedIn / Twitter
+  bio       String?  @db.VarChar(400)
+  website   String?  @db.VarChar(500)
   interests String   @default("") @db.VarChar(500)
   avatarUrl  String?  @db.VarChar(500)
-  coverStyle String?  @db.VarChar(100)   // preset key e.g. "teal" | "sunset" | "ocean"
-  coverUrl   String?  @db.VarChar(500)   // custom uploaded cover image
+  coverStyle String?  @db.VarChar(100)
+  coverUrl   String?  @db.VarChar(500)
   createdAt  DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // Access control
+  role          String    @default("user") @db.VarChar(20)  // user | moderator | admin
+  blocked       Boolean   @default(false)
+  blockedReason String?   @db.VarChar(500)
+  blockedAt     DateTime?
+  lastLoginAt   DateTime?
 
   currentStreak  Int       @default(0)
   longestStreak  Int       @default(0)
@@ -274,16 +281,17 @@ model BlogView {
 // ── Post reports ─────────────────────────────────────────────────────────
 
 model PostReport {
-  id         Int       @id @default(autoincrement())
-  reporterId Int
-  postType   String    @db.VarChar(30) // community | circle | user_blog
-  postId     Int
-  reason     String    @db.VarChar(100)
-  details    String?   @db.Text
-  status     String    @default("pending") @db.VarChar(20) // pending | resolved
-  adminNote  String?   @db.Text
-  resolvedAt DateTime?
-  createdAt  DateTime  @default(now())
+  id               Int       @id @default(autoincrement())
+  reporterId       Int
+  reportedUserId   Int?      // the user being reported (null for old reports)
+  postType         String    @db.VarChar(30) // community | circle | user_blog
+  postId           Int
+  reason           String    @db.VarChar(100)
+  details          String?   @db.Text
+  status           String    @default("pending") @db.VarChar(20) // pending | resolved | dismissed
+  adminNote        String?   @db.Text
+  resolvedAt       DateTime?
+  createdAt        DateTime  @default(now())
 
   reporter User @relation(fields: [reporterId], references: [id])
 
