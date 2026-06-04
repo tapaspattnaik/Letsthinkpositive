@@ -1,4 +1,4 @@
-import Together from 'together-ai'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 
 interface ModerationResult {
   safe:    boolean
@@ -23,7 +23,7 @@ function quickCheck(text: string): string[] {
   return issues
 }
 
-// ── AI deep check using Together AI ─────────────────────────────────────
+// ── AI deep check using Gemini ────────────────────────────────────────────
 export async function moderateContent(
   title: string,
   body: string,
@@ -39,22 +39,20 @@ export async function moderateContent(
     }
   }
 
-  // Step 2: AI check (fast small model)
-  const apiKey = process.env.TOGETHER_API_KEY
+  // Step 2: AI check via Gemini (fast, low token usage)
+  const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) return { safe: true, issues: [], message: '' } // skip if no key
 
   const excerpt = fullText.slice(0, 1500)
 
   try {
-    const together = new Together({ apiKey })
-    const res = await together.chat.completions.create({
-      model:       'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo',
-      max_tokens:  120,
-      temperature: 0,
-      messages: [
-        {
-          role:    'system',
-          content: `You are a content moderator for a wellness platform called "letsthinkpositive.com".
+    const genAI = new GoogleGenerativeAI(apiKey)
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-2.0-flash',
+      generationConfig: { maxOutputTokens: 120, temperature: 0 },
+    })
+
+    const prompt = `You are a content moderator for a wellness platform called "letsthinkpositive.com".
 Review the post below and respond ONLY with valid JSON in this exact format:
 {"safe":true,"issues":[],"message":""}
 
@@ -68,17 +66,16 @@ Flag content that contains:
 If safe: {"safe":true,"issues":[],"message":""}
 If not safe: {"safe":false,"issues":["short issue description"],"message":"friendly explanation to user"}
 
-DO NOT include any text outside the JSON.`,
-        },
-        {
-          role:    'user',
-          content: `Title: ${title}\n\nContent: ${excerpt}`,
-        },
-      ],
-    })
+DO NOT include any text outside the JSON.
 
-    const raw = res.choices[0]?.message?.content?.trim() ?? '{}'
-    // Extract JSON from response
+Title: ${title}
+
+Content: ${excerpt}`
+
+    const result = await model.generateContent(prompt)
+    const raw = result.response.text().trim()
+
+    // Extract JSON from response (Gemini sometimes wraps in markdown)
     const jsonMatch = raw.match(/\{[\s\S]*\}/)
     if (!jsonMatch) return { safe: true, issues: [], message: '' }
 
