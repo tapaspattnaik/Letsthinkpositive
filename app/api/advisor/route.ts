@@ -56,12 +56,19 @@ export async function POST(req: NextRequest) {
             const text = chunk.text()
             if (text) controller.enqueue(sseText(text))
           }
-          controller.enqueue(sseDone())
         } catch (e) {
           console.error('Advisor stream error:', e)
-          controller.enqueue(sseText("I lost my train of thought — want to try again?"))
+          const msg = e instanceof Error ? e.message : String(e)
+          const friendly = msg.includes('API_KEY') || msg.includes('API key') || msg.includes('invalid')
+            ? "I'm not configured correctly — please add GEMINI_API_KEY to the server environment."
+            : msg.includes('429') || msg.includes('quota')
+            ? "We're getting a lot of love right now — please try again in a moment. 💙"
+            : "I lost my train of thought — want to try again?"
+          controller.enqueue(sseText(friendly))
+        } finally {
           controller.enqueue(sseDone())
-        } finally { controller.close() }
+          controller.close()
+        }
       },
     })
 

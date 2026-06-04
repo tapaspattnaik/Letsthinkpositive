@@ -56,12 +56,19 @@ export async function POST(req: NextRequest) {
             const text = chunk.text()
             if (text) controller.enqueue(sseText(text))
           }
-          controller.enqueue(sseDone())
         } catch (e) {
           console.error('Reframe stream error:', e)
-          controller.enqueue(sseText("Something went quiet mid-stream — want to try again?"))
+          const msg = e instanceof Error ? e.message : String(e)
+          const friendly = msg.includes('API_KEY') || msg.includes('API key') || msg.includes('invalid')
+            ? "The AI key isn't configured correctly — please add GEMINI_API_KEY to the server environment."
+            : msg.includes('429') || msg.includes('quota')
+            ? "We're a little busy right now — please try again in a moment."
+            : "Something went quiet mid-stream — want to try again?"
+          controller.enqueue(sseText(friendly))
+        } finally {
           controller.enqueue(sseDone())
-        } finally { controller.close() }
+          controller.close()
+        }
       },
     })
 

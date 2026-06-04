@@ -83,6 +83,15 @@ export async function POST(req: NextRequest) {
               controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text })}\n\n`))
             }
           }
+        } catch (streamErr) {
+          console.error('Coach stream error:', streamErr)
+          const msg = streamErr instanceof Error ? streamErr.message : String(streamErr)
+          const friendly = msg.includes('API_KEY') || msg.includes('API key') || msg.includes('invalid')
+            ? "The AI key isn't configured correctly — please add GEMINI_API_KEY to the server environment."
+            : msg.includes('429') || msg.includes('quota')
+            ? "We're a little busy right now — please try again in a moment. 💙"
+            : "I'm sorry, I couldn't connect just now. Please try again in a moment. 🌿"
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: friendly })}\n\n`))
         } finally {
           clearTimeout(timeoutId)
           controller.enqueue(encoder.encode('data: [DONE]\n\n'))
