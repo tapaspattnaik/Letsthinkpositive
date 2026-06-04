@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import Groq from 'groq-sdk'
+import { languageInstruction } from '@/lib/languages'
 
 const encoder = new TextEncoder()
 function sseText(text: string) { return encoder.encode(`data: ${JSON.stringify({ text })}\n\n`) }
@@ -35,7 +36,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { thought } = await req.json()
+    const { thought, language } = await req.json()
     if (!thought?.trim()) {
       return makeResponse(fallbackStream("Please share a thought to reframe."))
     }
@@ -44,7 +45,7 @@ export async function POST(req: NextRequest) {
     const stream = await groq.chat.completions.create({
       model:       'llama-3.3-70b-versatile',
       messages: [
-        { role: 'system', content: REFRAME_SYSTEM_PROMPT },
+        { role: 'system', content: REFRAME_SYSTEM_PROMPT + languageInstruction(language) },
         { role: 'user',   content: thought.trim() },
       ],
       max_tokens:  320,

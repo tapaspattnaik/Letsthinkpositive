@@ -8,6 +8,7 @@ import Image from 'next/image'
 import { LtpLogo } from '@/components/ui/LtpLogo'
 import { NotificationBell } from '@/components/NotificationBell'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
+import { LanguageSelector } from '@/components/LanguageSelector'
 
 interface NavItem     { href: string; label: string; desc?: string; icon?: string }
 interface NavSubGroup { label: string; items: NavItem[] }
@@ -286,6 +287,9 @@ export function Navbar() {
               </div>
             </li>
           ))}
+
+          {/* Language selector */}
+          <li><LanguageSelector /></li>
 
           {/* Dark mode toggle */}
           <li><ThemeToggle /></li>

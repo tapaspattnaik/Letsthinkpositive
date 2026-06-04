@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { LtpLogo } from '@/components/ui/LtpLogo'
+import { useLanguage } from '@/context/LanguageContext'
 
 type Role = 'user' | 'assistant'
 interface Message { role: Role; content: string; error?: boolean }
@@ -52,6 +53,10 @@ export default function CoachPage() {
   const [input,     setInput]     = useState('')
 
   // Stable refs — no stale closures, no re-render on update
+  const { language } = useLanguage()
+  const languageRef  = useRef(language)
+  useEffect(() => { languageRef.current = language }, [language])
+
   const messagesRef      = useRef<Message[]>([])
   const categoryRef      = useRef(category)
   const streamingRef     = useRef(false)
@@ -115,6 +120,7 @@ export default function CoachPage() {
         body:    JSON.stringify({
           messages: history.map(m => ({ role: m.role, content: m.content })),
           category: categoryRef.current,
+          language: languageRef.current,
         }),
       })
       if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`)

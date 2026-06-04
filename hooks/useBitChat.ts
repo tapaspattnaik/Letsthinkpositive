@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
+import { LANG_STORAGE_KEY } from '@/lib/languages'
 
 export interface Message { role: 'user' | 'assistant'; content: string }
 
@@ -14,6 +15,12 @@ export function useBitChat() {
   const moodRef      = useRef('')
   const streamingRef = useRef(false)
   const abortRef     = useRef<AbortController | null>(null)
+  const languageRef  = useRef('en')
+
+  useEffect(() => {
+    const saved = localStorage.getItem(LANG_STORAGE_KEY)
+    if (saved) languageRef.current = saved
+  }, [])
 
   // Keep refs in sync with state
   const syncMessages = (next: Message[]) => {
@@ -45,6 +52,7 @@ export function useBitChat() {
         body:    JSON.stringify({
           messages: history.map(m => ({ role: m.role, content: m.content })),
           mood:     moodRef.current,
+          language: languageRef.current,
         }),
         signal: abort.signal,
       })

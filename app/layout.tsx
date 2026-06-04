@@ -8,6 +8,7 @@ import { ConstructionBanner } from '@/components/layout/ConstructionBanner'
 import { HeaderHeight } from '@/components/layout/HeaderHeight'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { AppLoader } from '@/components/layout/AppLoader'
+import { LanguageProvider } from '@/context/LanguageContext'
 import './globals.css'
 
 const playfair = Playfair_Display({
@@ -73,6 +74,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         `}} />
       </head>
       <body className="font-body" suppressHydrationWarning>
+        <LanguageProvider>
         <SessionProvider>
           {/* Loading overlay — hides unstyled flash while CSS downloads on mobile */}
           <AppLoader />
@@ -99,6 +101,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="hidden lg:block"><Footer /></div>
           <BitWidget />
         </SessionProvider>
+        </LanguageProvider>
       </body>
     </html>
   )
