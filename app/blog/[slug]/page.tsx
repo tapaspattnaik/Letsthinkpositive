@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic'
 
 interface DbAuthor {
   id: number; name: string; bio: string | null; avatarUrl: string | null
-  interests: string; currentStreak: number; badges: number
+  website: string | null; interests: string; currentStreak: number; badges: number
 }
 
 interface DbPostResult extends Post {
@@ -24,13 +24,13 @@ async function getAuthorByName(name: string): Promise<DbAuthor | null> {
     const u = await prisma.user.findFirst({
       where: { name: { contains: name } },
       select: {
-        id: true, name: true, bio: true, avatarUrl: true,
+        id: true, name: true, bio: true, website: true, avatarUrl: true,
         interests: true, currentStreak: true,
         _count: { select: { badges: true } },
       },
     })
     if (!u) return null
-    return { id: u.id, name: u.name, bio: u.bio, avatarUrl: u.avatarUrl,
+    return { id: u.id, name: u.name, bio: u.bio, website: u.website, avatarUrl: u.avatarUrl,
       interests: u.interests, currentStreak: u.currentStreak, badges: u._count.badges }
   } catch { return null }
 }
@@ -43,7 +43,7 @@ async function getDbPost(slug: string): Promise<DbPostResult | null> {
       include: {
         user: {
           select: {
-            id: true, name: true, bio: true, avatarUrl: true,
+            id: true, name: true, bio: true, website: true, avatarUrl: true,
             interests: true, currentStreak: true,
             _count: { select: { badges: true } },
           },
@@ -63,6 +63,7 @@ async function getDbPost(slug: string): Promise<DbPostResult | null> {
         id:            p.user.id,
         name:          p.user.name,
         bio:           p.user.bio,
+        website:       p.user.website,
         avatarUrl:     p.user.avatarUrl,
         interests:     p.user.interests,
         currentStreak: p.user.currentStreak,
@@ -84,12 +85,18 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') || 'https://letsthinkpositive.com'
   const pageUrl = `${siteUrl}/blog/${slug}`
 
+  // Include author bio snippet in description for richer social previews
+  const authorBio = (post as DbPostResult).dbAuthor?.bio
+  const fullDesc  = authorBio
+    ? `${post.excerpt} — By ${post.author}: ${authorBio.slice(0, 100)}${authorBio.length > 100 ? '…' : ''}`
+    : post.excerpt
+
   return {
     title: post.title,
-    description: post.excerpt,
+    description: fullDesc,
     openGraph: {
       title: post.title,
-      description: post.excerpt,
+      description: fullDesc,
       url: pageUrl,
       type: 'article',
       publishedTime: post.date,
@@ -99,7 +106,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     twitter: {
       card: 'summary_large_image',
       title: post.title,
-      description: post.excerpt,
+      description: fullDesc,
     },
     alternates: { canonical: pageUrl },
   }
@@ -241,12 +248,20 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
                     </div>
                   )}
 
-                  {/* Profile link */}
+                  {/* Profile + website links */}
                   {dbAuthor ? (
-                    <Link href={`/profile/${dbAuthor.id}`}
-                      className="inline-flex items-center gap-1.5 bg-teal-deep text-white text-[0.8rem] font-semibold px-4 py-2 rounded-full no-underline hover:bg-teal-dark transition-colors shadow-sm">
-                      View {dbAuthor.name.split(' ')[0]}&apos;s profile →
-                    </Link>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Link href={`/profile/${dbAuthor.id}`}
+                        className="inline-flex items-center gap-1.5 bg-teal-deep text-white text-[0.8rem] font-semibold px-4 py-2 rounded-full no-underline hover:bg-teal-dark transition-colors shadow-sm">
+                        View {dbAuthor.name.split(' ')[0]}&apos;s profile →
+                      </Link>
+                      {dbAuthor.website && (
+                        <a href={dbAuthor.website} target="_blank" rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 border border-teal-light text-teal-deep text-[0.8rem] font-semibold px-4 py-2 rounded-full no-underline hover:bg-teal-ghost hover:border-teal-mid transition-colors">
+                          🌐 Website ↗
+                        </a>
+                      )}
+                    </div>
                   ) : (
                     <div className="flex gap-2 flex-wrap">
                       <Link href="/about"

@@ -24,7 +24,8 @@ model User {
   password  String?  @db.VarChar(255)
   googleId  String?  @unique @db.VarChar(255)
   phone     String?  @db.VarChar(20)
-  bio       String?  @db.Text
+  bio       String?  @db.VarChar(400)   // short author bio shown on blog posts
+  website   String?  @db.VarChar(500)   // personal website / LinkedIn / Twitter
   interests String   @default("") @db.VarChar(500)
   avatarUrl  String?  @db.VarChar(500)
   coverStyle String?  @db.VarChar(100)   // preset key e.g. "teal" | "sunset" | "ocean"

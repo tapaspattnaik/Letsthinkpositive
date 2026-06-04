@@ -37,7 +37,7 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
 
   try {
-    const { name, phone, bio, interests, coverStyle, coverUrl } = await req.json()
+    const { name, phone, bio, website, interests, coverStyle, coverUrl } = await req.json()
 
     const updated = await prisma.user.update({
       where: { id: Number(session.user.id) },
@@ -45,6 +45,7 @@ export async function PUT(req: NextRequest) {
         name:       name       || undefined,
         phone:      phone      ?? undefined,
         bio:        bio        ?? undefined,
+        website:    website    ?? undefined,
         interests:  Array.isArray(interests) ? interests.join(',') : (interests ?? undefined),
         coverStyle: coverStyle ?? undefined,
         coverUrl:   coverUrl   ?? undefined,

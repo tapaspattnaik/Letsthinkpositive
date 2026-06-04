@@ -152,7 +152,7 @@ export default function ProfilePage() {
   const [tribeFollowing, setTribeFollowing] = useState<{id:number;name:string;avatarUrl:string|null}[]>([])
   const [tribeFollowers, setTribeFollowers] = useState<{id:number;name:string;avatarUrl:string|null}[]>([])
   const [editing,     setEditing]     = useState(false)
-  const [form,        setForm]        = useState({ name: '', phone: '', bio: '' })
+  const [form,        setForm]        = useState({ name: '', phone: '', bio: '', website: '' })
   const [selected,    setSelected]    = useState<string[]>([])
   const [saving,      setSaving]      = useState(false)
   const [saved,       setSaved]       = useState(false)
@@ -172,7 +172,7 @@ export default function ProfilePage() {
     if (status !== 'authenticated') return
     fetch('/api/profile').then(r => r.json()).then(data => {
       setProfile(data)
-      setForm({ name: data.name, phone: data.phone ?? '', bio: data.bio ?? '' })
+      setForm({ name: data.name, phone: data.phone ?? '', bio: data.bio ?? '', website: data.website ?? '' })
       setSelected(data.interests ? data.interests.split(',').filter(Boolean) : [])
     })
     setFeedLoading(true)
@@ -508,11 +508,25 @@ export default function ProfilePage() {
                   className="w-full border border-teal-light rounded-[14px] px-4 py-3 text-[0.93rem] outline-none focus:border-teal-mid bg-ivory transition-colors" />
               </div>
               <div>
-                <label className="block text-[0.78rem] font-semibold text-teal-deep mb-1.5">Bio</label>
-                <textarea value={form.bio} onChange={e => setForm(f => ({ ...f, bio: e.target.value }))}
-                  placeholder="A little about you — what brings you here?"
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-[0.78rem] font-semibold text-teal-deep">Bio</label>
+                  <span className={`text-[0.72rem] ${form.bio.length > 360 ? 'text-red-400' : form.bio.length > 280 ? 'text-amber' : 'text-text-xlight'}`}>
+                    {form.bio.length}/400
+                  </span>
+                </div>
+                <textarea value={form.bio} onChange={e => setForm(f => ({ ...f, bio: e.target.value.slice(0, 400) }))}
+                  placeholder="A little about you — what brings you here? This appears under every blog post you write."
                   rows={3}
+                  maxLength={400}
                   className="w-full border border-teal-light rounded-[14px] px-4 py-3 text-[0.93rem] outline-none focus:border-teal-mid bg-ivory resize-none transition-colors" />
+                <p className="text-[0.7rem] text-text-xlight mt-1">Shown at the bottom of your blog posts and on your public profile.</p>
+              </div>
+              <div>
+                <label className="block text-[0.78rem] font-semibold text-teal-deep mb-1.5">Website / Social link</label>
+                <input type="url" value={form.website} onChange={e => setForm(f => ({ ...f, website: e.target.value }))}
+                  placeholder="https://linkedin.com/in/yourname"
+                  className="w-full border border-teal-light rounded-[14px] px-4 py-3 text-[0.93rem] outline-none focus:border-teal-mid bg-ivory transition-colors" />
+                <p className="text-[0.7rem] text-text-xlight mt-1">LinkedIn, Twitter/X, or personal website — linked from your author card.</p>
               </div>
               <div>
                 <label className="block text-[0.78rem] font-semibold text-teal-deep mb-2">Interests</label>
