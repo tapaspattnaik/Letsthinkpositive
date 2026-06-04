@@ -1,32 +1,19 @@
 import { NextRequest } from 'next/server'
-import Together from 'together-ai'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 
 const encoder = new TextEncoder()
-
-function sseText(text: string) {
-  return encoder.encode(`data: ${JSON.stringify({ text })}\n\n`)
-}
-function sseDone() {
-  return encoder.encode('data: [DONE]\n\n')
-}
+function sseText(text: string) { return encoder.encode(`data: ${JSON.stringify({ text })}\n\n`) }
+function sseDone()             { return encoder.encode('data: [DONE]\n\n') }
 
 function fallbackStream(message: string) {
   return new ReadableStream({
-    start(controller) {
-      controller.enqueue(sseText(message))
-      controller.enqueue(sseDone())
-      controller.close()
-    },
+    start(c) { c.enqueue(sseText(message)); c.enqueue(sseDone()); c.close() },
   })
 }
 
 function makeResponse(stream: ReadableStream) {
   return new Response(stream, {
-    headers: {
-      'Content-Type':  'text/event-stream',
-      'Cache-Control': 'no-cache',
-      'Connection':    'keep-alive',
-    },
+    headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' },
   })
 }
 
@@ -42,71 +29,49 @@ When the user shares a negative, anxious, or distorted thought, respond in this 
 Total response: under 160 words. Never clinical. Never preachy. Warm and honest.`
 
 export async function POST(req: NextRequest) {
-  const apiKey = process.env.TOGETHER_API_KEY ?? ''
+  const apiKey = process.env.GEMINI_API_KEY ?? ''
   if (!apiKey) {
-    return makeResponse(
-      fallbackStream(
-        "The AI key is missing — add TOGETHER_API_KEY to your .env file and restart the server."
-      )
-    )
+    return makeResponse(fallbackStream("The AI key is missing — add GEMINI_API_KEY to your .env file."))
   }
 
   try {
     const { thought } = await req.json()
-
-    if (!thought || typeof thought !== 'string' || !thought.trim()) {
+    if (!thought?.trim()) {
       return makeResponse(fallbackStream("Please share a thought to reframe."))
     }
 
-    const together = new Together({ apiKey })
-
-    const stream = await together.chat.completions.create({
-      model:       'meta-llama/Llama-3.3-70B-Instruct-Turbo',
-      messages:    [
-        { role: 'system',  content: REFRAME_SYSTEM_PROMPT },
-        { role: 'user',    content: thought.trim() },
-      ],
-      max_tokens:  320,
-      temperature: 0.7,
-      stream:      true,
+    const genAI  = new GoogleGenerativeAI(apiKey)
+    const model  = genAI.getGenerativeModel({
+      model: 'gemini-2.0-flash',
+      systemInstruction: REFRAME_SYSTEM_PROMPT,
+      generationConfig: { maxOutputTokens: 320, temperature: 0.7 },
     })
+
+    const result = await model.generateContentStream(thought.trim())
 
     const readable = new ReadableStream({
       async start(controller) {
         try {
-          for await (const chunk of stream) {
-            const text = chunk.choices[0]?.delta?.content ?? ''
+          for await (const chunk of result.stream) {
+            const text = chunk.text()
             if (text) controller.enqueue(sseText(text))
           }
           controller.enqueue(sseDone())
-        } catch (streamErr) {
-          console.error('Reframe stream error:', streamErr)
-          controller.enqueue(
-            sseText("Something went quiet mid-stream — want to try again?")
-          )
+        } catch (e) {
+          console.error('Reframe stream error:', e)
+          controller.enqueue(sseText("Something went quiet mid-stream — want to try again?"))
           controller.enqueue(sseDone())
-        } finally {
-          controller.close()
-        }
+        } finally { controller.close() }
       },
     })
 
     return makeResponse(readable)
-
   } catch (err: unknown) {
     console.error('Reframe API error:', err)
-
     const msg = err instanceof Error ? err.message : String(err)
-    let friendly = "Something didn't connect just now. Please try again."
-
-    if (msg.includes('401') || msg.includes('Authentication') || msg.includes('API key')) {
-      friendly = "The AI key seems invalid. Check TOGETHER_API_KEY in your .env."
-    } else if (msg.includes('429') || msg.includes('rate')) {
-      friendly = "We're a little busy right now — please try again in a moment."
-    } else if (msg.includes('model') || msg.includes('404')) {
-      friendly = "The AI model isn't available right now. Try again shortly."
-    }
-
+    const friendly = msg.includes('429') || msg.includes('quota')
+      ? "We're a little busy right now — please try again in a moment."
+      : "Something didn't connect just now. Please try again."
     return makeResponse(fallbackStream(friendly))
   }
 }

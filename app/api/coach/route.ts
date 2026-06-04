@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import Together from 'together-ai'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 
 const COACH_SYSTEM_PROMPT = `You are the Calm Coach — a warm, encouraging wellness companion on letsthinkpositive.com.
 
@@ -22,19 +22,11 @@ Response style:
 - Use the user's own words and language
 - End with a gentle question or invitation to reflect further when appropriate
 
-Categories you can support:
-- Mood reflection: Understanding and processing current emotions
-- Motivation: Finding energy and purpose on difficult days
-- Reflection: Looking back on experiences with compassion and insight
-- Breathwork & calm: Guiding breathing exercises
-- Gratitude: Building appreciation practices
-- Sleep & rest: Gentle support for wind-down routines
-
 Remember: You are a wellness guide, not a therapist. If someone expresses crisis-level distress, gently encourage them to reach out to a professional or helpline.`
 
-// Module-level singleton — created once, reused across all requests
-const together = process.env.TOGETHER_API_KEY
-  ? new Together({ apiKey: process.env.TOGETHER_API_KEY })
+// Module-level singleton
+const genAI = process.env.GEMINI_API_KEY
+  ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
   : null
 
 const encoder = new TextEncoder()
@@ -52,8 +44,8 @@ function fallbackSSE(msg: string) {
 }
 
 export async function POST(req: NextRequest) {
-  if (!together) {
-    return fallbackSSE("The Calm Coach isn't configured yet — TOGETHER_API_KEY is missing from the server environment.")
+  if (!genAI) {
+    return fallbackSSE("The Calm Coach isn't configured yet — GEMINI_API_KEY is missing from the server environment.")
   }
 
   try {
@@ -62,25 +54,31 @@ export async function POST(req: NextRequest) {
       return new Response('Messages required', { status: 400 })
     }
 
-    const stream = await together.chat.completions.create({
-      model:       'meta-llama/Llama-3.3-70B-Instruct-Turbo',
-      messages:    [{ role: 'system', content: COACH_SYSTEM_PROMPT }, ...messages],
-      max_tokens:  800,
-      temperature: 0.75,
-      stream:      true,
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-2.0-flash',
+      systemInstruction: COACH_SYSTEM_PROMPT,
+      generationConfig: { maxOutputTokens: 800, temperature: 0.75 },
     })
 
-    // 60-second hard timeout — prevents hung SSE connections from holding
-    // a Node.js process open indefinitely on Hostinger shared hosting.
-    const abort      = new AbortController()
-    const timeoutId  = setTimeout(() => abort.abort(), 60_000)
+    // Convert messages to Gemini format
+    const history = messages.slice(0, -1).map((m: { role: string; content: string }) => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: m.content }],
+    }))
+    const lastMessage = messages[messages.length - 1].content
+
+    const chat = model.startChat({ history })
+
+    const abort     = new AbortController()
+    const timeoutId = setTimeout(() => abort.abort(), 60_000)
 
     const readable = new ReadableStream({
       async start(controller) {
         try {
-          for await (const chunk of stream) {
+          const result = await chat.sendMessageStream(lastMessage)
+          for await (const chunk of result.stream) {
             if (abort.signal.aborted) break
-            const text = chunk.choices[0]?.delta?.content ?? ''
+            const text = chunk.text()
             if (text) {
               controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text })}\n\n`))
             }
@@ -92,7 +90,6 @@ export async function POST(req: NextRequest) {
         }
       },
       cancel() {
-        // Client disconnected — abort the upstream AI stream immediately
         clearTimeout(timeoutId)
         abort.abort()
       },
@@ -100,16 +97,16 @@ export async function POST(req: NextRequest) {
 
     return new Response(readable, {
       headers: {
-        'Content-Type':  'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Connection':    'keep-alive',
-        'X-Accel-Buffering': 'no', // disable nginx buffering for SSE
+        'Content-Type':      'text/event-stream',
+        'Cache-Control':     'no-cache',
+        'Connection':        'keep-alive',
+        'X-Accel-Buffering': 'no',
       },
     })
   } catch (err) {
     console.error('Coach API error:', err)
     const msg = err instanceof Error ? err.message : String(err)
-    const friendly = msg.includes('429') || msg.includes('rate')
+    const friendly = msg.includes('429') || msg.includes('quota')
       ? "We're a little busy right now — please try again in a moment. 💙"
       : "I'm sorry, I couldn't connect just now. Please try again in a moment. 🌿"
     return fallbackSSE(friendly)

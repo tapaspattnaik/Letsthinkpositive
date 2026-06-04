@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import Together from 'together-ai'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 
 const SYSTEM_PROMPT =
   'You are a warm affirmation writer for letsthinkpositive.com. Write ONE single affirmation sentence — beautiful, honest, empowering, and personal. It should feel like something a wise friend would say. Maximum 18 words. No quotation marks. No prefix like "Affirmation:". Just the affirmation itself.'
@@ -28,49 +28,37 @@ const FALLBACKS = [
 ]
 
 function pickFallback(mood?: string, theme?: string): string {
-  // Seed selection loosely by mood+theme for variety
   const seed = ((mood ?? '').length + (theme ?? '').length) % FALLBACKS.length
   return FALLBACKS[seed]
 }
 
 export async function POST(req: NextRequest) {
   const { mood, theme } = await req.json().catch(() => ({}))
-
-  const apiKey = process.env.TOGETHER_API_KEY ?? ''
+  const apiKey = process.env.GEMINI_API_KEY ?? ''
 
   if (!apiKey) {
     return NextResponse.json({ affirmation: pickFallback(mood, theme) })
   }
 
   try {
-    const together = new Together({ apiKey })
-
-    const moodLine = mood ? `The person is feeling: ${mood}.` : ''
-    const themeLine = theme ? `They want an affirmation about: ${theme}.` : ''
-    const userPrompt = [moodLine, themeLine, 'Write the affirmation now.']
-      .filter(Boolean)
-      .join(' ')
-
-    const response = await together.chat.completions.create({
-      model: 'meta-llama/Llama-3.3-70B-Instruct-Turbo',
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: userPrompt },
-      ],
-      max_tokens: 60,
-      temperature: 0.85,
-      stream: false,
+    const genAI = new GoogleGenerativeAI(apiKey)
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-2.0-flash',
+      systemInstruction: SYSTEM_PROMPT,
+      generationConfig: { maxOutputTokens: 60, temperature: 0.85 },
     })
 
-    const raw = response.choices[0]?.message?.content?.trim() ?? ''
-    // Strip any stray leading/trailing quotes the model might add
+    const userPrompt = [
+      mood  ? `The person is feeling: ${mood}.`              : '',
+      theme ? `They want an affirmation about: ${theme}.`    : '',
+      'Write the affirmation now.',
+    ].filter(Boolean).join(' ')
+
+    const result      = await model.generateContent(userPrompt)
+    const raw         = result.response.text().trim()
     const affirmation = raw.replace(/^["'"]+|["'"]+$/g, '').trim()
 
-    if (!affirmation) {
-      return NextResponse.json({ affirmation: pickFallback(mood, theme) })
-    }
-
-    return NextResponse.json({ affirmation })
+    return NextResponse.json({ affirmation: affirmation || pickFallback(mood, theme) })
   } catch (err) {
     console.error('Affirmation API error:', err)
     return NextResponse.json({ affirmation: pickFallback(mood, theme) })
