@@ -8,72 +8,68 @@ export function useBitChat() {
   const [messages,  setMessages]  = useState<Message[]>([])
   const [mood,      setMood]      = useState('')
   const [streaming, setStreaming] = useState(false)
-  const abortRef = useRef<AbortController | null>(null)
+
+  // Refs — keep stable, never stale, no re-render on update
+  const messagesRef  = useRef<Message[]>([])
+  const moodRef      = useRef('')
+  const streamingRef = useRef(false)
+  const abortRef     = useRef<AbortController | null>(null)
+
+  // Keep refs in sync with state
+  const syncMessages = (next: Message[]) => {
+    messagesRef.current = next
+    setMessages(next)
+  }
 
   const send = useCallback(async (userText: string) => {
     const content = userText.trim()
-    if (!content || streaming) return
+    if (!content || streamingRef.current) return
 
-    const userMsg: Message = { role: 'user', content }
+    // Build history using the ref — never stale, no async setMessages hack
+    const history: Message[] = [...messagesRef.current, { role: 'user', content }]
+    const withPlaceholder: Message[] = [...history, { role: 'assistant', content: '' }]
 
-    // Capture current messages before state update
-    setMessages(prev => {
-      const next = [...prev, userMsg, { role: 'assistant' as const, content: '' }]
-      return next
-    })
+    streamingRef.current = true
+    syncMessages(withPlaceholder)
     setStreaming(true)
-
-    // We need a fresh snapshot of messages — use functional update pattern
-    // to pass the correct history to the API
-    const historySnapshot = await new Promise<Message[]>(resolve => {
-      setMessages(prev => {
-        // Remove the two we just added — they haven't been sent yet
-        const history = prev.slice(0, prev.length - 2)
-        resolve(history)
-        return prev // no change
-      })
-    })
-
-    const allMessages = [...historySnapshot, userMsg]
 
     const abort = new AbortController()
     abortRef.current = abort
+
+    let accumulated = ''
 
     try {
       const res = await fetch('/api/advisor', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ messages: allMessages, mood }),
-        signal:  abort.signal,
+        body:    JSON.stringify({
+          messages: history.map(m => ({ role: m.role, content: m.content })),
+          mood:     moodRef.current,
+        }),
+        signal: abort.signal,
       })
 
       if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`)
 
       const reader  = res.body.getReader()
       const decoder = new TextDecoder()
-      let buffer      = ''
-      let accumulated = ''
+      let buffer = ''
 
       outer: while (true) {
         const { done, value } = await reader.read()
         if (done) break
-
         buffer += decoder.decode(value, { stream: true })
-
-        // Split on newlines, keep any incomplete final line in buffer
         const lines = buffer.split('\n')
         buffer = lines.pop() ?? ''
 
         for (const line of lines) {
           const trimmed = line.trim()
           if (!trimmed.startsWith('data: ')) continue
-
           const payload = trimmed.slice(6)
           if (payload === '[DONE]') break outer
-
           try {
             const parsed = JSON.parse(payload)
-            // Support both { text: "..." } and { choices: [{ delta: { content } }] }
+            // Support both { text: "..." } (our SSE format) and raw OpenAI chunks
             const chunk: string =
               parsed.text ??
               parsed.choices?.[0]?.delta?.content ??
@@ -82,47 +78,59 @@ export function useBitChat() {
               accumulated += chunk
               const snap = accumulated
               setMessages(prev => {
-                const updated = [...prev]
-                updated[updated.length - 1] = { role: 'assistant', content: snap }
-                return updated
+                const u = [...prev]
+                u[u.length - 1] = { role: 'assistant', content: snap }
+                return u
               })
             }
-          } catch { /* malformed chunk — skip */ }
+          } catch { /* skip malformed chunk */ }
         }
       }
 
-      // If nothing came through, show a graceful fallback
-      if (!accumulated) {
-        setMessages(prev => {
-          const u = [...prev]
-          u[u.length - 1] = {
-            role: 'assistant',
-            content: "I'm here, though I had a moment of silence there. Want to try again?",
-          }
-          return u
-        })
-      }
+      // Final sync to ref
+      const finalMessages = withPlaceholder.map((m, i) =>
+        i === withPlaceholder.length - 1
+          ? { role: 'assistant' as const, content: accumulated || "I'm here — want to try again?" }
+          : m
+      )
+      messagesRef.current = finalMessages
+      if (!accumulated) setMessages(finalMessages)
+
     } catch (err: unknown) {
-      if ((err as Error).name === 'AbortError') return
-      setMessages(prev => {
-        const u = [...prev]
-        u[u.length - 1] = {
-          role: 'assistant',
-          content: "Something went wrong on my end. I'm still here — please try again in a moment.",
-        }
-        return u
-      })
+      if ((err as Error).name === 'AbortError') {
+        streamingRef.current = false
+        setStreaming(false)
+        abortRef.current = null
+        return
+      }
+      console.error('Bit chat error:', err)
+      const errorMessages = withPlaceholder.map((m, i) =>
+        i === withPlaceholder.length - 1
+          ? { role: 'assistant' as const, content: "Something went wrong on my end. I'm still here — please try again in a moment." }
+          : m
+      )
+      messagesRef.current = errorMessages
+      setMessages(errorMessages)
     } finally {
+      streamingRef.current = false
       setStreaming(false)
       abortRef.current = null
     }
-  }, [streaming, mood])
+  }, []) // no deps — reads everything from refs
+
+  // Keep moodRef in sync when setMood is called
+  const handleSetMood = useCallback((m: string) => {
+    moodRef.current = m
+    setMood(m)
+  }, [])
 
   function clear() {
     abortRef.current?.abort()
+    messagesRef.current = []
+    streamingRef.current = false
     setMessages([])
     setStreaming(false)
   }
 
-  return { messages, mood, setMood, streaming, send, clear }
+  return { messages, mood, setMood: handleSetMood, streaming, send, clear }
 }
