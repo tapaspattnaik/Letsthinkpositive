@@ -27,7 +27,7 @@ jobs:
 
       - name: TypeScript check
         env:
-          GEMINI_API_KEY:       ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY:         ${{ secrets.GROQ_API_KEY }}
           NEXT_PUBLIC_SITE_URL: https://letsthinkpositive.com
           DATABASE_URL:         mysql://placeholder:placeholder@localhost:3306/placeholder
           NEXTAUTH_SECRET:      ${{ secrets.NEXTAUTH_SECRET }}

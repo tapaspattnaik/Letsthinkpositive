@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import Groq from 'groq-sdk'
 
 const encoder = new TextEncoder()
 function sseText(text: string) { return encoder.encode(`data: ${JSON.stringify({ text })}\n\n`) }
@@ -29,9 +29,9 @@ When the user shares a negative, anxious, or distorted thought, respond in this 
 Total response: under 160 words. Never clinical. Never preachy. Warm and honest.`
 
 export async function POST(req: NextRequest) {
-  const apiKey = process.env.GEMINI_API_KEY ?? ''
+  const apiKey = process.env.GROQ_API_KEY ?? ''
   if (!apiKey) {
-    return makeResponse(fallbackStream("The AI key is missing — add GEMINI_API_KEY to your .env file."))
+    return makeResponse(fallbackStream("The AI key is missing — add GROQ_API_KEY to your .env file."))
   }
 
   try {
@@ -40,28 +40,29 @@ export async function POST(req: NextRequest) {
       return makeResponse(fallbackStream("Please share a thought to reframe."))
     }
 
-    const genAI  = new GoogleGenerativeAI(apiKey)
-    const model  = genAI.getGenerativeModel({
-      model: 'gemini-2.0-flash',
-      systemInstruction: REFRAME_SYSTEM_PROMPT,
-      generationConfig: { maxOutputTokens: 320, temperature: 0.7 },
+    const groq   = new Groq({ apiKey })
+    const stream = await groq.chat.completions.create({
+      model:       'llama-3.3-70b-versatile',
+      messages: [
+        { role: 'system', content: REFRAME_SYSTEM_PROMPT },
+        { role: 'user',   content: thought.trim() },
+      ],
+      max_tokens:  320,
+      temperature: 0.7,
+      stream:      true,
     })
-
-    const result = await model.generateContentStream(thought.trim())
 
     const readable = new ReadableStream({
       async start(controller) {
         try {
-          for await (const chunk of result.stream) {
-            const text = chunk.text()
+          for await (const chunk of stream) {
+            const text = chunk.choices[0]?.delta?.content ?? ''
             if (text) controller.enqueue(sseText(text))
           }
         } catch (e) {
           console.error('Reframe stream error:', e)
           const msg = e instanceof Error ? e.message : String(e)
-          const friendly = msg.includes('API_KEY') || msg.includes('API key') || msg.includes('invalid')
-            ? "The AI key isn't configured correctly — please add GEMINI_API_KEY to the server environment."
-            : msg.includes('429') || msg.includes('quota')
+          const friendly = msg.includes('429') || msg.includes('rate')
             ? "We're a little busy right now — please try again in a moment."
             : "Something went quiet mid-stream — want to try again?"
           controller.enqueue(sseText(friendly))
@@ -76,7 +77,7 @@ export async function POST(req: NextRequest) {
   } catch (err: unknown) {
     console.error('Reframe API error:', err)
     const msg = err instanceof Error ? err.message : String(err)
-    const friendly = msg.includes('429') || msg.includes('quota')
+    const friendly = msg.includes('429') || msg.includes('rate')
       ? "We're a little busy right now — please try again in a moment."
       : "Something didn't connect just now. Please try again."
     return makeResponse(fallbackStream(friendly))

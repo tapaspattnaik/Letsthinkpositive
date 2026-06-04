@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import Groq from 'groq-sdk'
 
 const COACH_SYSTEM_PROMPT = `You are the Calm Coach — a warm, encouraging wellness companion on letsthinkpositive.com.
 
@@ -25,17 +25,25 @@ Response style:
 Remember: You are a wellness guide, not a therapist. If someone expresses crisis-level distress, gently encourage them to reach out to a professional or helpline.`
 
 // Module-level singleton
-const genAI = process.env.GEMINI_API_KEY
-  ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
+const groq = process.env.GROQ_API_KEY
+  ? new Groq({ apiKey: process.env.GROQ_API_KEY })
   : null
 
 const encoder = new TextEncoder()
+
+function sseText(text: string) {
+  return encoder.encode(`data: ${JSON.stringify({ text })}\n\n`)
+}
+function sseDone() {
+  return encoder.encode('data: [DONE]\n\n')
+}
+
 function fallbackSSE(msg: string) {
   return new Response(
     new ReadableStream({
       start(c) {
-        c.enqueue(encoder.encode(`data: ${JSON.stringify({ text: msg })}\n\n`))
-        c.enqueue(encoder.encode('data: [DONE]\n\n'))
+        c.enqueue(sseText(msg))
+        c.enqueue(sseDone())
         c.close()
       },
     }),
@@ -44,30 +52,27 @@ function fallbackSSE(msg: string) {
 }
 
 export async function POST(req: NextRequest) {
-  if (!genAI) {
-    return fallbackSSE("The Calm Coach isn't configured yet — GEMINI_API_KEY is missing from the server environment.")
+  if (!groq) {
+    return fallbackSSE("The Calm Coach isn't configured yet — GROQ_API_KEY is missing from the server environment.")
   }
 
   try {
-    const { messages } = await req.json()
+    const { messages, category } = await req.json()
     if (!messages?.length) {
       return new Response('Messages required', { status: 400 })
     }
 
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-2.0-flash',
-      systemInstruction: COACH_SYSTEM_PROMPT,
-      generationConfig: { maxOutputTokens: 800, temperature: 0.75 },
-    })
+    const systemContent = category
+      ? `${COACH_SYSTEM_PROMPT}\n\nThe user has selected focus area: ${category}. Tailor your responses to this theme.`
+      : COACH_SYSTEM_PROMPT
 
-    // Convert messages to Gemini format
-    const history = messages.slice(0, -1).map((m: { role: string; content: string }) => ({
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: m.content }],
-    }))
-    const lastMessage = messages[messages.length - 1].content
-
-    const chat = model.startChat({ history })
+    const groqMessages = [
+      { role: 'system' as const, content: systemContent },
+      ...messages.map((m: { role: string; content: string }) => ({
+        role: m.role === 'assistant' ? 'assistant' as const : 'user' as const,
+        content: m.content,
+      })),
+    ]
 
     const abort     = new AbortController()
     const timeoutId = setTimeout(() => abort.abort(), 60_000)
@@ -75,26 +80,31 @@ export async function POST(req: NextRequest) {
     const readable = new ReadableStream({
       async start(controller) {
         try {
-          const result = await chat.sendMessageStream(lastMessage)
-          for await (const chunk of result.stream) {
+          const stream = await groq.chat.completions.create({
+            model:       'llama-3.3-70b-versatile',
+            messages:    groqMessages,
+            max_tokens:  800,
+            temperature: 0.75,
+            stream:      true,
+          })
+
+          for await (const chunk of stream) {
             if (abort.signal.aborted) break
-            const text = chunk.text()
-            if (text) {
-              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text })}\n\n`))
-            }
+            const text = chunk.choices[0]?.delta?.content ?? ''
+            if (text) controller.enqueue(sseText(text))
           }
         } catch (streamErr) {
           console.error('Coach stream error:', streamErr)
           const msg = streamErr instanceof Error ? streamErr.message : String(streamErr)
-          const friendly = msg.includes('API_KEY') || msg.includes('API key') || msg.includes('invalid')
-            ? "The AI key isn't configured correctly — please add GEMINI_API_KEY to the server environment."
-            : msg.includes('429') || msg.includes('quota')
+          const friendly = msg.includes('API_KEY') || msg.includes('api_key') || msg.includes('invalid')
+            ? "The AI key isn't configured correctly — please add GROQ_API_KEY to the server environment."
+            : msg.includes('429') || msg.includes('rate') || msg.includes('quota')
             ? "We're a little busy right now — please try again in a moment. 💙"
             : "I'm sorry, I couldn't connect just now. Please try again in a moment. 🌿"
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: friendly })}\n\n`))
+          controller.enqueue(sseText(friendly))
         } finally {
           clearTimeout(timeoutId)
-          controller.enqueue(encoder.encode('data: [DONE]\n\n'))
+          controller.enqueue(sseDone())
           controller.close()
         }
       },
@@ -115,7 +125,7 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error('Coach API error:', err)
     const msg = err instanceof Error ? err.message : String(err)
-    const friendly = msg.includes('429') || msg.includes('quota')
+    const friendly = msg.includes('429') || msg.includes('rate')
       ? "We're a little busy right now — please try again in a moment. 💙"
       : "I'm sorry, I couldn't connect just now. Please try again in a moment. 🌿"
     return fallbackSSE(friendly)

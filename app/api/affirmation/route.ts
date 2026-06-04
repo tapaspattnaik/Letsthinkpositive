@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import Groq from 'groq-sdk'
 
 const SYSTEM_PROMPT =
   'You are a warm affirmation writer for letsthinkpositive.com. Write ONE single affirmation sentence — beautiful, honest, empowering, and personal. It should feel like something a wise friend would say. Maximum 18 words. No quotation marks. No prefix like "Affirmation:". Just the affirmation itself.'
@@ -34,28 +34,33 @@ function pickFallback(mood?: string, theme?: string): string {
 
 export async function POST(req: NextRequest) {
   const { mood, theme } = await req.json().catch(() => ({}))
-  const apiKey = process.env.GEMINI_API_KEY ?? ''
+  const apiKey = process.env.GROQ_API_KEY ?? ''
 
   if (!apiKey) {
     return NextResponse.json({ affirmation: pickFallback(mood, theme) })
   }
 
   try {
-    const genAI = new GoogleGenerativeAI(apiKey)
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-2.0-flash',
-      systemInstruction: SYSTEM_PROMPT,
-      generationConfig: { maxOutputTokens: 60, temperature: 0.85 },
-    })
+    const groq = new Groq({ apiKey })
 
     const userPrompt = [
-      mood  ? `The person is feeling: ${mood}.`              : '',
-      theme ? `They want an affirmation about: ${theme}.`    : '',
+      mood  ? `The person is feeling: ${mood}.`           : '',
+      theme ? `They want an affirmation about: ${theme}.` : '',
       'Write the affirmation now.',
     ].filter(Boolean).join(' ')
 
-    const result      = await model.generateContent(userPrompt)
-    const raw         = result.response.text().trim()
+    const completion = await groq.chat.completions.create({
+      model:       'llama-3.1-8b-instant',  // fast lightweight model — ideal for single sentences
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'user',   content: userPrompt },
+      ],
+      max_tokens:  60,
+      temperature: 0.85,
+      stream:      false,
+    })
+
+    const raw         = completion.choices[0]?.message?.content?.trim() ?? ''
     const affirmation = raw.replace(/^["'"]+|["'"]+$/g, '').trim()
 
     return NextResponse.json({ affirmation: affirmation || pickFallback(mood, theme) })

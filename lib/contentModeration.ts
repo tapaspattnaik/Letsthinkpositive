@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import Groq from 'groq-sdk'
 
 interface ModerationResult {
   safe:    boolean
@@ -23,36 +23,39 @@ function quickCheck(text: string): string[] {
   return issues
 }
 
-// ── AI deep check using Gemini ────────────────────────────────────────────
+// ── AI deep check using Groq ──────────────────────────────────────────────
 export async function moderateContent(
   title: string,
   body: string,
 ): Promise<ModerationResult> {
   // Step 1: quick regex check
-  const fullText = `${title} ${body.replace(/<[^>]+>/g, ' ')}`
+  const fullText   = `${title} ${body.replace(/<[^>]+>/g, ' ')}`
   const quickIssues = quickCheck(fullText)
   if (quickIssues.length > 0) {
     return {
       safe:    false,
       issues:  quickIssues,
-      message: 'Your post contains language that isn\'t appropriate for our wellness community. Please review and remove any offensive words.',
+      message: "Your post contains language that isn't appropriate for our wellness community. Please review and remove any offensive words.",
     }
   }
 
-  // Step 2: AI check via Gemini (fast, low token usage)
-  const apiKey = process.env.GEMINI_API_KEY
-  if (!apiKey) return { safe: true, issues: [], message: '' } // skip if no key
+  // Step 2: AI check (fast small model)
+  const apiKey = process.env.GROQ_API_KEY
+  if (!apiKey) return { safe: true, issues: [], message: '' }
 
   const excerpt = fullText.slice(0, 1500)
 
   try {
-    const genAI = new GoogleGenerativeAI(apiKey)
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-2.0-flash',
-      generationConfig: { maxOutputTokens: 120, temperature: 0 },
-    })
-
-    const prompt = `You are a content moderator for a wellness platform called "letsthinkpositive.com".
+    const groq = new Groq({ apiKey })
+    const completion = await groq.chat.completions.create({
+      model:       'llama-3.1-8b-instant',
+      max_tokens:  120,
+      temperature: 0,
+      stream:      false,
+      messages: [
+        {
+          role:    'system',
+          content: `You are a content moderator for a wellness platform called "letsthinkpositive.com".
 Review the post below and respond ONLY with valid JSON in this exact format:
 {"safe":true,"issues":[],"message":""}
 
@@ -66,16 +69,16 @@ Flag content that contains:
 If safe: {"safe":true,"issues":[],"message":""}
 If not safe: {"safe":false,"issues":["short issue description"],"message":"friendly explanation to user"}
 
-DO NOT include any text outside the JSON.
+DO NOT include any text outside the JSON.`,
+        },
+        {
+          role:    'user',
+          content: `Title: ${title}\n\nContent: ${excerpt}`,
+        },
+      ],
+    })
 
-Title: ${title}
-
-Content: ${excerpt}`
-
-    const result = await model.generateContent(prompt)
-    const raw = result.response.text().trim()
-
-    // Extract JSON from response (Gemini sometimes wraps in markdown)
+    const raw = completion.choices[0]?.message?.content?.trim() ?? '{}'
     const jsonMatch = raw.match(/\{[\s\S]*\}/)
     if (!jsonMatch) return { safe: true, issues: [], message: '' }
 

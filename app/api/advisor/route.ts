@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import Groq from 'groq-sdk'
 import { ADVISOR_SYSTEM_PROMPT } from '@/lib/together'
 
 const encoder = new TextEncoder()
@@ -19,49 +19,49 @@ function makeResponse(stream: ReadableStream) {
 }
 
 export async function POST(req: NextRequest) {
-  const apiKey = process.env.GEMINI_API_KEY ?? ''
+  const apiKey = process.env.GROQ_API_KEY ?? ''
   if (!apiKey) {
     return makeResponse(fallbackStream(
-      "Bit isn't configured yet — add GEMINI_API_KEY to your .env file and restart the server."
+      "Bit isn't configured yet — add GROQ_API_KEY to your .env file and restart the server."
     ))
   }
 
   try {
     const { messages, mood } = await req.json()
 
-    const systemPrompt = mood
+    const systemContent = mood
       ? `${ADVISOR_SYSTEM_PROMPT}\n\nThe user's current mood: ${mood}. Tailor your opening tone accordingly.`
       : ADVISOR_SYSTEM_PROMPT
 
-    const genAI = new GoogleGenerativeAI(apiKey)
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-2.0-flash',
-      systemInstruction: systemPrompt,
-      generationConfig: { maxOutputTokens: 280, temperature: 0.7 },
+    const groq = new Groq({ apiKey })
+
+    const groqMessages = [
+      { role: 'system' as const, content: systemContent },
+      ...(messages || []).map((m: { role: string; content: string }) => ({
+        role: m.role === 'assistant' ? 'assistant' as const : 'user' as const,
+        content: m.content,
+      })),
+    ]
+
+    const stream = await groq.chat.completions.create({
+      model:       'llama-3.3-70b-versatile',
+      messages:    groqMessages,
+      max_tokens:  280,
+      temperature: 0.7,
+      stream:      true,
     })
-
-    const history = (messages || []).slice(0, -1).map((m: { role: string; content: string }) => ({
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: m.content }],
-    }))
-    const lastMessage = messages?.[messages.length - 1]?.content ?? ''
-
-    const chat   = model.startChat({ history })
-    const result = await chat.sendMessageStream(lastMessage)
 
     const readable = new ReadableStream({
       async start(controller) {
         try {
-          for await (const chunk of result.stream) {
-            const text = chunk.text()
+          for await (const chunk of stream) {
+            const text = chunk.choices[0]?.delta?.content ?? ''
             if (text) controller.enqueue(sseText(text))
           }
         } catch (e) {
           console.error('Advisor stream error:', e)
           const msg = e instanceof Error ? e.message : String(e)
-          const friendly = msg.includes('API_KEY') || msg.includes('API key') || msg.includes('invalid')
-            ? "I'm not configured correctly — please add GEMINI_API_KEY to the server environment."
-            : msg.includes('429') || msg.includes('quota')
+          const friendly = msg.includes('429') || msg.includes('rate')
             ? "We're getting a lot of love right now — please try again in a moment. 💙"
             : "I lost my train of thought — want to try again?"
           controller.enqueue(sseText(friendly))
@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
   } catch (err: unknown) {
     console.error('Advisor API error:', err)
     const msg = err instanceof Error ? err.message : String(err)
-    const friendly = msg.includes('429') || msg.includes('quota')
+    const friendly = msg.includes('429') || msg.includes('rate')
       ? "We're getting a lot of love right now — please try again in a moment. 💙"
       : "I'm having a quiet moment — please try again."
     return makeResponse(fallbackStream(friendly))
