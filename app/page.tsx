@@ -9,31 +9,19 @@ import { BlogTeaser }       from '@/components/home/BlogTeaser'
 import { StoryOfWeek }      from '@/components/home/StoryOfWeek'
 import { Newsletter }       from '@/components/home/Newsletter'
 import { DailyCheckIn }    from '@/components/home/DailyCheckIn'
-import dynamic from 'next/dynamic'
+import { PersonalisedSection } from '@/components/home/PersonalisedSection'
 import Link from 'next/link'
-
-// These components use useSession + fetch — must be client-only (no SSR)
-const FavouriteToolsBar = dynamic(
-  () => import('@/components/home/FavouriteToolsBar').then(m => ({ default: m.FavouriteToolsBar })),
-  { ssr: false }
-)
-const DailyRecipe = dynamic(
-  () => import('@/components/home/DailyRecipe').then(m => ({ default: m.DailyRecipe })),
-  { ssr: false }
-)
 
 export default function HomePage() {
   return (
     <>
       <Hero />
-      {/* Personalised quick-access strip — only shown when user has saved favourites */}
-      <FavouriteToolsBar />
       <QuoteSection />
       <WellnessPillars />
       <section className="py-12 px-[5%] bg-ivory">
         <div className="max-w-2xl mx-auto space-y-6">
-          {/* Personalised daily plan — shown only to logged-in users */}
-          <DailyRecipe />
+          {/* Personalised section — client-only (useSession + fetch) */}
+          <PersonalisedSection />
           <DailyCheckIn />
         </div>
       </section>
