@@ -1,6 +1,8 @@
 import { NextRequest } from 'next/server'
 import Groq from 'groq-sdk'
 import { withLanguage } from '@/lib/languages'
+import { getUserMemoryContext } from '@/lib/memory'
+import { getSession } from '@/lib/auth'
 
 const COACH_SYSTEM_PROMPT = `You are the Calm Coach — a warm, encouraging wellness companion on letsthinkpositive.com.
 
@@ -63,9 +65,15 @@ export async function POST(req: NextRequest) {
       return new Response('Messages required', { status: 400 })
     }
 
-    const basePrompt = category
-      ? `${COACH_SYSTEM_PROMPT}\n\nThe user has selected focus area: ${category}. Tailor your responses to this theme.`
-      : COACH_SYSTEM_PROMPT
+    // Inject personalisation memories into the system prompt
+    const session      = await getSession()
+    const memoryCtx    = session?.user?.id ? await getUserMemoryContext(Number(session.user.id)) : ''
+
+    const basePrompt = [
+      COACH_SYSTEM_PROMPT,
+      category ? `The user has selected focus area: ${category}. Tailor your responses to this theme.` : '',
+      memoryCtx,
+    ].filter(Boolean).join('\n\n')
     const systemContent = withLanguage(basePrompt, language)
 
     // Use 8b-instant for most topics (higher rate limit, sub-200ms first token)

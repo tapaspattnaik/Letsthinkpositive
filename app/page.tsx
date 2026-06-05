@@ -9,16 +9,22 @@ import { BlogTeaser }       from '@/components/home/BlogTeaser'
 import { StoryOfWeek }      from '@/components/home/StoryOfWeek'
 import { Newsletter }       from '@/components/home/Newsletter'
 import { DailyCheckIn }    from '@/components/home/DailyCheckIn'
+import { FavouriteToolsBar } from '@/components/home/FavouriteToolsBar'
+import { DailyRecipe }     from '@/components/home/DailyRecipe'
 import Link from 'next/link'
 
 export default function HomePage() {
   return (
     <>
       <Hero />
+      {/* Personalised quick-access strip — only shown when user has saved favourites */}
+      <FavouriteToolsBar />
       <QuoteSection />
       <WellnessPillars />
       <section className="py-12 px-[5%] bg-ivory">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-2xl mx-auto space-y-6">
+          {/* Personalised daily plan — shown only to logged-in users */}
+          <DailyRecipe />
           <DailyCheckIn />
         </div>
       </section>

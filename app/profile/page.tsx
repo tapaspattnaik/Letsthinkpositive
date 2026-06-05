@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { TIER_STYLES } from '@/lib/badges'
+import { ALL_TOOLS } from '@/components/home/FavouriteToolsBar'
 
 const INTERESTS = [
   'Mindfulness','Sleep','Gratitude','Anxiety Relief',
@@ -153,7 +154,9 @@ export default function ProfilePage() {
   const [tribeFollowers, setTribeFollowers] = useState<{id:number;name:string;avatarUrl:string|null}[]>([])
   const [editing,     setEditing]     = useState(false)
   const [form,        setForm]        = useState({ name: '', phone: '', bio: '', website: '' })
-  const [selected,    setSelected]    = useState<string[]>([])
+  const [selected,      setSelected]      = useState<string[]>([])
+  const [favTools,      setFavTools]      = useState<string[]>([])
+  const [savingFavs,    setSavingFavs]    = useState(false)
   const [saving,      setSaving]      = useState(false)
   const [saved,       setSaved]       = useState(false)
   const [uploading,     setUploading]     = useState(false)
@@ -174,6 +177,10 @@ export default function ProfilePage() {
       setProfile(data)
       setForm({ name: data.name, phone: data.phone ?? '', bio: data.bio ?? '', website: data.website ?? '' })
       setSelected(data.interests ? data.interests.split(',').filter(Boolean) : [])
+      // Load favourite tools
+      fetch('/api/favourite-tools').then(r => r.json()).then(({ tools }) => {
+        if (Array.isArray(tools)) setFavTools(tools)
+      }).catch(() => {})
     })
     setFeedLoading(true)
     fetch('/api/feed/home').then(r => r.ok ? r.json() : { community: [], circles: [] }).then(data => {
@@ -540,6 +547,34 @@ export default function ProfilePage() {
                     </button>
                   ))}
                 </div>
+              </div>
+              {/* Favourite tools */}
+              <div>
+                <label className="block text-[0.78rem] font-semibold text-teal-deep mb-1">⚡ Quick-Access Tools</label>
+                <p className="text-[0.71rem] text-text-xlight mb-2">Pin up to 6 tools for fast access from the home page.</p>
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {ALL_TOOLS.map(t => {
+                    const pinned = favTools.includes(t.slug)
+                    return (
+                      <button key={t.slug} type="button"
+                        onClick={() => setFavTools(f => pinned ? f.filter(s => s !== t.slug) : f.length < 6 ? [...f, t.slug] : f)}
+                        className={`px-3 py-1.5 rounded-full border text-[0.76rem] font-medium transition-all flex items-center gap-1.5
+                          ${pinned ? 'bg-amber/20 text-amber border-amber/40' : 'bg-teal-ghost text-text-mid border-teal-light hover:border-teal-mid'}`}>
+                        <span>{t.emoji}</span>{t.label}
+                        {pinned && <span className="text-amber">★</span>}
+                      </button>
+                    )
+                  })}
+                </div>
+                <button type="button" disabled={savingFavs}
+                  onClick={async () => {
+                    setSavingFavs(true)
+                    await fetch('/api/favourite-tools', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tools: favTools }) })
+                    setSavingFavs(false)
+                  }}
+                  className="text-[0.76rem] text-teal-deep border border-teal-light px-3 py-1.5 rounded-full hover:bg-teal-ghost transition-colors disabled:opacity-50">
+                  {savingFavs ? 'Saving…' : '⚡ Save quick access'}
+                </button>
               </div>
             </div>
             <div className="flex gap-3 mt-6">

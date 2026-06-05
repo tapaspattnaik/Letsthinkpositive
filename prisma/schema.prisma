@@ -40,11 +40,15 @@ model User {
   blockedAt     DateTime?
   lastLoginAt   DateTime?
 
+  // Personalisation
+  favouriteTools String    @default("[]") @db.VarChar(500)  // JSON array of tool slugs
+
   currentStreak  Int       @default(0)
   longestStreak  Int       @default(0)
   lastActiveDate DateTime?
 
   badges             UserBadge[]
+  memories           UserMemory[]
   progress           ChallengeProgress[]
   posts              CommunityPost[]
   groupMemberships   GroupMember[]
@@ -71,6 +75,7 @@ model User {
   sleepLogs          SleepLog[]
   assessments        WellnessAssessment[]
   savedQuotes        SavedQuote[]
+  dailyRecipes       DailyRecipe[]
 
   @@map("users")
 }
@@ -546,3 +551,39 @@ model PasswordReset {
 
   @@map("password_resets")
 }
+
+// ── AI Memory — coach/advisor remembers key facts about the user ──────────
+
+model UserMemory {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  key       String   @db.VarChar(100)  // e.g. "main_goal", "struggle", "name_pref"
+  value     String   @db.Text
+  source    String   @default("coach") @db.VarChar(30) // coach | advisor | manual
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, key])
+  @@map("user_memories")
+}
+
+// ── Daily Wellness Recipe ─────────────────────────────────────────────────
+
+model DailyRecipe {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  date        String   @db.VarChar(10)   // YYYY-MM-DD
+  tools       String   @db.VarChar(500)  // JSON array of tool slugs
+  reasons     String   @db.Text          // JSON array of reason strings
+  moodScore   Float?
+  sleepHours  Float?
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@map("daily_recipes")
+}
+

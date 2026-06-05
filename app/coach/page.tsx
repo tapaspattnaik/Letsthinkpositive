@@ -201,6 +201,15 @@ export default function CoachPage() {
   }
 
   function newSession() {
+    // Extract memories from the conversation before clearing (fire & forget)
+    const history = messagesRef.current
+    if (history.length >= 2) {
+      fetch('/api/memory', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ messages: history, source: 'coach' }),
+      }).catch(() => {})
+    }
     messagesRef.current = []
     accRef.current = ''
     setMessages([])

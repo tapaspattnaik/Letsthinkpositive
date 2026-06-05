@@ -69,11 +69,12 @@ export const authOptions: NextAuthOptions = {
           await prisma.user.update({
             where: { id: existing.id },
             data:  {
-              googleId:    existing.googleId ?? user.id,
-              avatarUrl:   existing.avatarUrl ?? user.image ?? null,
-              lastLoginAt: new Date(),
+              googleId:  existing.googleId ?? user.id,
+              avatarUrl: existing.avatarUrl ?? user.image ?? null,
             },
-          })
+          }).catch(() => {})
+          // Update lastLoginAt separately — resilient if column doesn't exist yet
+          await prisma.user.update({ where: { id: existing.id }, data: { lastLoginAt: new Date() } }).catch(() => {})
         }
       }
       return true
