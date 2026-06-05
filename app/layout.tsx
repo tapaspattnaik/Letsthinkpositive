@@ -71,16 +71,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           body { background: var(--ivory); margin: 0; font-family: system-ui, sans-serif; }
           * { box-sizing: border-box; }
           a { color: var(--teal-deep); }
+
+          /* Loader: CSS auto-hides after 2s — works even if React never mounts.
+             React adds .ltp-loaded to <body> to hide it instantly on mount. */
+          @keyframes ltp-auto-hide {
+            0%, 70% { opacity: 1; pointer-events: auto;  }
+            100%     { opacity: 0; pointer-events: none; }
+          }
+          #ltp-loader { animation: ltp-auto-hide 2s ease-out 0.2s forwards; }
+          body.ltp-loaded #ltp-loader { display: none; }
         `}} />
       </head>
       <body className="font-body" suppressHydrationWarning>
-        {/*
-          Pure-HTML/JS loader — hides itself via a plain script timeout.
-          Does NOT depend on React mounting. Runs even if the JS bundle fails.
-          This is the only reliable way to prevent it sticking on mobile.
-        */}
+        {/* Loader — CSS animation hides it after 2s without any JavaScript.
+            No inline script → no hydration mismatch → no "Something went wrong". */}
         <div
           id="ltp-loader"
+          suppressHydrationWarning
           style={{
             position:'fixed', inset:0, zIndex:99999,
             background:'#1A6B6B', display:'flex', flexDirection:'column',
@@ -97,25 +104,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             ))}
           </div>
         </div>
-        {/* Plain JS — hides loader after 1.2s, completely React-independent */}
-        <script dangerouslySetInnerHTML={{ __html: `
-          (function(){
-            function hide(){
-              var el=document.getElementById('ltp-loader');
-              if(el){el.style.transition='opacity 0.3s';el.style.opacity='0';setTimeout(function(){if(el&&el.parentNode)el.parentNode.removeChild(el);},320);}
-            }
-            // Hide as soon as possible — on DOMContentLoaded or 1.2s max
-            if(document.readyState==='loading'){
-              document.addEventListener('DOMContentLoaded', hide);
-            } else {
-              hide();
-            }
-            // Absolute fallback — always gone by 1.2s
-            setTimeout(hide, 1200);
-          })();
-        `}} />
         <LanguageProvider>
         <SessionProvider>
+          {/* AppLoader — adds body.ltp-loaded when React mounts → hides #ltp-loader instantly */}
+          <AppLoader />
           {/* Skip-to-content — visible on focus for keyboard/screen-reader users */}
           <a
             href="#main-content"
