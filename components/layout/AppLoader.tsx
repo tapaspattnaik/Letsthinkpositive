@@ -14,41 +14,27 @@ export function AppLoader() {
   const [visible, setVisible] = useState(true)
 
   useEffect(() => {
-    // Check if Tailwind CSS has loaded by detecting a known CSS custom property
-    function cssLoaded(): boolean {
-      try {
-        return getComputedStyle(document.documentElement)
-          .getPropertyValue('--teal-deep').trim().length > 0
-      } catch { return false }
-    }
-
-    // Hide immediately if CSS is already present (warm page load / navigation)
-    if (cssLoaded()) { setVisible(false); return }
-
-    // Otherwise poll — but STOP BLOCKING CLICKS after 800ms regardless.
-    // This prevents the AppLoader permanently blocking interaction if the
-    // CSS variable check fails (e.g. dark mode race, browser quirks).
+    // Hide after first paint — inline critical CSS means the page is always styled.
+    // We only need the loader long enough for the initial JS bundle to execute.
+    // On mobile with slow connections, cap at 1.2s max so it never blocks interaction.
     let cancelled = false
-    let attempts  = 0
-    const MAX_ATTEMPTS = 60  // ~1 second at 60fps
 
-    function poll() {
-      if (cancelled) return
-      attempts++
-      if (cssLoaded() || attempts >= MAX_ATTEMPTS) {
-        setVisible(false)
-      } else {
-        requestAnimationFrame(poll)
-      }
+    // Try to hide on next frame (desktop fast path)
+    const raf = requestAnimationFrame(() => {
+      if (!cancelled) setVisible(false)
+    })
+
+    // Hard ceiling — 1.2s max regardless of anything
+    const timeout = setTimeout(() => {
+      cancelled = true
+      setVisible(false)
+    }, 1200)
+
+    return () => {
+      cancelled = true
+      cancelAnimationFrame(raf)
+      clearTimeout(timeout)
     }
-
-    // Start polling after next paint
-    requestAnimationFrame(poll)
-
-    // Absolute hard ceiling — 3 seconds max, then always hide
-    const fallback = setTimeout(() => { cancelled = true; setVisible(false) }, 3000)
-
-    return () => { cancelled = true; clearTimeout(fallback) }
   }, [])
 
   if (!visible) return null
