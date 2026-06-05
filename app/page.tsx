@@ -9,9 +9,18 @@ import { BlogTeaser }       from '@/components/home/BlogTeaser'
 import { StoryOfWeek }      from '@/components/home/StoryOfWeek'
 import { Newsletter }       from '@/components/home/Newsletter'
 import { DailyCheckIn }    from '@/components/home/DailyCheckIn'
-import { FavouriteToolsBar } from '@/components/home/FavouriteToolsBar'
-import { DailyRecipe }     from '@/components/home/DailyRecipe'
+import dynamic from 'next/dynamic'
 import Link from 'next/link'
+
+// These components use useSession + fetch — must be client-only (no SSR)
+const FavouriteToolsBar = dynamic(
+  () => import('@/components/home/FavouriteToolsBar').then(m => ({ default: m.FavouriteToolsBar })),
+  { ssr: false }
+)
+const DailyRecipe = dynamic(
+  () => import('@/components/home/DailyRecipe').then(m => ({ default: m.DailyRecipe })),
+  { ssr: false }
+)
 
 export default function HomePage() {
   return (
