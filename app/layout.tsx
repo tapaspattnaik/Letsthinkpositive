@@ -74,10 +74,48 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         `}} />
       </head>
       <body className="font-body" suppressHydrationWarning>
+        {/*
+          Pure-HTML/JS loader — hides itself via a plain script timeout.
+          Does NOT depend on React mounting. Runs even if the JS bundle fails.
+          This is the only reliable way to prevent it sticking on mobile.
+        */}
+        <div
+          id="ltp-loader"
+          style={{
+            position:'fixed', inset:0, zIndex:99999,
+            background:'#1A6B6B', display:'flex', flexDirection:'column',
+            alignItems:'center', justifyContent:'center', gap:'16px',
+          }}
+          aria-hidden="true"
+        >
+          <p style={{ fontFamily:'"DM Sans",sans-serif', fontSize:'1.1rem', fontWeight:600, color:'#F5C96A', letterSpacing:'0.02em', margin:0 }}>
+            letsthinkpositive
+          </p>
+          <div style={{ display:'flex', gap:'6px' }}>
+            {[0,1,2].map(i => (
+              <span key={i} style={{ width:'7px', height:'7px', borderRadius:'50%', background:'rgba(255,255,255,0.5)', display:'inline-block' }} />
+            ))}
+          </div>
+        </div>
+        {/* Plain JS — hides loader after 1.2s, completely React-independent */}
+        <script dangerouslySetInnerHTML={{ __html: `
+          (function(){
+            function hide(){
+              var el=document.getElementById('ltp-loader');
+              if(el){el.style.transition='opacity 0.3s';el.style.opacity='0';setTimeout(function(){if(el&&el.parentNode)el.parentNode.removeChild(el);},320);}
+            }
+            // Hide as soon as possible — on DOMContentLoaded or 1.2s max
+            if(document.readyState==='loading'){
+              document.addEventListener('DOMContentLoaded', hide);
+            } else {
+              hide();
+            }
+            // Absolute fallback — always gone by 1.2s
+            setTimeout(hide, 1200);
+          })();
+        `}} />
         <LanguageProvider>
         <SessionProvider>
-          {/* Loading overlay — hides unstyled flash while CSS downloads on mobile */}
-          <AppLoader />
           {/* Skip-to-content — visible on focus for keyboard/screen-reader users */}
           <a
             href="#main-content"
