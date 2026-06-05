@@ -34,14 +34,14 @@ model User {
   updatedAt DateTime @updatedAt
 
   // Access control
-  role          String    @default("user") @db.VarChar(20)  // user | moderator | admin
+  role          String    @default("user") @db.VarChar(20)
   blocked       Boolean   @default(false)
-  blockedReason String?   @db.VarChar(500)
-  blockedAt     DateTime?
-  lastLoginAt   DateTime?
+  blockedReason String?   @map("blocked_reason")  @db.VarChar(500)
+  blockedAt     DateTime? @map("blocked_at")
+  lastLoginAt   DateTime? @map("last_login_at")
 
   // Personalisation
-  favouriteTools String    @default("[]") @db.VarChar(500)  // JSON array of tool slugs
+  favouriteTools String   @default("[]") @map("favourite_tools") @db.VarChar(500)
 
   currentStreak  Int       @default(0)
   longestStreak  Int       @default(0)
@@ -288,7 +288,7 @@ model BlogView {
 model PostReport {
   id               Int       @id @default(autoincrement())
   reporterId       Int
-  reportedUserId   Int?      // the user being reported (null for old reports)
+  reportedUserId   Int?      @map("reported_user_id")
   postType         String    @db.VarChar(30) // community | circle | user_blog
   postId           Int
   reason           String    @db.VarChar(100)
