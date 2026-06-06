@@ -280,4 +280,13 @@ a, button, [role="button"], input, select, textarea, label {
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
   }
+  /* When animations are disabled, hide the loader immediately via CSS too.
+     The inline script timer (2.5s) and AppLoader.tsx are the primary mechanisms,
+     but this ensures the loader never flickers on reduced-motion devices. */
+  #ltp-loader {
+    animation: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
 }

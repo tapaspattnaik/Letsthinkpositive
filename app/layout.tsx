@@ -83,8 +83,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         `}} />
       </head>
       <body className="font-body" suppressHydrationWarning>
-        {/* Loader — CSS animation hides it after 2s without any JavaScript.
-            No inline script → no hydration mismatch → no "Something went wrong". */}
+        {/* Loader — hidden by inline script timer (2.5s hard fallback) or instantly
+            when React mounts via window.__ltpHide(). Works on all mobile browsers
+            regardless of prefers-reduced-motion or JS loading speed. */}
         <div
           id="ltp-loader"
           suppressHydrationWarning
@@ -104,6 +105,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             ))}
           </div>
         </div>
+        {/* Inline script: sets a 2.5s hard-timeout to force-hide the loader even if
+            React never mounts (slow mobile, JS error, reduced-motion breaking CSS anim).
+            window.__ltpHide() is called by AppLoader.tsx to cancel + hide instantly. */}
+        <script dangerouslySetInnerHTML={{ __html: `
+          (function(){
+            var t = setTimeout(function(){
+              var el = document.getElementById('ltp-loader');
+              if (el) el.style.cssText += ';display:none!important';
+            }, 2500);
+            window.__ltpHide = function(){
+              clearTimeout(t);
+              var el = document.getElementById('ltp-loader');
+              if (el) el.style.cssText += ';display:none!important';
+            };
+          })();
+        `}} />
         <LanguageProvider>
         <SessionProvider>
           {/* AppLoader — adds body.ltp-loaded when React mounts → hides #ltp-loader instantly */}
