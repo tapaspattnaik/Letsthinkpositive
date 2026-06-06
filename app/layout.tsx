@@ -78,7 +78,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             0%, 70% { opacity: 1; }
             100%     { opacity: 0; pointer-events: none; visibility: hidden; }
           }
-          #ltp-loader { animation: ltp-auto-hide 4s ease-out 0.2s forwards; pointer-events: auto; }
+          #ltp-loader { animation: ltp-auto-hide 2s ease-out 0.2s forwards; pointer-events: auto; }
           body.ltp-loaded #ltp-loader { display: none !important; }
         `}} />
       </head>
