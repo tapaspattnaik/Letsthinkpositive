@@ -14,7 +14,9 @@ import { useEffect } from 'react'
  */
 export function AppLoader() {
   useEffect(() => {
-    // React mounted — hide loader instantly via body class
+    // Directly hide the loader element — CSS class alone can't override inline display:flex
+    const loader = document.getElementById('ltp-loader')
+    if (loader) loader.style.display = 'none'
     document.body.classList.add('ltp-loaded')
     return () => { document.body.classList.remove('ltp-loaded') }
   }, [])
