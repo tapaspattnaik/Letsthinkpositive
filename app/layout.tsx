@@ -82,11 +82,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         `}} />
       </head>
       <body className="font-body" suppressHydrationWarning>
+        {/* AppLoader is OUTSIDE providers so it mounts even if a provider throws.
+            It owns the loader div and unmounts it via useState on first render. */}
+        <AppLoader />
         <LanguageProvider>
         <SessionProvider>
-          {/* AppLoader owns the loader div — renders it until React mounts,
-              then React unmounts it cleanly via useState. No DOM hacks needed. */}
-          <AppLoader />
           {/* Skip-to-content — visible on focus for keyboard/screen-reader users */}
           <a
             href="#main-content"
