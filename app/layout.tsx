@@ -72,43 +72,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           * { box-sizing: border-box; }
           a { color: var(--teal-deep); }
 
-          /* Loader: CSS auto-hides after 2s — works even if React never mounts.
-             React adds .ltp-loaded to <body> to hide it instantly on mount. */
+          /* Loader fallback: if React never mounts (JS error / network fail),
+             this CSS animation auto-hides the loader after 2s. */
           @keyframes ltp-auto-hide {
             0%, 70% { opacity: 1; }
             100%     { opacity: 0; pointer-events: none; visibility: hidden; }
           }
-          #ltp-loader { animation: ltp-auto-hide 2s ease-out 0.2s forwards; pointer-events: auto; }
-          body.ltp-loaded #ltp-loader { display: none !important; }
+          #ltp-loader { animation: ltp-auto-hide 2s ease-out 0.2s forwards; }
         `}} />
       </head>
       <body className="font-body" suppressHydrationWarning>
-        {/* Loader — CSS animation auto-hides after 2s (fallback if React is slow).
-            AppLoader.tsx hides it instantly when React mounts.
-            globals.css hides it immediately for prefers-reduced-motion devices.
-            NO inline <script> — that caused hydration mismatch / app crash. */}
-        <div
-          id="ltp-loader"
-          suppressHydrationWarning
-          style={{
-            position:'fixed', inset:0, zIndex:99999,
-            background:'#1A6B6B', display:'flex', flexDirection:'column',
-            alignItems:'center', justifyContent:'center', gap:'16px',
-          }}
-          aria-hidden="true"
-        >
-          <p style={{ fontFamily:'"DM Sans",sans-serif', fontSize:'1.1rem', fontWeight:600, color:'#F5C96A', letterSpacing:'0.02em', margin:0 }}>
-            letsthinkpositive
-          </p>
-          <div style={{ display:'flex', gap:'6px' }}>
-            {[0,1,2].map(i => (
-              <span key={i} style={{ width:'7px', height:'7px', borderRadius:'50%', background:'rgba(255,255,255,0.5)', display:'inline-block' }} />
-            ))}
-          </div>
-        </div>
         <LanguageProvider>
         <SessionProvider>
-          {/* AppLoader — adds body.ltp-loaded when React mounts → hides #ltp-loader instantly */}
+          {/* AppLoader owns the loader div — renders it until React mounts,
+              then React unmounts it cleanly via useState. No DOM hacks needed. */}
           <AppLoader />
           {/* Skip-to-content — visible on focus for keyboard/screen-reader users */}
           <a
