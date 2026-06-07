@@ -17,12 +17,10 @@ const nextConfig = {
     cpus: 2,
   },
 
-  // Prevent mobile browsers from caching stale JS bundles.
-  // Next.js static assets (_next/static/) already have long-term cache with
-  // content hashes, so this only affects HTML pages.
   async headers() {
     return [
       {
+        // Security headers on everything
         source: '/(.*)',
         headers: [
           { key: 'X-Content-Type-Options', value: 'nosniff' },
@@ -30,10 +28,19 @@ const nextConfig = {
         ],
       },
       {
-        // HTML pages: short cache so mobile gets fresh JS references immediately
+        // _next/static/ assets have content-hashed filenames → safe to cache long-term
+        source: '/_next/static/(.*)',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+        ],
+      },
+      {
+        // HTML pages: no-store so mobile browsers NEVER cache the HTML document.
+        // Cached HTML with stale chunk filenames was causing JS 404s on mobile,
+        // preventing React from mounting (loader stuck forever).
         source: '/:path*',
         headers: [
-          { key: 'Cache-Control', value: 'public, max-age=0, must-revalidate' },
+          { key: 'Cache-Control', value: 'no-store' },
         ],
       },
     ]
