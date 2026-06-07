@@ -13,6 +13,24 @@ export default function Error({
   useEffect(() => {
     // Log to console in dev; swap for a real error service in production
     console.error('[App Error]', error)
+
+    // Also report to the server so we can see what's happening on real devices
+    // (the browser console isn't visible to us remotely). Best-effort — never
+    // throws, never blocks the UI.
+    try {
+      fetch('/api/client-error', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message:   error?.message,
+          stack:     error?.stack,
+          digest:    error?.digest,
+          url:       typeof window !== 'undefined' ? window.location.href : undefined,
+          userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
+        }),
+        keepalive: true,
+      }).catch(() => {})
+    } catch {}
   }, [error])
 
   return (
