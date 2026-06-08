@@ -118,7 +118,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
 
             {/* Follow — desktop */}
             <div className="hidden sm:block flex-shrink-0 pb-2">
-              <FollowButton userId={id} />
+              <FollowButton userId={id} showStats={false} />
             </div>
           </div>
 
@@ -142,7 +142,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
 
           {/* Follow — mobile */}
           <div className="sm:hidden mt-4">
-            <FollowButton userId={id} />
+            <FollowButton userId={id} showStats={false} />
           </div>
         </div>
 
@@ -263,7 +263,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
               <p className="text-text-mid text-[0.88rem] leading-[1.7] max-w-xs mx-auto mb-5">
                 They&apos;re {memberDays <= 7 ? 'brand new to the community' : 'on their wellness journey'} — give them a warm welcome by connecting!
               </p>
-              <FollowButton userId={id} />
+              <FollowButton userId={id} showStats={false} />
             </div>
           )}
 

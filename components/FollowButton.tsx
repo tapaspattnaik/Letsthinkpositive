@@ -10,7 +10,7 @@ interface FollowState {
   isFollowing: boolean
 }
 
-export function FollowButton({ userId }: { userId: number }) {
+export function FollowButton({ userId, showStats = true }: { userId: number; showStats?: boolean }) {
   const { data: session } = useSession()
   const [state,    setState]    = useState<FollowState | null>(null)
   const [loading,  setLoading]  = useState(true)
@@ -45,17 +45,19 @@ export function FollowButton({ userId }: { userId: number }) {
 
   return (
     <div className="flex items-center gap-4 mt-4 justify-center flex-wrap">
-      {/* Stats */}
-      <div className="flex gap-5 text-center">
-        <div>
-          <p className="font-bold text-[1.1rem] text-charcoal">{state.followerCount}</p>
-          <p className="text-[0.72rem] text-text-xlight">Followers</p>
+      {/* Stats — optional, the profile page already shows these in its stats strip */}
+      {showStats && (
+        <div className="flex gap-5 text-center">
+          <div>
+            <p className="font-bold text-[1.1rem] text-charcoal">{state.followerCount}</p>
+            <p className="text-[0.72rem] text-text-xlight">Followers</p>
+          </div>
+          <div>
+            <p className="font-bold text-[1.1rem] text-charcoal">{state.followingCount}</p>
+            <p className="text-[0.72rem] text-text-xlight">Following</p>
+          </div>
         </div>
-        <div>
-          <p className="font-bold text-[1.1rem] text-charcoal">{state.followingCount}</p>
-          <p className="text-[0.72rem] text-text-xlight">Following</p>
-        </div>
-      </div>
+      )}
 
       {/* Follow/Unfollow button */}
       {!isOwnProfile && session && (
