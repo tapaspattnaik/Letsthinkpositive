@@ -83,12 +83,38 @@ export async function GET() {
   // Return cached recipe if already generated today
   const cached = await prisma.dailyRecipe.findUnique({ where: { userId_date: { userId, date: today } } })
   if (cached) {
+    let tools: RecipeTool[]
+    try {
+      const raw = JSON.parse(cached.tools)
+      // Old cache format stored slug strings; new format stores full objects.
+      // Guard against the old format by checking whether the first item is an object.
+      if (Array.isArray(raw) && raw.length > 0 && typeof raw[0] === 'object' && raw[0]?.href) {
+        tools = raw as RecipeTool[]
+      } else {
+        // Legacy slug-only format — rebuild recipe so the response always has full objects
+        const [user2, recentMoods2, lastSleep2] = await Promise.all([
+          prisma.user.findUnique({ where: { id: userId }, select: { currentStreak: true } }),
+          prisma.moodEntry.findMany({
+            where: { userId, createdAt: { gte: new Date(Date.now() - 3 * 86400000) } },
+            orderBy: { createdAt: 'desc' },
+            take: 5,
+          }),
+          prisma.sleepLog.findFirst({ where: { userId }, orderBy: { createdAt: 'desc' } }),
+        ])
+        const moodAvg2  = recentMoods2.length ? recentMoods2.reduce((s, m) => s + m.mood, 0) / recentMoods2.length : null
+        const sleepHrs2 = lastSleep2 ? lastSleep2.durationMins / 60 : null
+        tools = buildRecipe(moodAvg2, sleepHrs2, user2?.currentStreak ?? 0, getTimeSlot())
+        // Upgrade the cache entry to the new format so future reads are fast
+        await prisma.dailyRecipe.update({
+          where: { userId_date: { userId, date: today } },
+          data:  { tools: JSON.stringify(tools), reasons: JSON.stringify(tools.map(t => t.reason)) },
+        }).catch(() => {})
+      }
+    } catch {
+      tools = []
+    }
     return NextResponse.json({
-      recipe: {
-        tools:   JSON.parse(cached.tools),
-        reasons: JSON.parse(cached.reasons),
-        date:    cached.date,
-      },
+      recipe: { tools, reasons: tools.map(t => t.reason), date: cached.date },
     })
   }
 
@@ -113,12 +139,12 @@ export async function GET() {
 
   const recipe    = buildRecipe(moodAvg, sleepHrs, streak, timeSlot)
 
-  // Cache it
+  // Cache it — store full tool objects so the read path always gets complete data
   await prisma.dailyRecipe.upsert({
     where:  { userId_date: { userId, date: today } },
     create: {
       userId, date: today,
-      tools:   JSON.stringify(recipe.map(t => t.slug)),
+      tools:   JSON.stringify(recipe),              // full objects with href/label/emoji
       reasons: JSON.stringify(recipe.map(t => t.reason)),
       moodScore:  moodAvg,
       sleepHours: sleepHrs,

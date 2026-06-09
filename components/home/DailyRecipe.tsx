@@ -22,7 +22,17 @@ export function DailyRecipe() {
     if (status !== 'authenticated') { setLoading(false); return }
     fetch('/api/wellness-recipe')
       .then(r => r.json())
-      .then(({ recipe }) => { if (recipe?.tools) setTools(recipe.tools) })
+      .then(({ recipe }) => {
+        if (!recipe?.tools) return
+        // Guard: only accept tool objects that have a valid href string.
+        // (Old cached responses stored only slug strings instead of full objects —
+        //  those are now fixed server-side, but this prevents any future regression.)
+        const valid = (recipe.tools as unknown[]).filter(
+          (t): t is RecipeTool =>
+            typeof t === 'object' && t !== null && typeof (t as RecipeTool).href === 'string'
+        )
+        setTools(valid)
+      })
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [status])
