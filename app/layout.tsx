@@ -9,7 +9,10 @@ import { HeaderHeight } from '@/components/layout/HeaderHeight'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { AppLoader } from '@/components/layout/AppLoader'
 import { LanguageProvider } from '@/context/LanguageContext'
+import { JsonLd } from '@/components/JsonLd'
 import './globals.css'
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://letsthinkpositive.com'
 
 const playfair = Playfair_Display({
   subsets: ['latin'],
@@ -66,6 +69,42 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       {/* Minimal critical CSS — ensures the page is never completely unstyled
           even if the Tailwind stylesheet fails to load on Hostinger cold start */}
       <head>
+        {/* ── Structured data: Organization + WebSite ─────────────── */}
+        <JsonLd data={[
+          {
+            '@context': 'https://schema.org',
+            '@type': 'Organization',
+            name: 'letsthinkpositive',
+            url: SITE_URL,
+            logo: `${SITE_URL}/icons/icon-512.png`,
+            description: 'A space for mental wellness, gratitude, calm sounds, and AI-guided positivity.',
+            sameAs: [
+              'https://twitter.com/letsthinkpos',
+              'https://www.instagram.com/letsthinkpositive',
+              'https://www.facebook.com/letsthinkpositive',
+            ],
+            contactPoint: {
+              '@type': 'ContactPoint',
+              contactType: 'customer support',
+              url: `${SITE_URL}/contact`,
+            },
+          },
+          {
+            '@context': 'https://schema.org',
+            '@type': 'WebSite',
+            name: 'letsthinkpositive',
+            url: SITE_URL,
+            description: 'A space for mental wellness, gratitude, calm sounds, and AI-guided positivity.',
+            potentialAction: {
+              '@type': 'SearchAction',
+              target: {
+                '@type': 'EntryPoint',
+                urlTemplate: `${SITE_URL}/search?q={search_term_string}`,
+              },
+              'query-input': 'required name=search_term_string',
+            },
+          },
+        ]} />
         <style dangerouslySetInnerHTML={{ __html: `
           :root { --teal-deep: #1A6B6B; --ivory: #F8F8F4; }
           body { background: var(--ivory); margin: 0; font-family: system-ui, sans-serif; }

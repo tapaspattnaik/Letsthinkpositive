@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { getArticle, getAllArticleSlugs, getAllArticles } from '@/lib/library'
 import { TranslateBanner } from '@/components/TranslateBanner'
+import { JsonLd } from '@/components/JsonLd'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,8 +28,49 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
     ? allArticles.filter(a => article.relatedSlugs.includes(a.slug))
     : allArticles.filter(a => a.slug !== article.slug && a.category === article.category).slice(0, 2)
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') || 'https://letsthinkpositive.com'
+  const pageUrl = `${siteUrl}/library/${article.slug}`
+  const logoUrl = `${siteUrl}/icons/icon-512.png`
+
   return (
     <>
+      {/* ── Structured data: BreadcrumbList + Article ──────────── */}
+      <JsonLd data={[
+        {
+          '@context': 'https://schema.org',
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Home',    item: siteUrl },
+            { '@type': 'ListItem', position: 2, name: 'Library', item: `${siteUrl}/library` },
+            { '@type': 'ListItem', position: 3, name: article.title, item: pageUrl },
+          ],
+        },
+        {
+        '@context': 'https://schema.org',
+        '@type': 'Article',
+        headline: article.title,
+        description: article.excerpt,
+        url: pageUrl,
+        datePublished: article.date,
+        dateModified: article.date,
+        author: {
+          '@type': 'Person',
+          name: article.author,
+          description: article.authorBio || undefined,
+        },
+        publisher: {
+          '@type': 'Organization',
+          name: 'letsthinkpositive',
+          logo: { '@type': 'ImageObject', url: logoUrl },
+        },
+        mainEntityOfPage: { '@type': 'WebPage', '@id': pageUrl },
+        keywords: article.tags.join(', '),
+        articleSection: article.category,
+        ...(article.image ? { image: article.image.startsWith('http') ? article.image : `${siteUrl}${article.image}` } : {}),
+          timeRequired: `PT${article.readTime}M`,
+        },
+      ]} />
+
       {/* Hero */}
       <section className="bg-gradient-to-br from-teal-deep to-teal-dark py-20 px-[5%] text-white">
         <div className="max-w-[760px] mx-auto">

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { JsonLd } from '@/components/JsonLd'
 
 export const metadata: Metadata = {
   title: 'Guided Meditation',
@@ -101,6 +102,34 @@ export default function MeditationPage() {
 
   return (
     <>
+      {/* ── Structured data: FAQ ─────────────────────────────────── */}
+      <JsonLd data={{
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: [
+          {
+            '@type': 'Question',
+            name: 'How long should I meditate as a beginner?',
+            acceptedAnswer: { '@type': 'Answer', text: 'Even 5 minutes a day is enough to start. Our shortest session is just 5 minutes and is designed specifically for beginners.' },
+          },
+          {
+            '@type': 'Question',
+            name: 'Can meditation help with sleep?',
+            acceptedAnswer: { '@type': 'Answer', text: 'Yes. Our 10-minute guided sleep meditation uses body scanning, slow breathing, and peaceful imagery to help you drift into deep rest.' },
+          },
+          {
+            '@type': 'Question',
+            name: 'Can meditation reduce anxiety?',
+            acceptedAnswer: { '@type': 'Answer', text: 'Absolutely. Our 8-minute Anxiety Relief session uses proven breath-focused techniques to bring you back to the present and calm your nervous system.' },
+          },
+          {
+            '@type': 'Question',
+            name: 'Do I need any equipment to meditate?',
+            acceptedAnswer: { '@type': 'Answer', text: 'No equipment needed. All sessions run directly in your browser — just find a quiet spot, put on headphones if you like, and follow along.' },
+          },
+        ],
+      }} />
+
       {/* Hero */}
       <section className="bg-gradient-to-br from-teal-deep to-teal-dark py-20 px-[5%] text-white overflow-hidden relative">
         <div className="absolute -top-[20%] -right-[10%] w-[500px] h-[500px] rounded-full bg-[radial-gradient(circle,rgba(232,160,32,0.08)_0%,transparent_70%)] pointer-events-none" />

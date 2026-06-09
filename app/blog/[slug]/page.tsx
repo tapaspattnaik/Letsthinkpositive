@@ -5,6 +5,7 @@ import { getPost, getAllPostSlugs, getAllPosts, Post } from '@/lib/posts'
 import { BlogInteractions }  from '@/components/blog/BlogInteractions'
 import { BlogSidebar }      from '@/components/blog/BlogSidebar'
 import { TranslateBanner }  from '@/components/TranslateBanner'
+import { JsonLd } from '@/components/JsonLd'
 import { prisma } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
@@ -127,8 +128,46 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
 
   const allPosts = getAllPosts()
 
+  const siteUrl  = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') || 'https://letsthinkpositive.com'
+  const pageUrl  = `${siteUrl}/blog/${post.slug}`
+  const logoUrl  = `${siteUrl}/icons/icon-512.png`
+
   return (
     <>
+      {/* ── Structured data: BreadcrumbList + Article ──────────── */}
+      <JsonLd data={[
+        {
+          '@context': 'https://schema.org',
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Home',  item: siteUrl },
+            { '@type': 'ListItem', position: 2, name: 'Blog',  item: `${siteUrl}/blog` },
+            { '@type': 'ListItem', position: 3, name: post.title, item: pageUrl },
+          ],
+        },
+        {
+        '@context': 'https://schema.org',
+        '@type': 'Article',
+        headline: post.title,
+        description: post.excerpt,
+        url: pageUrl,
+        datePublished: post.date,
+        dateModified: post.date,
+        author: {
+          '@type': 'Person',
+          name: post.author,
+          ...(dbAuthor?.website ? { url: dbAuthor.website } : {}),
+        },
+        publisher: {
+          '@type': 'Organization',
+          name: 'letsthinkpositive',
+          logo: { '@type': 'ImageObject', url: logoUrl },
+        },
+        mainEntityOfPage: { '@type': 'WebPage', '@id': pageUrl },
+        keywords: post.tag,
+        },
+      ]} />
+
       {/* ── Hero ────────────────────────────────────────────────── */}
       <section className="bg-gradient-to-br from-teal-deep to-teal-dark py-20 px-[5%] text-white">
         <div className="max-w-[760px] mx-auto">
