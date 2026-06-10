@@ -4,6 +4,55 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 
+// ── Post-mood activity recommendations ───────────────────────────────────
+const MOOD_ACTIONS: Record<number, { emoji: string; message: string; cta: string; href: string }[]> = {
+  1: [
+    { emoji: '💨', message: 'Box breathing can calm your nervous system in under 2 minutes.',            cta: 'Try breathing',    href: '/breathing'  },
+    { emoji: '🎵', message: 'Soothing sounds can shift your mood gently without any effort.',           cta: 'Open sounds',      href: '/sounds'     },
+    { emoji: '💬', message: 'The Calm Coach is here — share how you\'re feeling, no judgement.',        cta: 'Talk to coach',    href: '/coach'      },
+  ],
+  2: [
+    { emoji: '🧘', message: 'A quick 5-minute meditation can ease the weight of a tough moment.',       cta: 'Meditate now',     href: '/meditation' },
+    { emoji: '📓', message: 'Writing down even 3 words about your day can bring unexpected relief.',    cta: 'Open journal',     href: '/journal'    },
+    { emoji: '💨', message: 'Try a simple breathing reset — it works even when nothing else does.',     cta: 'Breathe',          href: '/breathing'  },
+  ],
+  3: [
+    { emoji: '📓', message: 'A steady mood is a great moment to journal and reflect.',                  cta: 'Journal now',      href: '/journal'    },
+    { emoji: '🌿', message: 'Check in on your habits — even one small win today makes a difference.',   cta: 'View habits',      href: '/habits'     },
+    { emoji: '📚', message: 'Explore a wellness article matched to what you care about.',               cta: 'Browse library',   href: '/library'    },
+  ],
+  4: [
+    { emoji: '🏆', message: 'Great mood — this is the perfect energy to check in on your challenges.',  cta: 'Check challenges', href: '/challenges' },
+    { emoji: '🌟', message: 'Share your positivity with the community — stories inspire others.',       cta: 'Share story',      href: '/community'  },
+    { emoji: '💪', message: 'Strong energy? Log a habit or set a new one for the week.',               cta: 'Track habits',     href: '/habits'     },
+  ],
+  5: [
+    { emoji: '🌟', message: 'You\'re thriving! Share what\'s going well — your story could inspire someone.', cta: 'Share with community', href: '/community' },
+    { emoji: '🏆', message: 'Channel this great mood into a challenge check-in today.',                cta: 'Check in',         href: '/challenges' },
+    { emoji: '📓', message: 'Capture what made today great — your future self will thank you.',        cta: 'Write it down',    href: '/journal'    },
+  ],
+}
+
+function MoodActivitySuggestion({ mood }: { mood: number | null }) {
+  if (!mood) return null
+  const suggestions = MOOD_ACTIONS[mood] ?? []
+  const pick = suggestions[Math.floor(Math.random() * suggestions.length)]
+  if (!pick) return null
+
+  return (
+    <div className="mt-3 bg-amber-pale border border-amber/30 rounded-[14px] px-4 py-3.5">
+      <p className="text-[0.65rem] font-bold text-amber uppercase tracking-widest mb-1.5">✨ Try this now</p>
+      <p className="text-[0.85rem] text-charcoal leading-relaxed mb-3">{pick.emoji} {pick.message}</p>
+      <Link
+        href={pick.href}
+        className="inline-block bg-teal-deep text-white text-[0.8rem] font-semibold px-5 py-2 rounded-full no-underline hover:bg-teal-dark transition-colors"
+      >
+        {pick.cta} →
+      </Link>
+    </div>
+  )
+}
+
 interface MoodEntry {
   id:        number
   mood:      number
@@ -256,11 +305,14 @@ export default function MoodPage() {
           </div>
 
           {savedToday && (
-            <div className="bg-teal-ghost border border-teal-mid/30 rounded-[12px] px-4 py-3 mb-4 text-center">
-              <p className="text-teal-deep text-[0.85rem] font-semibold">
-                {MOODS[(selected ?? 3) - 1].emoji} Mood logged — great job checking in! 🌿
-              </p>
-            </div>
+            <>
+              <div className="bg-teal-ghost border border-teal-mid/30 rounded-[12px] px-4 py-3 mb-3 text-center">
+                <p className="text-teal-deep text-[0.85rem] font-semibold">
+                  {MOODS[(selected ?? 3) - 1].emoji} Mood logged — great job checking in! 🌿
+                </p>
+              </div>
+              <MoodActivitySuggestion mood={selected} />
+            </>
           )}
 
           <button onClick={saveMood} disabled={!selected || saving}
