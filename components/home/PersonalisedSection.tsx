@@ -25,10 +25,16 @@ const OnboardingModal = dynamic(
   { ssr: false, loading: () => null }
 )
 
+const AffirmationCard = dynamic(
+  () => import('./AffirmationCard').then(m => ({ default: m.AffirmationCard })),
+  { ssr: false, loading: () => null }
+)
+
 export function PersonalisedSection() {
   return (
     <>
       <OnboardingModal />
+      <AffirmationCard />
       <FavouriteToolsBar />
       <InsightCard />
       <DailyRecipe />
