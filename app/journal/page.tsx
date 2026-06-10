@@ -25,6 +25,85 @@ const STATIC_PROMPTS = [
 
 function todayStr() { return new Date().toISOString().split('T')[0] }
 
+const MOOD_META: Record<string, { color: string; label: string }> = {
+  '🌟 Grateful':  { color: 'bg-amber',       label: 'Grateful'  },
+  '😌 Calm':      { color: 'bg-teal-mid',     label: 'Calm'      },
+  '🌱 Hopeful':   { color: 'bg-green-400',    label: 'Hopeful'   },
+  '💪 Strong':    { color: 'bg-blue-400',     label: 'Strong'    },
+  '😔 Struggling':{ color: 'bg-indigo-300',   label: 'Struggling'},
+  '🌈 Joyful':    { color: 'bg-pink-300',     label: 'Joyful'    },
+}
+
+function EmotionTrends({ entries }: { entries: Entry[] }) {
+  const [insight, setInsight] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetch('/api/ai-emotion-pattern')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.insight) setInsight(d.insight) })
+      .catch(() => {})
+  }, [])
+
+  // Count moods from journal entries (last 30 or all)
+  const counts: Record<string, number> = {}
+  entries.forEach(e => {
+    if (e.mood) counts[e.mood] = (counts[e.mood] ?? 0) + 1
+  })
+
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1])
+  const total = entries.filter(e => e.mood).length
+  if (total === 0) return null
+
+  const topMood = sorted[0]?.[0]
+  const topMeta = MOOD_META[topMood]
+
+  return (
+    <div className="mt-10 bg-gradient-to-br from-teal-ghost to-white border border-teal-light rounded-[20px] p-6">
+      <p className="text-[0.72rem] font-bold text-teal-mid uppercase tracking-widest mb-4">
+        🔍 Your Emotional Patterns
+      </p>
+
+      {/* Mood frequency bars */}
+      <div className="space-y-2.5 mb-5">
+        {sorted.map(([moodKey, count]) => {
+          const meta = MOOD_META[moodKey]
+          const pct  = Math.round((count / total) * 100)
+          return (
+            <div key={moodKey} className="flex items-center gap-3">
+              <span className="text-[0.75rem] w-24 text-text-mid flex-shrink-0">{moodKey}</span>
+              <div className="flex-1 h-2 bg-white rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-700 ${meta?.color ?? 'bg-teal-mid'}`}
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+              <span className="text-[0.7rem] text-text-xlight w-8 text-right">{count}×</span>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Top mood callout */}
+      {topMeta && (
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-base">{topMood.split(' ')[0]}</span>
+          <p className="text-[0.8rem] font-semibold text-charcoal">
+            Most frequent: <span className="text-teal-deep">{topMeta.label}</span>
+            <span className="text-text-xlight font-normal"> · {Math.round((sorted[0][1] / total) * 100)}% of entries</span>
+          </p>
+        </div>
+      )}
+
+      {/* AI insight */}
+      {insight && (
+        <p className="text-[0.78rem] italic text-text-mid leading-relaxed border-t border-teal-light/60 pt-3">
+          ✨ {insight}
+        </p>
+      )}
+    </div>
+  )
+}
+
 export default function JournalPage() {
   const [entries, setEntries] = useState<Entry[]>([])
   const [text, setText]       = useState('')
@@ -124,6 +203,9 @@ export default function JournalPage() {
             </button>
             {saved && <span className="text-teal-mid font-medium text-[0.9rem]">🌱 Saved!</span>}
           </div>
+
+          {/* Emotion Trends */}
+          {entries.length >= 3 && <EmotionTrends entries={entries} />}
 
           {/* Past entries */}
           {entries.length > 0 && (
