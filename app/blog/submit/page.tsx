@@ -156,6 +156,21 @@ export default function BlogSubmitPage() {
       </section>
 
       <div className="max-w-[760px] mx-auto py-12 px-[5%]">
+
+        {/* ── Bio reminder ─────────────────────────────────────────────── */}
+        <div className="flex items-start gap-3 bg-teal-ghost border border-teal-light rounded-[16px] px-5 py-4 mb-8">
+          <span className="text-[1.4rem] flex-shrink-0 mt-0.5">🪪</span>
+          <div>
+            <p className="text-[0.87rem] font-semibold text-teal-deep mb-0.5">Your author bio appears at the bottom of every post</p>
+            <p className="text-[0.82rem] text-text-mid leading-[1.65]">
+              Make sure your profile has a bio — readers will see it in the &ldquo;About the Author&rdquo; section.{' '}
+              <Link href="/profile" className="text-teal-mid underline underline-offset-2 font-semibold hover:text-teal-deep">
+                Update your profile →
+              </Link>
+            </p>
+          </div>
+        </div>
+
         <form onSubmit={submit} className="space-y-8">
 
           {/* Title */}

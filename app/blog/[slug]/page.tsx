@@ -17,6 +17,7 @@ interface DbAuthor {
 
 interface DbPostResult extends Post {
   dbAuthor?: DbAuthor
+  images?: string[]   // parsed from UserBlogPost.images JSON
 }
 
 // Helper: look up an author from the DB by name (for filesystem posts)
@@ -52,6 +53,10 @@ async function getDbPost(slug: string): Promise<DbPostResult | null> {
       },
     })
     if (!p) return null
+    // Parse images JSON safely
+    let parsedImages: string[] = []
+    try { parsedImages = JSON.parse(p.images || '[]') } catch { /* keep empty */ }
+
     return {
       slug:        p.slug ?? slug,
       title:       p.title,
@@ -60,6 +65,7 @@ async function getDbPost(slug: string): Promise<DbPostResult | null> {
       author:      p.user?.name ?? 'Community Member',
       excerpt:     p.excerpt ?? '',
       contentHtml: p.body,
+      images:      parsedImages,
       dbAuthor: p.user ? {
         id:            p.user.id,
         name:          p.user.name,
@@ -125,6 +131,9 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
   // For filesystem posts: try to find the author in the DB by name
   const dbAuthor = (dbResult as DbPostResult | null)?.dbAuthor
     ?? (fsPost ? await getAuthorByName(fsPost.author) : null)
+
+  // Images uploaded with the post (DB posts only — MDX posts embed their own images)
+  const postImages: string[] = (dbResult as DbPostResult | null)?.images ?? []
 
   const allPosts = getAllPosts()
 
@@ -200,6 +209,35 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
         {/* Main column */}
         <div>
           <TranslateBanner />
+
+          {/* ── Uploaded images gallery ───────────────────────── */}
+          {postImages.length > 0 && (
+            <div className="mb-8">
+              {/* First image — featured / full width */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={postImages[0]}
+                alt={`${post.title} — featured image`}
+                className="w-full rounded-[18px] object-cover max-h-[480px] shadow-card border border-teal-light/30"
+              />
+
+              {/* Additional images — 2-col grid */}
+              {postImages.length > 1 && (
+                <div className={`mt-3 grid gap-3 ${postImages.length === 2 ? 'grid-cols-2' : 'grid-cols-2 sm:grid-cols-3'}`}>
+                  {postImages.slice(1).map((src, i) => (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      key={i}
+                      src={src}
+                      alt={`${post.title} — image ${i + 2}`}
+                      className="w-full rounded-[14px] object-cover aspect-[4/3] shadow-card border border-teal-light/20"
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           <article
             className="prose prose-lg max-w-none
               prose-headings:font-display prose-headings:text-charcoal
@@ -274,7 +312,15 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
                     <p className="text-text-mid text-[0.88rem] leading-[1.75] mb-3">
                       Tapas Pattanaik is the founder of letsthinkpositive.com — a wellness platform built from lived experience. He writes on mental wellbeing, resilience, and living with intention.
                     </p>
-                  ) : null}
+                  ) : (
+                    /* Author registered but hasn't filled in their bio yet */
+                    <p className="text-text-xlight text-[0.82rem] italic mb-3">
+                      This author hasn&apos;t added a bio yet.{' '}
+                      <Link href="/profile" className="text-teal-mid underline underline-offset-2 not-italic hover:text-teal-deep">
+                        Add yours in your profile →
+                      </Link>
+                    </p>
+                  )}
 
                   {/* Interests */}
                   {dbAuthor?.interests && (
