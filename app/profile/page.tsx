@@ -175,15 +175,21 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (status !== 'authenticated') return
-    fetch('/api/profile').then(r => r.json()).then(data => {
-      setProfile(data)
-      setForm({ name: data.name, phone: data.phone ?? '', bio: data.bio ?? '', website: data.website ?? '' })
-      setSelected(data.interests ? data.interests.split(',').filter(Boolean) : [])
-      // Load favourite tools
-      fetch('/api/favourite-tools').then(r => r.json()).then(({ tools }) => {
-        if (Array.isArray(tools)) setFavTools(tools)
-      }).catch(() => {})
-    })
+    // Sync badges first (seeds definitions + retroactively awards any missed badges)
+    // then fetch profile so the returned badges array is already complete
+    fetch('/api/badges/sync')
+      .catch(() => {})
+      .finally(() => {
+        fetch('/api/profile').then(r => r.json()).then(data => {
+          setProfile(data)
+          setForm({ name: data.name, phone: data.phone ?? '', bio: data.bio ?? '', website: data.website ?? '' })
+          setSelected(data.interests ? data.interests.split(',').filter(Boolean) : [])
+          // Load favourite tools
+          fetch('/api/favourite-tools').then(r => r.json()).then(({ tools }) => {
+            if (Array.isArray(tools)) setFavTools(tools)
+          }).catch(() => {})
+        })
+      })
     setFeedLoading(true)
     fetch('/api/feed/home').then(r => r.ok ? r.json() : { community: [], circles: [] }).then(data => {
       const combined: FeedPost[] = [

@@ -37,15 +37,26 @@ export async function POST(req: NextRequest) {
   if (isComplete) {
     const badgeDef = BADGE_BY_CHALLENGE[slug]
     if (badgeDef) {
-      const badge = await prisma.badge.findUnique({ where: { slug: badgeDef.slug } })
-      if (badge) {
-        const alreadyHas = await prisma.userBadge.findUnique({
-          where: { userId_badgeId: { userId, badgeId: badge.id } },
-        })
-        if (!alreadyHas) {
-          await prisma.userBadge.create({ data: { userId, badgeId: badge.id } })
-          awardedBadge = badgeDef
-        }
+      // Upsert the badge definition so it's created if the badges table was never seeded
+      const badge = await prisma.badge.upsert({
+        where: { slug: badgeDef.slug },
+        create: {
+          slug:        badgeDef.slug,
+          name:        badgeDef.name,
+          description: badgeDef.description,
+          icon:        badgeDef.icon,
+          tier:        badgeDef.tier,
+          challenge:   badgeDef.challenge ?? null,
+        },
+        update: {}, // don't overwrite existing data
+      })
+
+      const alreadyHas = await prisma.userBadge.findUnique({
+        where: { userId_badgeId: { userId, badgeId: badge.id } },
+      })
+      if (!alreadyHas) {
+        await prisma.userBadge.create({ data: { userId, badgeId: badge.id } })
+        awardedBadge = badgeDef
       }
     }
 
