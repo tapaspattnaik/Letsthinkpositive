@@ -7,6 +7,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { TIER_STYLES } from '@/lib/badges'
 import { ALL_TOOLS } from '@/components/home/FavouriteToolsBar'
+import { MoodSleepCard } from '@/components/profile/MoodSleepCard'
 
 const INTERESTS = [
   'Mindfulness','Sleep','Gratitude','Anxiety Relief',
@@ -641,6 +642,9 @@ export default function ProfilePage() {
                 </div>
               </div>
             )}
+
+            {/* Mood × Sleep Correlation */}
+            <MoodSleepCard />
 
             {/* Today's suggestion */}
             <div className="bg-gradient-to-br from-teal-deep to-teal-dark rounded-[20px] p-5 text-white">
