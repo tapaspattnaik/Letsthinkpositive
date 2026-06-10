@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
+import type { GeneratedChallenge } from '@/app/api/ai-challenge/route'
 
 export const dynamic = 'force-dynamic'
 
@@ -229,8 +230,125 @@ export default function ChallengesPage() {
             ))}
           </div>
         </div>
+
+        {/* AI Challenge Creator */}
+        <AiChallengeCreator isLoggedIn={!!session} />
       </div>
     </>
+  )
+}
+
+// ── AI Challenge Creator ───────────────────────────────────────────────────
+function AiChallengeCreator({ isLoggedIn }: { isLoggedIn: boolean }) {
+  const [goal, setGoal]           = useState('')
+  const [generating, setGenerating] = useState(false)
+  const [challenge, setChallenge] = useState<GeneratedChallenge | null>(null)
+  const [error, setError]         = useState('')
+
+  async function handleGenerate() {
+    if (!goal.trim()) return
+    setGenerating(true)
+    setError('')
+    setChallenge(null)
+
+    try {
+      const res = await fetch('/api/ai-challenge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ goal }),
+      })
+      const data = await res.json()
+      if (data.error) { setError(data.error); return }
+      if (data.challenge) setChallenge(data.challenge)
+    } catch {
+      setError('Something went wrong — please try again.')
+    } finally {
+      setGenerating(false)
+    }
+  }
+
+  return (
+    <div className="mt-16 bg-gradient-to-br from-teal-deep/5 to-teal-mid/5 border border-teal-light rounded-[24px] p-8">
+      <div className="max-w-xl mx-auto text-center">
+        <span className="text-[2rem] block mb-3">🪄</span>
+        <h2 className="font-display text-[1.4rem] text-charcoal font-bold mb-2">
+          Create Your Own Challenge
+        </h2>
+        <p className="text-text-mid text-[0.9rem] leading-[1.75] mb-6">
+          Tell us your goal in plain words and AI will design a personalised 21-day challenge just for you.
+        </p>
+
+        {!isLoggedIn ? (
+          <div className="bg-amber/10 border border-amber/30 rounded-[16px] p-5">
+            <p className="text-[0.88rem] text-text-mid mb-3">Sign in to use the AI challenge creator.</p>
+            <Link href="/login" className="inline-block bg-teal-deep text-white px-6 py-2.5 rounded-full font-semibold text-[0.85rem] no-underline hover:bg-teal-dark transition-colors">
+              Sign in →
+            </Link>
+          </div>
+        ) : (
+          <>
+            <div className="flex gap-3 mb-6">
+              <input
+                value={goal}
+                onChange={e => setGoal(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && !generating && handleGenerate()}
+                placeholder="e.g. I want to sleep better and feel less anxious"
+                maxLength={200}
+                className="flex-1 border border-teal-light rounded-full px-5 py-3 text-[0.9rem] text-charcoal bg-white outline-none focus:border-teal-mid transition-colors placeholder:text-text-xlight"
+              />
+              <button
+                onClick={handleGenerate}
+                disabled={generating || !goal.trim()}
+                className="bg-teal-deep text-white px-6 py-3 rounded-full font-semibold text-[0.88rem] hover:bg-teal-dark disabled:opacity-60 transition-colors whitespace-nowrap flex-shrink-0"
+              >
+                {generating ? '✨ Designing…' : 'Design it →'}
+              </button>
+            </div>
+
+            {error && <p className="text-red-500 text-[0.85rem] mb-4">{error}</p>}
+
+            {challenge && (
+              <div className="bg-white border border-teal-light rounded-[20px] p-6 text-left shadow-card animate-fade-in mt-2">
+                <div className="flex items-start gap-4 mb-4">
+                  <span className="text-[2.5rem] flex-shrink-0">{challenge.emoji}</span>
+                  <div>
+                    <div className="inline-block text-[0.68rem] font-bold tracking-[0.12em] uppercase px-3 py-1 rounded-full bg-teal-ghost text-teal-deep mb-2">
+                      {challenge.duration} · AI Generated
+                    </div>
+                    <h3 className="font-display text-[1.1rem] text-charcoal font-semibold leading-snug">
+                      {challenge.title}
+                    </h3>
+                  </div>
+                </div>
+
+                <p className="text-text-mid text-[0.88rem] leading-[1.75] mb-3">{challenge.description}</p>
+
+                <div className="bg-teal-ghost rounded-[12px] px-4 py-3 mb-3">
+                  <p className="text-[0.72rem] font-bold text-teal-deep uppercase tracking-widest mb-1">Daily action</p>
+                  <p className="text-[0.88rem] text-charcoal">{challenge.dailyAction}</p>
+                </div>
+
+                <p className="text-[0.82rem] text-text-light mb-4">
+                  <strong className="text-charcoal">Outcome:</strong> {challenge.outcome}
+                </p>
+
+                <p className="text-[0.78rem] text-center text-text-xlight">
+                  💡 Save this challenge and start tracking it by joining the{' '}
+                  <Link href="/journal" className="text-teal-mid font-semibold hover:text-teal-deep no-underline">
+                    journal
+                  </Link>{' '}
+                  or{' '}
+                  <Link href="/mood" className="text-teal-mid font-semibold hover:text-teal-deep no-underline">
+                    mood tracker
+                  </Link>
+                  .
+                </p>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
   )
 }
 
