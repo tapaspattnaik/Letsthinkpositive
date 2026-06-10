@@ -76,8 +76,12 @@ export function BlogFilter({ posts }: { posts: PostMeta[] }) {
 
         {/* Community placeholder — shown on All or when there are results */}
         {(activeFilter === 'All' || visible.length > 0) && (
-          <div className="bg-teal-ghost rounded-[24px] overflow-hidden border-2 border-dashed border-teal-light">
-            <div className="h-2 bg-teal-light" />
+          <Link
+            href="/blog/submit"
+            className="bg-teal-ghost rounded-[24px] overflow-hidden border-2 border-dashed border-teal-light no-underline
+              hover:border-teal-mid hover:bg-teal-light/30 hover:-translate-y-1 transition-all duration-300 block group"
+          >
+            <div className="h-2 bg-teal-light group-hover:bg-teal-mid transition-colors" />
             <div className="p-7 text-center">
               <span className="text-[2rem]">✍️</span>
               <h3 className="font-body font-semibold text-[1rem] text-teal-deep mt-3 mb-2">Your story could live right here</h3>
@@ -86,11 +90,11 @@ export function BlogFilter({ posts }: { posts: PostMeta[] }) {
               </p>
             </div>
             <div className="px-7 py-4 border-t border-teal-light/50 flex justify-center">
-              <Link href="/blog/submit" className="text-[0.82rem] font-semibold text-teal-mid no-underline hover:text-teal-deep transition-colors">
+              <span className="text-[0.82rem] font-semibold text-teal-mid group-hover:text-teal-deep transition-colors">
                 Submit your post →
-              </Link>
+              </span>
             </div>
-          </div>
+          </Link>
         )}
       </div>
     </>
