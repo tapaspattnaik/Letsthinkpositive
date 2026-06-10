@@ -20,9 +20,15 @@ const InsightCard = dynamic(
   { ssr: false, loading: () => null }
 )
 
+const OnboardingModal = dynamic(
+  () => import('@/components/onboarding/OnboardingModal').then(m => ({ default: m.OnboardingModal })),
+  { ssr: false, loading: () => null }
+)
+
 export function PersonalisedSection() {
   return (
     <>
+      <OnboardingModal />
       <FavouriteToolsBar />
       <InsightCard />
       <DailyRecipe />
