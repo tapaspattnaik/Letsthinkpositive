@@ -7,7 +7,8 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { TIER_STYLES } from '@/lib/badges'
 import { ALL_TOOLS } from '@/components/home/FavouriteToolsBar'
-import { MoodSleepCard } from '@/components/profile/MoodSleepCard'
+import { MoodSleepCard }   from '@/components/profile/MoodSleepCard'
+import { WellnessScore }   from '@/components/profile/WellnessScore'
 
 const INTERESTS = [
   'Mindfulness','Sleep','Gratitude','Anxiety Relief',
@@ -628,6 +629,9 @@ export default function ProfilePage() {
                 ))}
               </div>
             </div>
+
+            {/* Personal Wellness Index */}
+            <WellnessScore />
 
             {/* Longest streak card */}
             {(profile.longestStreak ?? 0) > 0 && (
