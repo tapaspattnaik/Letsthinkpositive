@@ -87,10 +87,15 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Unsupported file type. Use .docx, .pdf, or .txt' }, { status: 400 })
       }
     } else if (bodyText) {
-      body = bodyText
-        .split(/\n{2,}/)
-        .map(p => `<p>${p.trim().replace(/\n/g, '<br>')}</p>`)
-        .join('\n')
+      // If body is already HTML (from Tiptap RichTextEditor), use it directly.
+      // If it's plain text (legacy), wrap paragraphs.
+      const isHtml = /^<[a-z]/i.test(bodyText.trimStart())
+      body = isHtml
+        ? bodyText
+        : bodyText
+            .split(/\n{2,}/)
+            .map(p => `<p>${p.trim().replace(/\n/g, '<br>')}</p>`)
+            .join('\n')
     } else {
       return NextResponse.json({ error: 'Please upload a file or paste your content.' }, { status: 400 })
     }

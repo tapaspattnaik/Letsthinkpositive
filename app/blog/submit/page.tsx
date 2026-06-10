@@ -5,6 +5,14 @@ import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { LtpLogo } from '@/components/ui/LtpLogo'
+import dynamic from 'next/dynamic'
+
+const RichTextEditor = dynamic(
+  () => import('@/components/ui/RichTextEditor').then(m => ({ default: m.RichTextEditor })),
+  { ssr: false, loading: () => (
+    <div className="border border-teal-light rounded-[16px] bg-white animate-pulse" style={{ minHeight: 320 }} />
+  )},
+)
 
 const CATEGORIES = [
   'Mindset', 'Wellness', 'Career', 'Student Life', 'Habits',
@@ -236,10 +244,12 @@ export default function BlogSubmitPage() {
                 </div>
               </div>
             ) : (
-              <textarea value={bodyText} onChange={e => setBodyText(e.target.value)}
+              <RichTextEditor
+                value={bodyText}
+                onChange={setBodyText}
                 placeholder="Write your post here… Pour your heart into it."
-                rows={16}
-                className="w-full border border-teal-light rounded-[16px] px-5 py-4 text-[0.93rem] text-charcoal outline-none focus:border-teal-mid bg-white transition-colors resize-y leading-[1.9]" />
+                minHeight={320}
+              />
             )}
           </div>
 
