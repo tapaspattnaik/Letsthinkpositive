@@ -73,7 +73,7 @@ export function OnboardingModal() {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-[28px] shadow-2xl w-full max-w-md overflow-hidden">
+      <div className="bg-white rounded-[28px] shadow-2xl w-full max-w-md overflow-hidden relative">
         {/* Progress bar */}
         <div className="h-1 bg-gray-100">
           <div
@@ -81,6 +81,16 @@ export function OnboardingModal() {
             style={{ width: `${(step / 3) * 100}%` }}
           />
         </div>
+
+        {/* Skip / close — always available, no trapped users */}
+        <button
+          onClick={finish}
+          aria-label="Skip onboarding"
+          title="Skip for now"
+          className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full text-gray-300 hover:text-text-mid hover:bg-gray-50 transition-colors text-[1rem]"
+        >
+          ✕
+        </button>
 
         <div className="p-8">
           {/* ── Step 1: Goal ────────────────────────────────────────────── */}
@@ -124,6 +134,14 @@ export function OnboardingModal() {
                 className="w-full bg-teal-deep text-white py-3.5 rounded-full font-semibold text-[0.95rem] hover:bg-teal-dark disabled:opacity-40 transition-colors"
               >
                 Continue →
+              </button>
+
+              <button
+                onClick={finish}
+                disabled={saving}
+                className="w-full text-text-xlight text-[0.75rem] mt-3 hover:text-text-mid transition-colors"
+              >
+                Skip for now — explore on my own
               </button>
             </>
           )}
@@ -170,6 +188,14 @@ export function OnboardingModal() {
                   Continue →
                 </button>
               </div>
+
+              <button
+                onClick={finish}
+                disabled={saving}
+                className="w-full text-text-xlight text-[0.75rem] mt-3 hover:text-text-mid transition-colors"
+              >
+                Skip for now — explore on my own
+              </button>
             </>
           )}
 
