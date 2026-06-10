@@ -15,10 +15,16 @@ const DailyRecipe = dynamic(
   { ssr: false, loading: () => null }
 )
 
+const InsightCard = dynamic(
+  () => import('./InsightCard').then(m => ({ default: m.InsightCard })),
+  { ssr: false, loading: () => null }
+)
+
 export function PersonalisedSection() {
   return (
     <>
       <FavouriteToolsBar />
+      <InsightCard />
       <DailyRecipe />
     </>
   )

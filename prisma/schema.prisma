@@ -76,6 +76,7 @@ model User {
   assessments        WellnessAssessment[]
   savedQuotes        SavedQuote[]
   dailyRecipes       DailyRecipe[]
+  weeklyInsights     WeeklyInsight[]
 
   @@map("users")
 }
@@ -585,5 +586,25 @@ model DailyRecipe {
 
   @@unique([userId, date])
   @@map("daily_recipes")
+}
+
+// ── AI Weekly Insight ─────────────────────────────────────────────────────
+// Cached once per ISO week per user — regenerated on next week start.
+
+model WeeklyInsight {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  week        String   @db.VarChar(10)   // ISO week: YYYY-Www  e.g. "2025-W22"
+  insight     String   @db.VarChar(600)  // AI-generated insight text
+  moodAvg     Float?                     // snapshot data used to generate
+  sleepAvg    Float?
+  streakDays  Int?
+  habitRate   Float?                     // 0-1 completion rate
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, week])
+  @@map("weekly_insights")
 }
 
