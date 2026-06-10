@@ -10,6 +10,7 @@ import { StoryOfWeek }      from '@/components/home/StoryOfWeek'
 import { Newsletter }       from '@/components/home/Newsletter'
 import { DailyCheckIn }    from '@/components/home/DailyCheckIn'
 import { PersonalisedSection } from '@/components/home/PersonalisedSection'
+import { ForYouWrapper }       from '@/components/home/ForYouWrapper'
 import Link from 'next/link'
 
 export default function HomePage() {
@@ -29,6 +30,7 @@ export default function HomePage() {
       <PromoPanel />
       <SuperbManSection />
       <Pillars />
+      <ForYouWrapper />
       <BlogTeaser />
       <StoryOfWeek />
 
