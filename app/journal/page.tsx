@@ -12,7 +12,7 @@ interface Entry {
 
 const MOODS = ['🌟 Grateful', '😌 Calm', '🌱 Hopeful', '💪 Strong', '😔 Struggling', '🌈 Joyful']
 
-const PROMPTS = [
+const STATIC_PROMPTS = [
   'What are three things that made you smile today?',
   'Who is someone you are grateful for, and why?',
   'What is a small win you had today — even a tiny one?',
@@ -30,14 +30,30 @@ export default function JournalPage() {
   const [text, setText]       = useState('')
   const [mood, setMood]       = useState('')
   const [saved, setSaved]     = useState(false)
+  const [aiPrompt, setAiPrompt]   = useState<string | null>(null)
+  const [promptSource, setPromptSource] = useState<'ai' | 'static'>('static')
 
-  const prompt = PROMPTS[new Date().getDay() % PROMPTS.length]
+  const staticPrompt = STATIC_PROMPTS[new Date().getDay() % STATIC_PROMPTS.length]
+  const prompt = aiPrompt ?? staticPrompt
 
   useEffect(() => {
     try {
       const stored = localStorage.getItem('ltp_journal')
       if (stored) setEntries(JSON.parse(stored))
     } catch { /* noop */ }
+  }, [])
+
+  // Fetch mood-aware AI prompt
+  useEffect(() => {
+    fetch('/api/ai-journal-prompt')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.prompt) {
+          setAiPrompt(data.prompt)
+          setPromptSource(data.source === 'static' ? 'static' : 'ai')
+        }
+      })
+      .catch(() => {})
   }, [])
 
   function save() {
@@ -68,7 +84,14 @@ export default function JournalPage() {
         <div className="max-w-2xl mx-auto">
           {/* Today's prompt */}
           <div className="bg-amber-pale border-l-4 border-amber rounded-r-card p-6 mb-8">
-            <p className="text-[0.78rem] font-bold tracking-widest uppercase text-amber mb-1">Today&apos;s Prompt</p>
+            <div className="flex items-center gap-2 mb-1">
+              <p className="text-[0.78rem] font-bold tracking-widest uppercase text-amber">Today&apos;s Prompt</p>
+              {promptSource === 'ai' && (
+                <span className="text-[0.65rem] font-semibold bg-teal-deep/10 text-teal-deep px-2 py-0.5 rounded-full tracking-wide">
+                  ✨ personalised
+                </span>
+              )}
+            </div>
             <p className="font-display italic text-[1.15rem] text-teal-deep">{prompt}</p>
           </div>
 
