@@ -589,6 +589,26 @@ model DailyRecipe {
   @@map("daily_recipes")
 }
 
+// ── Launch signups ────────────────────────────────────────────────────────
+// Pre-launch landing-page leads. Created outside this app — declared here
+// (mirroring the live table exactly) so `prisma db push` preserves it.
+
+model LaunchSignup {
+  id          Int      @id @default(autoincrement()) @db.UnsignedInt
+  email       String   @unique(map: "uq_launch_signups_email") @db.VarChar(255)
+  ipAddress   String?  @map("ip_address") @db.VarChar(45)
+  countryCode String?  @map("country_code") @db.Char(2)
+  countryName String?  @map("country_name") @db.VarChar(100)
+  userAgent   String?  @map("user_agent") @db.VarChar(500)
+  source      String   @default("landing_page") @db.VarChar(100)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  @@index([createdAt], map: "idx_launch_signups_created_at")
+  @@index([countryCode], map: "idx_launch_signups_country_code")
+  @@map("launch_signups")
+}
+
 // ── AI Weekly Insight ─────────────────────────────────────────────────────
 // Cached once per ISO week per user — regenerated on next week start.
 
