@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
+import { getAdminUser } from '@/lib/admin'
 
 /** Returns the ISO week string for today, e.g. "2025-W21" */
 function currentISOWeek(): string {
@@ -16,9 +15,6 @@ function currentISOWeek(): string {
   return `${now.getFullYear()}-W${String(weekNum).padStart(2, '0')}`
 }
 
-function isAdmin(email?: string | null) {
-  return email && email === process.env.ADMIN_EMAIL
-}
 
 // GET — return current week's featured story
 export async function GET() {
@@ -54,8 +50,7 @@ export async function GET() {
 
 // POST — set the featured story for this week
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions)
-  if (!isAdmin(session?.user?.email)) {
+  if (!await getAdminUser()) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 

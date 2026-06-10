@@ -17,8 +17,6 @@ interface Stats { totalUsers: number; blockedCount: number; pendingReports: numb
 
 type Filter = 'all' | 'blocked' | 'reported' | 'admin'
 
-const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? ''
-
 function timeAgo(d?: string) {
   if (!d) return 'Never'
   const diff = Date.now() - new Date(d).getTime()
@@ -65,17 +63,17 @@ export default function AdminUsersPage() {
   const [working,      setWorking]= useState(false)
   const [toast,        setToast]  = useState('')
 
-  const isAdmin = session?.user?.email === (process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? ADMIN_EMAIL)
-
-  useEffect(() => {
-    if (session && !isAdmin) router.replace('/admin')
-  }, [session, isAdmin, router])
+  // Server is the source of truth for admin status (DB role or env email) —
+  // a 403 from the API redirects away; success authorizes the page.
+  const [isAdmin, setIsAdmin] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
     try {
       const params = new URLSearchParams({ search, filter, page: String(page) })
       const res  = await fetch(`/api/admin/users?${params}`)
+      if (res.status === 403) { router.replace('/'); return }
+      setIsAdmin(true)
       const data = await res.json()
       setUsers(data.users ?? [])
       setTotal(data.total ?? 0)
@@ -83,9 +81,9 @@ export default function AdminUsersPage() {
     } finally {
       setLoading(false)
     }
-  }, [search, filter, page])
+  }, [search, filter, page, router])
 
-  useEffect(() => { if (isAdmin) load() }, [isAdmin, load])
+  useEffect(() => { if (session) load() }, [session, load])
 
   async function doAction() {
     if (!selected || !actionModal) return

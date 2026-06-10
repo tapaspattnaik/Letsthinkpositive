@@ -1,13 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/db'
-
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? process.env.SMTP_USER ?? ''
+import { getAdminUser } from '@/lib/admin'
 
 async function requireAdmin() {
-  const session = await getSession()
-  if (!session?.user?.email || session.user.email !== ADMIN_EMAIL) return null
-  return session
+  return getAdminUser()
 }
 
 // GET — list all reports (admin only)

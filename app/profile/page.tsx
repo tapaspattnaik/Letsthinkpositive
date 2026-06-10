@@ -36,7 +36,7 @@ interface FeedPost {
   commentCount?: number; createdAt: string
 }
 interface UserProfile {
-  id: number; name: string; email: string; phone?: string; bio?: string
+  id: number; name: string; email: string; phone?: string; bio?: string; role?: string
   interests: string; avatarUrl?: string; coverStyle?: string; coverUrl?: string; createdAt: string
   currentStreak?: number; longestStreak?: number; streakFreezes?: number
   badges: BadgeEntry[]; progress: ProgressEntry[]
@@ -338,7 +338,8 @@ export default function ProfilePage() {
 
         {/* Avatar + name — overlaps the cover */}
         <div className="max-w-7xl mx-auto px-[5%]">
-          <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4 -mt-14 sm:-mt-16 pb-6 border-b border-teal-light/50">
+          {/* Row 1: avatar (overlaps cover) + actions (below cover edge) */}
+          <div className="-mt-14 sm:-mt-16 flex items-start justify-between">
 
             {/* Avatar */}
             <div className="relative flex-shrink-0 group">
@@ -374,39 +375,10 @@ export default function ProfilePage() {
               <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={uploadAvatar} />
             </div>
 
-            {/* Name + meta */}
-            <div className="flex-1 text-center sm:text-left sm:pb-2">
-              <h1 className="font-display text-[1.7rem] sm:text-[2rem] font-bold text-charcoal leading-tight">
-                {profile.name}
-              </h1>
-              <p className="text-text-xlight text-[0.83rem] mt-0.5">
-                {profile.email} · Member since {joinedYear}
-              </p>
-              {profile.bio && (
-                <p className="text-text-mid text-[0.88rem] mt-1.5 max-w-[500px] leading-[1.65]">{profile.bio}</p>
-              )}
-              {interests.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mt-2.5 justify-center sm:justify-start">
-                  {interests.slice(0, 5).map(i => (
-                    <span key={i} className="bg-teal-ghost text-teal-deep text-[0.72rem] font-semibold px-2.5 py-1 rounded-full border border-teal-light">{i}</span>
-                  ))}
-                  {interests.length > 5 && (
-                    <span className="text-text-xlight text-[0.72rem] px-2.5 py-1">+{interests.length - 5} more</span>
-                  )}
-                </div>
-              )}
-              {saved && (
-                <div className="mt-2 inline-flex items-center gap-1.5 bg-teal-ghost text-teal-deep text-[0.78rem] font-semibold px-3 py-1.5 rounded-full">
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-                  Profile saved!
-                </div>
-              )}
-            </div>
-
-            {/* Sign out + Admin link — desktop right */}
-            <div className="hidden sm:flex items-center gap-3 sm:pb-2 flex-shrink-0">
-              {/* Admin link — only visible to admin */}
-              {session?.user?.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL && (
+            {/* Sign out + Admin link — desktop right, pushed below the cover edge */}
+            <div className="hidden sm:flex items-center gap-3 flex-shrink-0 mt-[72px]">
+              {/* Admin link — only visible to admin (DB role or env email) */}
+              {(profile.role === 'admin' || session?.user?.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL) && (
                 <Link href="/admin"
                   className="flex items-center gap-1.5 text-[0.78rem] font-semibold text-amber bg-amber/10 border border-amber/30 hover:bg-amber/20 px-3 py-1.5 rounded-full transition-colors no-underline">
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -425,6 +397,35 @@ export default function ProfilePage() {
                 Sign out
               </button>
             </div>
+          </div>
+
+          {/* Row 2: name + meta — always in the white area below the cover */}
+          <div className="mt-3 pb-6 border-b border-teal-light/50">
+            <h1 className="font-display text-[1.7rem] sm:text-[2rem] font-bold text-charcoal leading-tight">
+              {profile.name}
+            </h1>
+            <p className="text-text-xlight text-[0.83rem] mt-0.5">
+              {profile.email} · Member since {joinedYear}
+            </p>
+            {profile.bio && (
+              <p className="text-text-mid text-[0.88rem] mt-1.5 max-w-[500px] leading-[1.65]">{profile.bio}</p>
+            )}
+            {interests.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-2.5">
+                {interests.slice(0, 5).map(i => (
+                  <span key={i} className="bg-teal-ghost text-teal-deep text-[0.72rem] font-semibold px-2.5 py-1 rounded-full border border-teal-light">{i}</span>
+                ))}
+                {interests.length > 5 && (
+                  <span className="text-text-xlight text-[0.72rem] px-2.5 py-1">+{interests.length - 5} more</span>
+                )}
+              </div>
+            )}
+            {saved && (
+              <div className="mt-2 inline-flex items-center gap-1.5 bg-teal-ghost text-teal-deep text-[0.78rem] font-semibold px-3 py-1.5 rounded-full">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                Profile saved!
+              </div>
+            )}
           </div>
 
           {/* ── Stats bar ─────────────────────────────────────────── */}
@@ -796,7 +797,7 @@ export default function ProfilePage() {
 
             {/* Admin + Sign out — mobile */}
             <div className="sm:hidden flex flex-col items-center gap-2 py-2">
-              {session?.user?.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL && (
+              {(profile.role === 'admin' || session?.user?.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL) && (
                 <Link href="/admin"
                   className="flex items-center gap-1.5 text-[0.82rem] font-semibold text-amber bg-amber/10 border border-amber/30 px-4 py-2 rounded-full no-underline hover:bg-amber/20 transition-colors">
                   ⚙️ Admin Dashboard

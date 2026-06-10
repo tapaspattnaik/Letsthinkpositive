@@ -514,22 +514,57 @@ export default function AffirmationPage() {
   }, [])
 
   const shareCard = useCallback(async () => {
+    // Render the card to an image so the share includes the visual, not just text
+    let imageFile: File | null = null
+    if (cardRef.current) {
+      try {
+        const html2canvas = (await import('html2canvas')).default
+        const canvas = await html2canvas(cardRef.current, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: null,
+          logging: false,
+        })
+        const blob: Blob | null = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'))
+        if (blob) imageFile = new File([blob], 'my-affirmation-ltp.png', { type: 'image/png' })
+      } catch {
+        // html2canvas unavailable — fall through to text-only share
+      }
+    }
+
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
-        await navigator.share({
-          title: 'My Daily Affirmation 💌',
-          text: affirmation,
-          url: 'https://letsthinkpositive.com/affirmation',
-        })
+        // Share WITH the image when the platform supports file sharing
+        if (imageFile && navigator.canShare?.({ files: [imageFile] })) {
+          await navigator.share({
+            title: 'My Daily Affirmation 💌',
+            text: `${affirmation}\n\n✨ letsthinkpositive.com/affirmation`,
+            files: [imageFile],
+          })
+        } else {
+          await navigator.share({
+            title: 'My Daily Affirmation 💌',
+            text: affirmation,
+            url: 'https://letsthinkpositive.com/affirmation',
+          })
+        }
       } catch {
         // User cancelled — no error
       }
     } else {
+      // Desktop fallback: download the image + copy the text
+      if (imageFile) {
+        const a = document.createElement('a')
+        a.href = URL.createObjectURL(imageFile)
+        a.download = imageFile.name
+        a.click()
+        URL.revokeObjectURL(a.href)
+      }
       try {
         await navigator.clipboard.writeText(
           `${affirmation}\n\n✨ letsthinkpositive.com/affirmation`
         )
-        setShareMsg('Copied to clipboard! ✓')
+        setShareMsg(imageFile ? 'Card downloaded & text copied! ✓' : 'Copied to clipboard! ✓')
       } catch {
         setShareMsg('Share link: letsthinkpositive.com/affirmation')
       }
