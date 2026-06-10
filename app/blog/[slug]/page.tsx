@@ -2,8 +2,9 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { getPost, getAllPostSlugs, getAllPosts, Post } from '@/lib/posts'
-import { BlogInteractions }  from '@/components/blog/BlogInteractions'
-import { BlogSidebar }      from '@/components/blog/BlogSidebar'
+import { BlogInteractions }    from '@/components/blog/BlogInteractions'
+import { BlogSidebar }        from '@/components/blog/BlogSidebar'
+import { BlogImageGallery }   from '@/components/blog/BlogImageGallery'
 import { TranslateBanner }  from '@/components/TranslateBanner'
 import { JsonLd } from '@/components/JsonLd'
 import { prisma } from '@/lib/db'
@@ -210,33 +211,8 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
         <div>
           <TranslateBanner />
 
-          {/* ── Uploaded images gallery ───────────────────────── */}
-          {postImages.length > 0 && (
-            <div className="mb-8">
-              {/* First image — featured / full width */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={postImages[0]}
-                alt={`${post.title} — featured image`}
-                className="w-full rounded-[18px] object-cover max-h-[480px] shadow-card border border-teal-light/30"
-              />
-
-              {/* Additional images — 2-col grid */}
-              {postImages.length > 1 && (
-                <div className={`mt-3 grid gap-3 ${postImages.length === 2 ? 'grid-cols-2' : 'grid-cols-2 sm:grid-cols-3'}`}>
-                  {postImages.slice(1).map((src, i) => (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      key={i}
-                      src={src}
-                      alt={`${post.title} — image ${i + 2}`}
-                      className="w-full rounded-[14px] object-cover aspect-[4/3] shadow-card border border-teal-light/20"
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+          {/* ── Uploaded images gallery (client component — handles broken images gracefully) */}
+          <BlogImageGallery images={postImages} title={post.title} />
 
           <article
             className="prose prose-lg max-w-none
