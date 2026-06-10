@@ -78,73 +78,69 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
 
       <div className="max-w-2xl mx-auto px-4 sm:px-6">
 
-        {/* ── Avatar + identity ───────────────────────────── */}
-        <div className="-mt-16 sm:-mt-20 mb-5">
-          <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4">
+        {/* ── Avatar + Follow row ─────────────────────────────
+             Negative margin pulls the avatar up into the cover.
+             Follow button is offset DOWN so it always sits in
+             the white area, not inside the dark gradient.         */}
+        <div className="-mt-[60px] sm:-mt-[72px] flex items-start justify-between mb-1">
 
-            {/* Avatar */}
-            <div className="relative flex-shrink-0">
-              <div className="w-[100px] h-[100px] sm:w-[120px] sm:h-[120px] rounded-full overflow-hidden border-[5px] border-white shadow-lift bg-teal-ghost flex items-center justify-center">
-                {user.avatarUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={user.avatarUrl} alt={user.name} referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover" />
-                ) : (
-                  <div className={`w-full h-full bg-gradient-to-br ${coverStyle.bg} flex items-center justify-center`}>
-                    <span className="text-white font-display font-bold text-[2.8rem] drop-shadow">
-                      {user.name.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                )}
-              </div>
-              {(user.currentStreak ?? 0) >= 7 && (
-                <div className="absolute -bottom-1 -right-1 bg-amber text-white text-[0.6rem] font-bold px-1.5 py-0.5 rounded-full border-2 border-white shadow-sm whitespace-nowrap">
-                  🔥 {user.currentStreak}d
+          {/* Avatar */}
+          <div className="relative flex-shrink-0">
+            <div className="w-[100px] h-[100px] sm:w-[120px] sm:h-[120px] rounded-full overflow-hidden border-[5px] border-white shadow-lift bg-teal-ghost flex items-center justify-center">
+              {user.avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={user.avatarUrl} alt={user.name} referrerPolicy="no-referrer"
+                  className="w-full h-full object-cover" />
+              ) : (
+                <div className={`w-full h-full bg-gradient-to-br ${coverStyle.bg} flex items-center justify-center`}>
+                  <span className="text-white font-display font-bold text-[2.8rem] drop-shadow">
+                    {user.name.charAt(0).toUpperCase()}
+                  </span>
                 </div>
               )}
             </div>
-
-            {/* Name + meta */}
-            <div className="flex-1 text-center sm:text-left sm:pb-2 min-w-0">
-              <h1 className="font-display text-[1.6rem] sm:text-[2rem] font-bold text-charcoal leading-tight truncate">
-                {user.name}
-              </h1>
-              <p className="text-text-xlight text-[0.78rem] mt-0.5 flex items-center gap-2 justify-center sm:justify-start flex-wrap">
-                <span>Joined {joinedStr}</span>
-                <span className="text-teal-light">·</span>
-                <span className="text-teal-mid font-medium">{memberDays} days on the journey</span>
-              </p>
-            </div>
-
-            {/* Follow — desktop */}
-            <div className="hidden sm:block flex-shrink-0 pb-2">
-              <FollowButton userId={id} showStats={false} />
-            </div>
+            {(user.currentStreak ?? 0) >= 7 && (
+              <div className="absolute -bottom-1 -right-1 bg-amber text-white text-[0.6rem] font-bold px-1.5 py-0.5 rounded-full border-2 border-white shadow-sm whitespace-nowrap">
+                🔥 {user.currentStreak}d
+              </div>
+            )}
           </div>
 
-          {/* Bio */}
-          {user.bio && (
-            <p className="mt-3 text-text-mid text-[0.9rem] leading-[1.75] bg-white rounded-[14px] px-4 py-3 border border-teal-light/60 shadow-sm">
-              {user.bio}
-            </p>
-          )}
-
-          {/* Interests */}
-          {interests.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-3 justify-center sm:justify-start">
-              {interests.map(i => (
-                <span key={i} className="bg-white text-teal-deep text-[0.72rem] font-semibold px-3 py-1 rounded-full border border-teal-light shadow-sm">
-                  {i}
-                </span>
-              ))}
-            </div>
-          )}
-
-          {/* Follow — mobile */}
-          <div className="sm:hidden mt-4">
+          {/* Follow button — pushed down past the cover so it sits in white area */}
+          <div className="mt-[64px] sm:mt-[80px] flex-shrink-0">
             <FollowButton userId={id} showStats={false} />
           </div>
         </div>
+
+        {/* ── Name + meta — always in white area, never in cover ── */}
+        <div className="mb-4 mt-3">
+          <h1 className="font-display text-[1.7rem] sm:text-[2rem] font-bold text-charcoal leading-tight">
+            {user.name}
+          </h1>
+          <p className="text-text-xlight text-[0.78rem] mt-1 flex items-center gap-2 flex-wrap">
+            <span>Joined {joinedStr}</span>
+            <span className="text-teal-light">·</span>
+            <span className="text-teal-mid font-medium">{memberDays} days on the journey</span>
+          </p>
+        </div>
+
+        {/* Bio */}
+        {user.bio && (
+          <p className="mb-3 text-text-mid text-[0.9rem] leading-[1.75] bg-white rounded-[14px] px-4 py-3 border border-teal-light/60 shadow-sm">
+            {user.bio}
+          </p>
+        )}
+
+        {/* Interests */}
+        {interests.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mb-5">
+            {interests.map(i => (
+              <span key={i} className="bg-white text-teal-deep text-[0.72rem] font-semibold px-3 py-1 rounded-full border border-teal-light shadow-sm">
+                {i}
+              </span>
+            ))}
+          </div>
+        )}
 
         {/* ── Stats strip ─────────────────────────────────── */}
         <div className="grid grid-cols-4 gap-2 sm:gap-3 mb-6">
@@ -260,10 +256,10 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
               <p className="font-display font-bold text-charcoal text-[1.1rem] mb-2">
                 {user.name} just joined! 🌱
               </p>
-              <p className="text-text-mid text-[0.88rem] leading-[1.7] max-w-xs mx-auto mb-5">
+              <p className="text-text-mid text-[0.88rem] leading-[1.7] max-w-xs mx-auto">
                 They&apos;re {memberDays <= 7 ? 'brand new to the community' : 'on their wellness journey'} — give them a warm welcome by connecting!
               </p>
-              <FollowButton userId={id} showStats={false} />
+              {/* Follow button is already in the header — no duplicate here */}
             </div>
           )}
 

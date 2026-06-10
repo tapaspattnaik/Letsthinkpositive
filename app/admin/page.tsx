@@ -36,7 +36,13 @@ interface UserBlogPost {
   user: { id: number; name: string; email: string; avatarUrl?: string | null }
 }
 
-type AdminSection = 'reports' | 'comments' | 'blog-posts' | 'story'
+type AdminSection = 'reports' | 'comments' | 'blog-posts' | 'story' | 'new-users'
+
+interface RecentUser {
+  id: number; name: string; email: string; avatarUrl?: string
+  createdAt: string; currentStreak: number
+  _count: { blogSubmissions: number; posts: number }
+}
 
 interface FeaturedStory {
   id: number
@@ -87,6 +93,10 @@ export default function AdminPage() {
   const [bpPending,       setBpPending]       = useState(0)
   const [bpExpanded,      setBpExpanded]      = useState<number | null>(null)
   const [bpSubmitting,    setBpSubmitting]    = useState<number | null>(null)
+
+  // ── Recent Signups ────────────────────────────────────────────────
+  const [recentUsers,     setRecentUsers]     = useState<RecentUser[]>([])
+  const [ruLoading,       setRuLoading]       = useState(false)
 
   // ── Story of the Week ────────────────────────────────────────────
   const [storyLoading,    setStoryLoading]    = useState(false)
@@ -189,6 +199,16 @@ export default function AdminPage() {
   useEffect(() => {
     if (section === 'story') loadCurrentStory()
   }, [section, loadCurrentStory])
+
+  useEffect(() => {
+    if (section !== 'new-users') return
+    setRuLoading(true)
+    fetch('/api/admin/users?page=1&filter=all')
+      .then(r => r.json())
+      .then(d => setRecentUsers(d.users ?? []))
+      .catch(() => {})
+      .finally(() => setRuLoading(false))
+  }, [section])
 
   async function resolve(reportId: number, action: 'remove' | 'keep' | 'dismiss') {
     if (!adminNote.trim() && action !== 'dismiss') {
@@ -304,6 +324,11 @@ export default function AdminPage() {
               className={`px-4 py-1.5 rounded-full text-[0.82rem] font-semibold transition-all flex items-center gap-1.5
                 ${section === 'story' ? 'bg-amber text-charcoal' : 'border border-teal-light text-text-mid hover:bg-teal-ghost'}`}>
               📖 Story of the Week
+            </button>
+            <button onClick={() => setSection('new-users')}
+              className={`px-4 py-1.5 rounded-full text-[0.82rem] font-semibold transition-all flex items-center gap-1.5
+                ${section === 'new-users' ? 'bg-green-600 text-white' : 'border border-green-200 text-green-700 hover:bg-green-50'}`}>
+              🆕 New Users
             </button>
           </div>
         </div>
@@ -718,6 +743,91 @@ export default function AdminPage() {
                 </button>
               </form>
             </div>
+          </div>
+        )}
+
+        {/* ── Recent Signups ───────────────────────────────────────── */}
+        {section === 'new-users' && (
+          <div>
+            <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+              <div>
+                <h2 className="font-display font-bold text-[1.1rem] text-charcoal">Recent Signups</h2>
+                <p className="text-text-xlight text-[0.78rem] mt-0.5">Latest 20 users · newest first · click a name to manage them</p>
+              </div>
+              <button onClick={() => router.push('/admin/users')}
+                className="px-4 py-2 rounded-full border border-purple-200 text-purple-700 text-[0.82rem] font-semibold hover:bg-purple-50 transition-colors">
+                Full User Management →
+              </button>
+            </div>
+
+            {ruLoading ? (
+              <div className="flex justify-center py-12">
+                <div className="flex gap-1.5">{[0,1,2].map(i => <span key={i} className="w-2 h-2 rounded-full bg-teal-mid animate-bounce" style={{ animationDelay: `${i*150}ms` }} />)}</div>
+              </div>
+            ) : (
+              <div className="bg-white rounded-[20px] border border-gray-100 shadow-sm overflow-hidden">
+                {recentUsers.length === 0 ? (
+                  <p className="text-center py-12 text-text-xlight">No users found</p>
+                ) : (
+                  <div className="divide-y divide-gray-50">
+                    {recentUsers.map((u, i) => {
+                      const joinedAgo = timeAgo(u.createdAt)
+                      const isNew = Date.now() - new Date(u.createdAt).getTime() < 7 * 86400000
+                      return (
+                        <div key={u.id} className="flex items-center gap-4 px-5 py-3.5 hover:bg-gray-50/60 transition-colors">
+                          {/* Rank */}
+                          <span className="text-[0.72rem] font-bold text-text-xlight w-5 text-right flex-shrink-0">{i + 1}</span>
+
+                          {/* Avatar */}
+                          {u.avatarUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={u.avatarUrl} alt={u.name} className="w-9 h-9 rounded-full object-cover flex-shrink-0 border border-teal-light" />
+                          ) : (
+                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-teal-mid to-teal-deep flex items-center justify-center text-white font-bold text-[0.9rem] flex-shrink-0">
+                              {u.name.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+
+                          {/* Name + email */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="font-semibold text-[0.88rem] text-charcoal leading-none truncate">{u.name}</p>
+                              {isNew && (
+                                <span className="bg-green-100 text-green-700 text-[0.62rem] font-bold px-2 py-0.5 rounded-full flex-shrink-0">🆕 New</span>
+                              )}
+                            </div>
+                            <p className="text-[0.72rem] text-text-xlight mt-0.5 truncate">{u.email}</p>
+                          </div>
+
+                          {/* Joined */}
+                          <div className="text-right flex-shrink-0 hidden sm:block">
+                            <p className="text-[0.78rem] font-semibold text-charcoal">{joinedAgo}</p>
+                            <p className="text-[0.68rem] text-text-xlight">joined</p>
+                          </div>
+
+                          {/* Activity pills */}
+                          <div className="flex gap-1.5 flex-shrink-0">
+                            {u.currentStreak > 0 && (
+                              <span className="bg-amber/10 text-amber text-[0.68rem] font-bold px-2 py-0.5 rounded-full">🔥 {u.currentStreak}d</span>
+                            )}
+                            {u._count.posts > 0 && (
+                              <span className="bg-teal-ghost text-teal-deep text-[0.68rem] font-bold px-2 py-0.5 rounded-full">💬 {u._count.posts}</span>
+                            )}
+                          </div>
+
+                          {/* Manage link */}
+                          <button
+                            onClick={() => router.push('/admin/users')}
+                            className="flex-shrink-0 text-[0.72rem] text-text-xlight hover:text-teal-deep transition-colors px-2 py-1 rounded-lg hover:bg-teal-ghost">
+                            Manage →
+                          </button>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
