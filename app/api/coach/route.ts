@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import Groq from 'groq-sdk'
 import { withLanguage } from '@/lib/languages'
-import { getUserMemoryContext } from '@/lib/memory'
+import { getUserMemoryContext, getUserLiveContext } from '@/lib/memory'
 import { getSession } from '@/lib/auth'
 
 const COACH_SYSTEM_PROMPT = `You are the Calm Coach — a warm, encouraging wellness companion on letsthinkpositive.com.
@@ -65,14 +65,18 @@ export async function POST(req: NextRequest) {
       return new Response('Messages required', { status: 400 })
     }
 
-    // Inject personalisation memories into the system prompt
-    const session      = await getSession()
-    const memoryCtx    = session?.user?.id ? await getUserMemoryContext(Number(session.user.id)) : ''
+    // Inject personalisation memories + live wellbeing context into the system prompt
+    const session = await getSession()
+    const userId  = session?.user?.id ? Number(session.user.id) : null
+    const [memoryCtx, liveCtx] = userId
+      ? await Promise.all([getUserMemoryContext(userId), getUserLiveContext(userId)])
+      : ['', '']
 
     const basePrompt = [
       COACH_SYSTEM_PROMPT,
       category ? `The user has selected focus area: ${category}. Tailor your responses to this theme.` : '',
       memoryCtx,
+      liveCtx,
     ].filter(Boolean).join('\n\n')
     const systemContent = withLanguage(basePrompt, language)
 

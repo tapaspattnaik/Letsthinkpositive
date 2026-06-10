@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import Groq from 'groq-sdk'
 import { ADVISOR_SYSTEM_PROMPT } from '@/lib/together'
 import { withLanguage } from '@/lib/languages'
-import { getUserMemoryContext } from '@/lib/memory'
+import { getUserMemoryContext, getUserLiveContext } from '@/lib/memory'
 import { getSession } from '@/lib/auth'
 
 const encoder = new TextEncoder()
@@ -32,13 +32,17 @@ export async function POST(req: NextRequest) {
   try {
     const { messages, mood, language } = await req.json()
 
-    const session   = await getSession()
-    const memoryCtx = session?.user?.id ? await getUserMemoryContext(Number(session.user.id)) : ''
+    const session = await getSession()
+    const userId  = session?.user?.id ? Number(session.user.id) : null
+    const [memoryCtx, liveCtx] = userId
+      ? await Promise.all([getUserMemoryContext(userId), getUserLiveContext(userId)])
+      : ['', '']
 
     const basePrompt = [
       ADVISOR_SYSTEM_PROMPT,
       mood ? `The user's current mood: ${mood}. Tailor your opening tone accordingly.` : '',
       memoryCtx,
+      liveCtx,
     ].filter(Boolean).join('\n\n')
     const systemContent = withLanguage(basePrompt, language)
 

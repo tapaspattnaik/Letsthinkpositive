@@ -25,10 +25,10 @@ export async function GET() {
   const userId = Number(session.user.id)
   const sevenDaysAgo = new Date(Date.now() - 7 * 86400000)
 
-  const [user, moods, sleepLogs, habitLogs, activeHabits] = await Promise.all([
+  const [user, moods, sleepLogs, habitLogs, activeHabits, allMoods, allSleep, allGratitudeDates] = await Promise.all([
     prisma.user.findUnique({
       where:  { id: userId },
-      select: { currentStreak: true },
+      select: { currentStreak: true, longestStreak: true },
     }),
     prisma.moodEntry.findMany({
       where:  { userId, createdAt: { gte: sevenDaysAgo } },
@@ -44,6 +44,19 @@ export async function GET() {
     prisma.habit.findMany({
       where:  { userId, active: true },
       select: { id: true },
+    }),
+    // Full history — small per-user datasets, used for personal-best framing
+    prisma.moodEntry.findMany({
+      where:  { userId },
+      select: { mood: true, date: true },
+    }),
+    prisma.sleepLog.findMany({
+      where:  { userId },
+      select: { durationMins: true, date: true },
+    }),
+    prisma.gratitudeEntry.findMany({
+      where:  { userId },
+      select: { date: true },
     }),
   ])
 
@@ -93,7 +106,73 @@ export async function GET() {
   const pwi = effectiveMax > 0 ? Math.round((rawTotal / effectiveMax) * 100) : 0
   const { label, colour } = scoreLabel(pwi)
 
+  // ── Personal bests — always self-comparison, never against others ──────────
+  // ISO-week key from a YYYY-MM-DD date string
+  function weekKey(dateStr: string): string {
+    const d = new Date(dateStr + 'T00:00:00Z')
+    const day = (d.getUTCDay() + 6) % 7            // Mon=0
+    d.setUTCDate(d.getUTCDate() - day + 3)         // nearest Thursday
+    const jan4 = new Date(Date.UTC(d.getUTCFullYear(), 0, 4))
+    const week = 1 + Math.round(((d.getTime() - jan4.getTime()) / 86400000 - 3 + ((jan4.getUTCDay() + 6) % 7)) / 7)
+    return `${d.getUTCFullYear()}-W${String(week).padStart(2, '0')}`
+  }
+
+  const personalBests: string[] = []
+  const nowWeek  = weekKey(new Date().toISOString().split('T')[0])
+  const nowMonth = new Date().toISOString().slice(0, 7)
+
+  // 🔥 Streak record
+  const longest = user?.longestStreak ?? 0
+  if (streak >= 3 && streak === longest) {
+    personalBests.push(`🔥 ${streak} days — your longest streak ever`)
+  } else if (streak >= 3 && longest - streak <= 3) {
+    personalBests.push(`🔥 ${longest - streak} day${longest - streak === 1 ? '' : 's'} from your all-time streak record`)
+  }
+
+  // 🌙 Best sleep week (current week vs every past week, needs ≥3 logs this week + history)
+  const sleepWeeks = new Map<string, number[]>()
+  for (const l of allSleep) {
+    const k = weekKey(l.date)
+    sleepWeeks.set(k, [...(sleepWeeks.get(k) ?? []), l.durationMins])
+  }
+  const thisWeekSleep = sleepWeeks.get(nowWeek)
+  if (thisWeekSleep && thisWeekSleep.length >= 3 && sleepWeeks.size >= 3) {
+    const thisAvg = thisWeekSleep.reduce((a, b) => a + b, 0) / thisWeekSleep.length
+    const isBest = [...sleepWeeks.entries()].every(([k, v]) =>
+      k === nowWeek || v.length < 3 || v.reduce((a, b) => a + b, 0) / v.length <= thisAvg
+    )
+    if (isBest) personalBests.push('🌙 Best sleep week since you started tracking')
+  }
+
+  // 😊 Highest mood week
+  const moodWeeks = new Map<string, number[]>()
+  for (const m of allMoods) {
+    const k = weekKey(m.date)
+    moodWeeks.set(k, [...(moodWeeks.get(k) ?? []), m.mood])
+  }
+  const thisWeekMood = moodWeeks.get(nowWeek)
+  if (thisWeekMood && thisWeekMood.length >= 3 && moodWeeks.size >= 3) {
+    const thisAvg = thisWeekMood.reduce((a, b) => a + b, 0) / thisWeekMood.length
+    const isBest = [...moodWeeks.entries()].every(([k, v]) =>
+      k === nowWeek || v.length < 3 || v.reduce((a, b) => a + b, 0) / v.length <= thisAvg
+    )
+    if (isBest) personalBests.push('😊 Your brightest mood week on record')
+  }
+
+  // 🙏 Most gratitude entries in a month
+  const gratMonths = new Map<string, number>()
+  for (const g of allGratitudeDates) {
+    const k = g.date.slice(0, 7)
+    gratMonths.set(k, (gratMonths.get(k) ?? 0) + 1)
+  }
+  const thisMonthGrat = gratMonths.get(nowMonth) ?? 0
+  if (thisMonthGrat >= 3 && gratMonths.size >= 2) {
+    const isBest = [...gratMonths.entries()].every(([k, v]) => k === nowMonth || v <= thisMonthGrat)
+    if (isBest) personalBests.push(`🙏 ${thisMonthGrat} gratitudes — your most thankful month yet`)
+  }
+
   return NextResponse.json({
+    personalBests,
     pwi,
     label,
     colour,

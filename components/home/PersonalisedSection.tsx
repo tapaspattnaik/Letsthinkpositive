@@ -30,13 +30,31 @@ const AffirmationCard = dynamic(
   { ssr: false, loading: () => null }
 )
 
+const TimeOfDayCard = dynamic(
+  () => import('./TimeOfDayCard').then(m => ({ default: m.TimeOfDayCard })),
+  { ssr: false, loading: () => null }
+)
+
+const GentleBanner = dynamic(
+  () => import('@/components/GentleBanner').then(m => ({ default: m.GentleBanner })),
+  { ssr: false, loading: () => null }
+)
+
+const OnThisDayCard = dynamic(
+  () => import('./OnThisDayCard').then(m => ({ default: m.OnThisDayCard })),
+  { ssr: false, loading: () => null }
+)
+
 export function PersonalisedSection() {
   return (
     <>
       <OnboardingModal />
+      <GentleBanner />
+      <TimeOfDayCard />
       <AffirmationCard />
       <FavouriteToolsBar />
       <InsightCard />
+      <OnThisDayCard />
       <DailyRecipe />
     </>
   )

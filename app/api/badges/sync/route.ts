@@ -59,6 +59,23 @@ export async function GET() {
     }
   }
 
+  // ── 3. Each newly-awarded badge grants a streak freeze (capped at 3) ──────
+  if (awarded.length > 0) {
+    const u = await prisma.user.findUnique({ where: { id: userId }, select: { streakFreezes: true } })
+    const newFreezes = Math.min(3, (u?.streakFreezes ?? 0) + awarded.length)
+    if (u && newFreezes > u.streakFreezes) {
+      await prisma.user.update({ where: { id: userId }, data: { streakFreezes: newFreezes } })
+      await prisma.notification.create({
+        data: {
+          userId,
+          type:    'streak_freeze_earned',
+          message: `🧊 Badge earned — you also gained a streak freeze! It will automatically save your streak if you ever miss a single day. (${newFreezes}/3)`,
+          link:    '/profile',
+        },
+      }).catch(() => {})
+    }
+  }
+
   return NextResponse.json({
     ok: true,
     awardedNow: awarded,

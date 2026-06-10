@@ -10,7 +10,7 @@ export async function POST() {
   const userId = Number(session.user.id)
   const user   = await prisma.user.findUnique({
     where:  { id: userId },
-    select: { currentStreak: true, longestStreak: true, lastActiveDate: true },
+    select: { currentStreak: true, longestStreak: true, lastActiveDate: true, streakFreezes: true },
   })
   if (!user) return NextResponse.json({ ok: false })
 
@@ -27,6 +27,7 @@ export async function POST() {
     return NextResponse.json({
       currentStreak: user.currentStreak,
       longestStreak: user.longestStreak,
+      streakFreezes: user.streakFreezes,
     })
   }
 
@@ -34,31 +35,66 @@ export async function POST() {
   yesterday.setDate(yesterday.getDate() - 1)
   const yestStr   = yesterday.toISOString().split('T')[0]
 
-  const newStreak = lastStr === yestStr ? user.currentStreak + 1 : 1
-  const longest   = Math.max(newStreak, user.longestStreak)
+  const dayBefore = new Date(today)
+  dayBefore.setDate(dayBefore.getDate() - 2)
+  const dayBeforeStr = dayBefore.toISOString().split('T')[0]
+
+  let newStreak  = 1
+  let freezes    = user.streakFreezes
+  let freezeUsed = false
+
+  if (lastStr === yestStr) {
+    // Normal continuation
+    newStreak = user.currentStreak + 1
+  } else if (lastStr === dayBeforeStr && freezes > 0 && user.currentStreak > 1) {
+    // Missed exactly one day — a streak freeze saves it 🧊
+    newStreak  = user.currentStreak + 1
+    freezes   -= 1
+    freezeUsed = true
+  }
+
+  const longest = Math.max(newStreak, user.longestStreak)
 
   await prisma.user.update({
     where: { id: userId },
-    data:  { currentStreak: newStreak, longestStreak: longest, lastActiveDate: today },
+    data:  { currentStreak: newStreak, longestStreak: longest, lastActiveDate: today, streakFreezes: freezes },
   })
 
-  return NextResponse.json({ currentStreak: newStreak, longestStreak: longest })
+  if (freezeUsed) {
+    // Tell the user their streak was saved (fire-and-forget)
+    prisma.notification.create({
+      data: {
+        userId,
+        type:    'streak_freeze_used',
+        message: `🧊 A streak freeze saved your ${user.currentStreak}-day streak! You missed yesterday, but the chain lives on. (${freezes} freeze${freezes === 1 ? '' : 's'} left — earn more with badges.)`,
+        link:    '/profile',
+      },
+    }).catch(() => {})
+  }
+
+  return NextResponse.json({
+    currentStreak: newStreak,
+    longestStreak: longest,
+    streakFreezes: freezes,
+    freezeUsed,
+  })
 }
 
 // GET — fetch current streak
 export async function GET() {
   const session = await getSession()
   if (!session?.user?.id)
-    return NextResponse.json({ currentStreak: 0, longestStreak: 0 })
+    return NextResponse.json({ currentStreak: 0, longestStreak: 0, streakFreezes: 0 })
 
   const user = await prisma.user.findUnique({
     where:  { id: Number(session.user.id) },
-    select: { currentStreak: true, longestStreak: true, lastActiveDate: true },
+    select: { currentStreak: true, longestStreak: true, lastActiveDate: true, streakFreezes: true },
   })
 
   return NextResponse.json({
     currentStreak: user?.currentStreak ?? 0,
     longestStreak: user?.longestStreak ?? 0,
+    streakFreezes: user?.streakFreezes ?? 0,
     lastActiveDate: user?.lastActiveDate ?? null,
   })
 }

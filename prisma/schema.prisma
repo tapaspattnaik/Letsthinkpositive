@@ -46,6 +46,7 @@ model User {
   currentStreak  Int       @default(0)
   longestStreak  Int       @default(0)
   lastActiveDate DateTime?
+  streakFreezes  Int       @default(1) @map("streak_freezes") // tokens that auto-save a streak on a single missed day; earned via badges, capped at 3
 
   badges             UserBadge[]
   memories           UserMemory[]

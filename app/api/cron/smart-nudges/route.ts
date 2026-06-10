@@ -2,11 +2,25 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import nodemailer from 'nodemailer'
 
-// Smart nudge cron — call daily from Hostinger cron: GET /api/cron/smart-nudges?secret=YOUR_CRON_SECRET
-// Checks user behaviour and sends targeted in-app + email nudges
+// Smart nudge cron — call HOURLY from Hostinger cron: GET /api/cron/smart-nudges?secret=YOUR_CRON_SECRET
+// Checks user behaviour and sends targeted in-app + email nudges.
+//
+// Smart timing: streak nudges go out in the hour window just before each user's
+// natural logging time (median hour of their recent mood logs) instead of one
+// fixed hour for everyone. Users without history fall back to DEFAULT_NUDGE_HOUR.
+// Dedupe guards make hourly invocation safe — each nudge fires at most once/day.
 
 const CRON_SECRET = process.env.CRON_SECRET ?? ''
 const SITE_URL    = process.env.NEXTAUTH_URL ?? 'https://letsthinkpositive.com'
+const DEFAULT_NUDGE_HOUR = 18  // fallback send hour (server time) for users with no log history
+
+// Median hour-of-day of a user's recent mood logs (server timezone — consistent
+// since their own timestamps are stored in the same clock)
+function medianLogHour(timestamps: Date[]): number | null {
+  if (timestamps.length < 5) return null
+  const hours = timestamps.map(t => t.getHours()).sort((a, b) => a - b)
+  return hours[Math.floor(hours.length / 2)]
+}
 
 interface NudgeType {
   type:    string
@@ -52,6 +66,8 @@ export async function GET(req: NextRequest) {
 
   let nudgesSent = 0
 
+  const currentHour = now.getHours()
+
   // ── 1. Streak about to break (active streak, no activity in 20+ hrs) ────
   const streakUsers = await prisma.user.findMany({
     where: {
@@ -64,6 +80,18 @@ export async function GET(req: NextRequest) {
   })
 
   for (const u of streakUsers) {
+    // Smart timing — send in the hour just before this user's natural log time
+    const recentLogs = await prisma.moodEntry.findMany({
+      where:   { userId: u.id },
+      select:  { createdAt: true },
+      orderBy: { createdAt: 'desc' },
+      take:    20,
+    })
+    const naturalHour = medianLogHour(recentLogs.map(l => l.createdAt)) ?? DEFAULT_NUDGE_HOUR
+    // Window: [naturalHour - 1, naturalHour] — catch them right before their usual moment
+    const inWindow = currentHour === naturalHour || currentHour === (naturalHour + 23) % 24
+    if (!inWindow) continue
+
     // Don't spam — check if we already sent this nudge today
     const already = await prisma.notification.findFirst({
       where: { userId: u.id, type: 'nudge_streak', createdAt: { gte: oneDayAgo } },
@@ -91,6 +119,11 @@ export async function GET(req: NextRequest) {
 <p style="color:#999;font-size:12px;">You can unsubscribe from nudge emails in your profile settings.</p>`,
     })
     nudgesSent++
+  }
+
+  // ── 2 & 3 run once daily at the default hour (cron itself is hourly) ────
+  if (currentHour !== DEFAULT_NUDGE_HOUR) {
+    return NextResponse.json({ success: true, nudgesSent, timestamp: now.toISOString() })
   }
 
   // ── 2. Mood has been low (≤ 2) for 3+ days ─────────────────────────────

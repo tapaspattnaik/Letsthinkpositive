@@ -9,6 +9,7 @@ interface ScoreData {
   label: string
   colour: string
   hasData: boolean
+  personalBests?: string[]
   components: {
     mood:   Component
     sleep:  Component
@@ -136,6 +137,18 @@ export function WellnessScore() {
         <ComponentRow emoji="🔥" label="Streak" score={components.streak.score} max={25} display={streakDisplay} />
         <ComponentRow emoji="✅" label="Habits" score={components.habits.score} max={25} display={habitDisplay}  />
       </div>
+
+      {/* Personal bests — self-comparison only, always celebratory */}
+      {(data.personalBests?.length ?? 0) > 0 && (
+        <div className="mt-4 pt-4 border-t border-teal-light/40">
+          <p className="text-[0.62rem] font-bold text-amber uppercase tracking-widest mb-2">🏆 Personal Bests</p>
+          <div className="space-y-1.5">
+            {data.personalBests!.map((b, i) => (
+              <p key={i} className="text-[0.78rem] text-charcoal font-medium leading-snug">{b}</p>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

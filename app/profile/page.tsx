@@ -9,6 +9,7 @@ import { TIER_STYLES } from '@/lib/badges'
 import { ALL_TOOLS } from '@/components/home/FavouriteToolsBar'
 import { MoodSleepCard }   from '@/components/profile/MoodSleepCard'
 import { WellnessScore }   from '@/components/profile/WellnessScore'
+import { GentleBanner }    from '@/components/GentleBanner'
 
 const INTERESTS = [
   'Mindfulness','Sleep','Gratitude','Anxiety Relief',
@@ -37,7 +38,7 @@ interface FeedPost {
 interface UserProfile {
   id: number; name: string; email: string; phone?: string; bio?: string
   interests: string; avatarUrl?: string; coverStyle?: string; coverUrl?: string; createdAt: string
-  currentStreak?: number; longestStreak?: number
+  currentStreak?: number; longestStreak?: number; streakFreezes?: number
   badges: BadgeEntry[]; progress: ProgressEntry[]
 }
 
@@ -167,6 +168,7 @@ export default function ProfilePage() {
   const [uploadingCover,setUploadingCover]= useState(false)
   const fileRef      = useRef<HTMLInputElement>(null)
   const coverFileRef = useRef<HTMLInputElement>(null)
+  const tabsRef      = useRef<HTMLDivElement>(null)
 
   // Remove manual redirect — useSession({ required: true }) handles it with callbackUrl
   useEffect(() => {
@@ -221,6 +223,16 @@ export default function ProfilePage() {
     setProfile(p => p ? { ...p, ...updated } : p)
     setSaving(false); setSaved(true); setEditing(false)
     setTimeout(() => setSaved(false), 3000)
+  }
+
+  function jumpToTab(tab: Tab) {
+    setActiveTab(tab)
+    setTimeout(() => {
+      if (tabsRef.current) {
+        const y = tabsRef.current.getBoundingClientRect().top + window.scrollY - 84
+        window.scrollTo({ top: y, behavior: 'smooth' })
+      }
+    }, 50)
   }
 
   async function uploadAvatar(e: React.ChangeEvent<HTMLInputElement>) {
@@ -417,18 +429,38 @@ export default function ProfilePage() {
 
           {/* ── Stats bar ─────────────────────────────────────────── */}
           <div className="grid grid-cols-4 gap-3 py-5">
-            {[
-              { value: profile.currentStreak ?? 0, label: 'Day Streak',       icon: '🔥', color: 'text-orange-500' },
-              { value: profile.badges.length,       label: 'Badges Earned',   icon: '🏅', color: 'text-amber'      },
-              { value: completedChallenges,          label: 'Challenges Done', icon: '🏆', color: 'text-teal-deep'  },
-              { value: tribeFollowing.length,        label: 'Tribe',           icon: '🌿', color: 'text-teal-mid'   },
-            ].map(s => (
-              <div key={s.label} className="bg-white rounded-[18px] p-4 text-center shadow-card border border-teal-light/60 hover:shadow-lift transition-shadow">
-                <span className="text-[1.4rem] block mb-1">{s.icon}</span>
-                <p className={`font-display font-bold text-[1.5rem] sm:text-[1.8rem] leading-none ${s.color}`}>{s.value}</p>
-                <p className="text-text-xlight text-[0.65rem] sm:text-[0.72rem] mt-1 leading-tight">{s.label}</p>
-              </div>
-            ))}
+            {([
+              { value: profile.currentStreak ?? 0, label: 'Day Streak',       icon: '🔥', color: 'text-orange-500', tab: null,           href: '/mood'  },
+              { value: profile.badges.length,       label: 'Badges Earned',   icon: '🏅', color: 'text-amber',      tab: 'badges',       href: null     },
+              { value: completedChallenges,          label: 'Challenges Done', icon: '🏆', color: 'text-teal-deep',  tab: 'challenges',   href: null     },
+              { value: tribeFollowing.length,        label: 'Tribe',           icon: '🌿', color: 'text-teal-mid',   tab: null,           href: '/tribe' },
+            ] as { value: number; label: string; icon: string; color: string; tab: Tab | null; href: string | null }[]).map(s => {
+              const cardClass = "bg-white rounded-[18px] p-4 text-center shadow-card border border-teal-light/60 hover:shadow-lift hover:scale-[1.04] active:scale-[0.97] transition-all cursor-pointer"
+              const inner = (
+                <>
+                  <span className="text-[1.4rem] block mb-1">{s.icon}</span>
+                  <p className={`font-display font-bold text-[1.5rem] sm:text-[1.8rem] leading-none ${s.color}`}>{s.value}</p>
+                  <p className="text-text-xlight text-[0.65rem] sm:text-[0.72rem] mt-1 leading-tight">{s.label}</p>
+                  {s.label === 'Day Streak' && (profile.streakFreezes ?? 0) > 0 && (
+                    <p className="text-[0.6rem] text-sky-500 font-semibold mt-1" title="Streak freezes — automatically save your streak if you miss a single day">
+                      🧊 ×{profile.streakFreezes} protected
+                    </p>
+                  )}
+                </>
+              )
+              if (s.tab) {
+                return (
+                  <button key={s.label} className={cardClass} onClick={() => jumpToTab(s.tab as Tab)}>
+                    {inner}
+                  </button>
+                )
+              }
+              return (
+                <Link key={s.label} href={s.href!} className={`${cardClass} block no-underline`}>
+                  {inner}
+                </Link>
+              )
+            })}
           </div>
         </div>
       </div>
@@ -639,6 +671,19 @@ export default function ProfilePage() {
             {/* Personal Wellness Index */}
             <WellnessScore />
 
+            {/* Year in Positivity — wrapped */}
+            <Link href="/wrapped"
+              className="block bg-gradient-to-br from-[#0F4040] to-teal-mid rounded-[20px] p-5 no-underline hover:shadow-lift hover:-translate-y-0.5 transition-all group">
+              <div className="flex items-center gap-3">
+                <span className="text-[1.8rem]">🎁</span>
+                <div>
+                  <p className="text-amber text-[0.65rem] font-bold uppercase tracking-widest mb-0.5">✨ {new Date().getFullYear()} wrapped</p>
+                  <p className="text-white font-display font-bold text-[0.95rem] leading-snug">Your Year in Positivity</p>
+                  <p className="text-white/55 text-[0.72rem] mt-0.5 group-hover:text-white/75 transition-colors">See your year in numbers →</p>
+                </div>
+              </div>
+            </Link>
+
             {/* Longest streak card */}
             {(profile.longestStreak ?? 0) > 0 && (
               <div className="bg-gradient-to-br from-orange-50 to-amber/10 border border-amber/30 rounded-[20px] p-5">
@@ -767,7 +812,7 @@ export default function ProfilePage() {
           {/* ── RIGHT MAIN ────────────────────────────────────────── */}
           <div>
             {/* Tab bar */}
-            <div className="flex gap-1 bg-white border border-teal-light/60 rounded-[18px] p-1.5 mb-5 shadow-card overflow-x-auto">
+            <div ref={tabsRef} className="flex gap-1 bg-white border border-teal-light/60 rounded-[18px] p-1.5 mb-5 shadow-card overflow-x-auto">
               {TABS.map(tab => (
                 <button key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
@@ -789,6 +834,9 @@ export default function ProfilePage() {
             {/* ── OVERVIEW TAB — Social Home Feed ──────────────────── */}
             {activeTab === 'overview' && (
               <div className="space-y-4">
+
+                {/* Gentle mode — soft support during rough patches */}
+                <GentleBanner />
 
                 {/* Active challenges mini strip */}
                 {activeChallenges.length > 0 && (
