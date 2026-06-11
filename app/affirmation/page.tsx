@@ -462,6 +462,7 @@ export default function AffirmationPage() {
   const [bgIndex, setBgIndex] = useState(0)
   const [shareMsg, setShareMsg] = useState<string | null>(null)
   const [hasGenerated, setHasGenerated] = useState(false)
+  const [postingWall, setPostingWall] = useState(false)
 
   const cardRef = useRef<HTMLDivElement>(null!)
 
@@ -571,6 +572,50 @@ export default function AffirmationPage() {
       setTimeout(() => setShareMsg(null), 3000)
     }
   }, [affirmation])
+
+  const postToWall = useCallback(async () => {
+    if (postingWall || !affirmation) return
+    setPostingWall(true)
+    try {
+      // Render the card and upload it so the wall post carries the visual
+      let imageUrl: string | null = null
+      if (cardRef.current) {
+        try {
+          const html2canvas = (await import('html2canvas')).default
+          const canvas = await html2canvas(cardRef.current, { scale: 2, useCORS: true, backgroundColor: null, logging: false })
+          const blob: Blob | null = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'))
+          if (blob) {
+            const fd = new FormData()
+            fd.append('image', new File([blob], 'affirmation.png', { type: 'image/png' }))
+            const up = await fetch('/api/upload/post-image', { method: 'POST', body: fd })
+            if (up.status === 401) {
+              setShareMsg('Sign in to post to the community wall ✋')
+              setTimeout(() => setShareMsg(null), 4000)
+              return
+            }
+            const d = await up.json()
+            if (up.ok && d.imageUrl) imageUrl = d.imageUrl
+          }
+        } catch { /* card render failed — post text-only */ }
+      }
+
+      const res = await fetch('/api/community', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          body:     affirmation,
+          images:   imageUrl ? [imageUrl] : [],
+          tags:     '#affirmation',
+          postType: 'story',
+        }),
+      })
+      const d = await res.json()
+      setShareMsg(d.ok ? '🌍 Posted to the community wall!' : (d.error ?? 'Could not post — try again'))
+    } finally {
+      setPostingWall(false)
+      setTimeout(() => setShareMsg(null), 4000)
+    }
+  }, [affirmation, postingWall])
 
   return (
     <main
@@ -786,6 +831,9 @@ export default function AffirmationPage() {
               </ActionButton>
               <ActionButton onClick={shareCard}>
                 📤 Share
+              </ActionButton>
+              <ActionButton onClick={postToWall}>
+                {postingWall ? '⏳ Posting…' : '🌍 Post to wall'}
               </ActionButton>
             </div>
           )}

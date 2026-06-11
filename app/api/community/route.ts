@@ -62,8 +62,11 @@ export async function POST(req: NextRequest) {
     const session = await getSession()
     const { title, body, author, tags, postType, images } = await req.json()
 
-    if (!title?.trim() || !body?.trim())
-      return NextResponse.json({ error: 'Title and body are required' }, { status: 400 })
+    if (!body?.trim())
+      return NextResponse.json({ error: 'Post body is required' }, { status: 400 })
+
+    // Title optional — casual wall posts derive it from the first line of the body
+    const finalTitle = (title?.trim() || body.trim().split('\n')[0]).slice(0, 200) || 'Shared a moment'
 
     const type      = postType === 'wish' ? 'wish' : 'story'
     const isLoggedIn = !!session?.user?.id
@@ -75,7 +78,7 @@ export async function POST(req: NextRequest) {
 
     const post = await prisma.communityPost.create({
       data: {
-        title:    title.trim().slice(0, 200),
+        title:    finalTitle,
         body:     body.trim().slice(0, 2000),
         author:   isLoggedIn ? (session.user?.name ?? 'Member') : (author?.trim() || 'Anonymous').slice(0, 100),
         tags:     (tags?.trim() || '').slice(0, 500),

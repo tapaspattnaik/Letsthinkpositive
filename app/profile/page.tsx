@@ -10,6 +10,7 @@ import { ALL_TOOLS } from '@/components/home/FavouriteToolsBar'
 import { MoodSleepCard }   from '@/components/profile/MoodSleepCard'
 import { WellnessScore }   from '@/components/profile/WellnessScore'
 import { GentleBanner }    from '@/components/GentleBanner'
+import { WallComposer }    from '@/components/WallComposer'
 
 const INTERESTS = [
   'Mindfulness','Sleep','Gratitude','Anxiety Relief',
@@ -192,15 +193,7 @@ export default function ProfilePage() {
           }).catch(() => {})
         })
       })
-    setFeedLoading(true)
-    fetch('/api/feed/home').then(r => r.ok ? r.json() : { community: [], circles: [] }).then(data => {
-      const combined: FeedPost[] = [
-        ...(data.community ?? []),
-        ...(data.circles ?? []),
-      ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      setFeed(combined)
-      setFeedLoading(false)
-    }).catch(() => setFeedLoading(false))
+    loadFeed()
     fetch('/api/circles').then(r => r.json()).then(data => {
       if (Array.isArray(data)) setCircles(data.filter((c: Circle) => c.isMember))
     })
@@ -212,6 +205,18 @@ export default function ProfilePage() {
       }
     }).catch(() => {})
   }, [status])
+
+  function loadFeed() {
+    setFeedLoading(true)
+    fetch('/api/feed/home').then(r => r.ok ? r.json() : { community: [], circles: [] }).then(data => {
+      const combined: FeedPost[] = [
+        ...(data.community ?? []),
+        ...(data.circles ?? []),
+      ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      setFeed(combined)
+      setFeedLoading(false)
+    }).catch(() => setFeedLoading(false))
+  }
 
   async function saveProfile() {
     setSaving(true)
@@ -851,6 +856,9 @@ export default function ProfilePage() {
 
                 {/* Gentle mode — soft support during rough patches */}
                 <GentleBanner />
+
+                {/* What's on your mind? — instant wall composer */}
+                <WallComposer onPosted={loadFeed} />
 
                 {/* Active challenges mini strip */}
                 {activeChallenges.length > 0 && (
