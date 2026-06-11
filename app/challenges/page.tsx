@@ -373,6 +373,22 @@ function ChallengeCard({ c, progress, stats, onEnroll, onCheckin, loading, today
   const pct             = Math.round((completedDays.length / c.totalDays) * 100)
   const isLoading       = loading === c.id || loading === c.id + '-checkin'
 
+  // Share completion to the community wall
+  const [sharing, setSharing] = useState(false)
+  const [shared,  setShared]  = useState(false)
+
+  async function shareToWall() {
+    if (sharing || shared) return
+    setSharing(true)
+    const { createWallPost } = await import('@/lib/wall')
+    const result = await createWallPost({
+      body: `I just completed the ${c.title} challenge! ${c.badge.icon} ${c.totalDays} days of showing up — and earned the ${c.badge.name} badge. Join me on the next one? 💪`,
+      tags: '#challenge',
+    })
+    setSharing(false)
+    if (result.ok) setShared(true)
+  }
+
   return (
     <div className={`bg-gradient-to-br ${c.color} border ${c.borderColor} rounded-[24px] p-7 flex flex-col h-full ${large ? 'md:flex-row md:gap-8 md:items-start' : ''}`}>
       <div className={`${large ? 'flex-1' : ''} flex flex-col flex-1`}>
@@ -441,9 +457,18 @@ function ChallengeCard({ c, progress, stats, onEnroll, onCheckin, loading, today
       {/* Action button */}
       <div className={`${large ? 'flex-shrink-0 self-end md:self-center' : 'mt-auto'} pt-2`}>
         {isComplete ? (
-          <Link href="/profile" className="block bg-teal-deep text-white px-6 py-2.5 rounded-full font-semibold text-[0.85rem] no-underline hover:bg-teal-dark transition-colors text-center">
-            View Badge →
-          </Link>
+          <div className="flex flex-col gap-2">
+            <button onClick={shareToWall} disabled={sharing || shared}
+              className={`px-6 py-2.5 rounded-full font-semibold text-[0.85rem] transition-colors text-center
+                ${shared
+                  ? 'bg-teal-ghost text-teal-deep border border-teal-light cursor-default'
+                  : 'bg-amber text-charcoal hover:bg-amber-soft'}`}>
+              {sharing ? '⏳ Sharing…' : shared ? '✓ Shared to wall!' : '🌍 Share to wall'}
+            </button>
+            <Link href="/profile" className="block bg-teal-deep text-white px-6 py-2.5 rounded-full font-semibold text-[0.85rem] no-underline hover:bg-teal-dark transition-colors text-center">
+              View Badge →
+            </Link>
+          </div>
         ) : enrolled ? (
           <button
             onClick={() => onCheckin(c.id, c.totalDays)}

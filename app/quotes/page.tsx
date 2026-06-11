@@ -146,6 +146,37 @@ export default function QuoteCreatorPage() {
   const credit    = attribution ? attribution.replace(/^—\s*/, '') : ''
   const quoteLine = credit ? `"${quote}" — ${credit}` : `"${quote}"`
 
+  // ── Post the card to the community wall ──────────────────────────────────
+  const [wallPosting, setWallPosting] = useState(false)
+  const [wallMsg,     setWallMsg]     = useState<string | null>(null)
+
+  async function postToWall() {
+    if (wallPosting || !cardRef.current) return
+    setWallPosting(true)
+    try {
+      const canvas = await html2canvas(cardRef.current, { scale: 2, useCORS: true, allowTaint: true, logging: false })
+      const blob: Blob | null = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'))
+      let images: string[] = []
+      if (blob) {
+        const { uploadWallImage } = await import('@/lib/wall')
+        const url = await uploadWallImage(blob, 'quote-card.png')
+        if (url === 'login') {
+          setWallMsg('Sign in to post to the community wall ✋')
+          return
+        }
+        if (url) images = [url]
+      }
+      const { createWallPost } = await import('@/lib/wall')
+      const result = await createWallPost({ body: quoteLine, images, tags: '#quote' })
+      setWallMsg(result.ok ? '🌍 Posted to the community wall!' : (result.error ?? 'Could not post — try again'))
+    } catch {
+      setWallMsg('Could not post — try again')
+    } finally {
+      setWallPosting(false)
+      setTimeout(() => setWallMsg(null), 4000)
+    }
+  }
+
   async function shareTwitter() {
     const shareUrl = await uploadCardAndGetShareUrl()
     const text = `✨ ${quoteLine}\n\nThis one hit different 💛\n\n#Mindfulness #Positivity #letsthinkpositive`
@@ -410,7 +441,16 @@ export default function QuoteCreatorPage() {
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" /></svg>
                 Native Share
               </button>
+              <button onClick={postToWall} disabled={wallPosting}
+                className="flex items-center gap-2 bg-white text-teal-deep border-2 border-teal-light px-6 py-3.5 rounded-full font-semibold text-[0.92rem] hover:border-teal-mid hover:-translate-y-0.5 transition-all shadow-md disabled:opacity-60">
+                {wallPosting ? '⏳ Posting…' : '🌍 Post to wall'}
+              </button>
             </div>
+
+            {/* Wall post feedback */}
+            {wallMsg && (
+              <p className="text-center text-[0.85rem] font-semibold text-teal-deep mb-6">{wallMsg}</p>
+            )}
 
             {/* Social sharing grid */}
             <div className="border border-teal-light rounded-[24px] p-6 mb-6 bg-ivory">
