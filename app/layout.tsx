@@ -8,6 +8,7 @@ import { ConstructionBanner } from '@/components/layout/ConstructionBanner'
 import { HeaderHeight } from '@/components/layout/HeaderHeight'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { AppLoader } from '@/components/layout/AppLoader'
+import { ToolBreadcrumb } from '@/components/layout/ToolBreadcrumb'
 import { LanguageProvider } from '@/context/LanguageContext'
 import { JsonLd } from '@/components/JsonLd'
 import Script from 'next/script'
@@ -143,6 +144,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
           {/* Dynamically sets main padding-top = actual header height (navbar ± banner) */}
           <HeaderHeight />
+          {/* Floating ← Back / My Space pills on tool pages (desktop, signed-in) */}
+          <ToolBreadcrumb />
           <main id="main-content" className="pt-[72px] pb-[60px] lg:pb-0">
             {children}
           </main>
