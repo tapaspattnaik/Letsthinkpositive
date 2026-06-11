@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { BADGE_BY_CHALLENGE } from '@/lib/badges'
+import { awardCoins, COIN_RULES } from '@/lib/coins'
 
 export async function POST(req: NextRequest) {
   const session = await getSession()
@@ -60,8 +61,11 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Challenge completed — award Hope Coins 🪙
+    await awardCoins(userId, COIN_RULES.CHALLENGE_COMPLETE, `challenge_complete_${slug}`).catch(() => {})
+
     // Check for "first-post" (story sharer) badge via post count — skip here, handled in community API
   }
 
-  return NextResponse.json({ ok: true, days, isComplete, awardedBadge })
+  return NextResponse.json({ ok: true, days, isComplete, awardedBadge, coinsEarned: isComplete ? COIN_RULES.CHALLENGE_COMPLETE : 0 })
 }

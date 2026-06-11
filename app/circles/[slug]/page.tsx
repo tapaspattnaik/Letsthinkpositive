@@ -6,10 +6,12 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ReportButton } from '@/components/ReportButton'
+import { LinkifiedText, PostImages, ImageAttach } from '@/components/PostContent'
 
 interface CommentType { id: number; body: string; createdAt: string; user: { id: number; name: string; avatarUrl?: string } }
 interface Post {
   id: number; body: string; createdAt: string
+  images?: string[]
   user: { id: number; name: string; avatarUrl?: string }
   likeCount: number; commentCount: number; likedByMe: boolean
   comments: CommentType[]
@@ -27,6 +29,7 @@ export default function CirclePage({ params }: { params: Promise<{ slug: string 
   const [circle,   setCircle]   = useState<CircleInfo | null>(null)
   const [posts,    setPosts]    = useState<Post[]>([])
   const [body,     setBody]     = useState('')
+  const [images,   setImages]   = useState<string[]>([])
   const [posting,  setPosting]  = useState(false)
   const [loading,  setLoading]  = useState(true)
   const [error,    setError]    = useState('')
@@ -66,11 +69,11 @@ export default function CirclePage({ params }: { params: Promise<{ slug: string 
     setPosting(true)
     const res  = await fetch(`/api/circles/${slug}/posts`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body:   JSON.stringify({ body }),
+      body:   JSON.stringify({ body, images }),
     })
     const data = await res.json()
     if (data.id) setPosts(p => [{ ...data, showComments: false, newComment: '', likeCount: 0, commentCount: 0, likedByMe: false }, ...p])
-    setBody(''); setPosting(false)
+    setBody(''); setImages([]); setPosting(false)
   }
 
   async function toggleLike(postId: number) {
@@ -168,9 +171,10 @@ export default function CirclePage({ params }: { params: Promise<{ slug: string 
                 className="flex-1 border border-teal-light rounded-[16px] px-4 py-2.5 text-[0.93rem] outline-none focus:border-teal-mid transition-colors resize-none bg-ivory placeholder:text-text-xlight"
               />
             </div>
-            <div className="flex justify-end">
+            <div className="flex items-center justify-between gap-3 pl-12">
+              <ImageAttach images={images} setImages={setImages} max={4} />
               <button type="submit" disabled={!body.trim() || posting}
-                className="bg-teal-deep text-white px-6 py-2.5 rounded-full text-[0.88rem] font-semibold hover:bg-teal-dark disabled:opacity-50 transition-colors">
+                className="bg-teal-deep text-white px-6 py-2.5 rounded-full text-[0.88rem] font-semibold hover:bg-teal-dark disabled:opacity-50 transition-colors flex-shrink-0">
                 {posting ? 'Sharing…' : 'Share →'}
               </button>
             </div>
@@ -205,7 +209,8 @@ export default function CirclePage({ params }: { params: Promise<{ slug: string 
                 </div>
 
                 {/* Body */}
-                <p className="text-text-mid text-[0.93rem] leading-[1.8] mb-4 whitespace-pre-wrap">{post.body}</p>
+                <LinkifiedText text={post.body} className="text-text-mid text-[0.93rem] leading-[1.8] mb-4 whitespace-pre-wrap" />
+                <PostImages images={post.images ?? []} alt={`Post by ${post.user.name}`} />
 
                 {/* Actions */}
                 <div className="flex items-center gap-4 border-t border-teal-light/40 pt-3">

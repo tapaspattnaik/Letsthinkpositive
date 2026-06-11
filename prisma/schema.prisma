@@ -47,6 +47,7 @@ model User {
   longestStreak  Int       @default(0)
   lastActiveDate DateTime?
   streakFreezes  Int       @default(1) @map("streak_freezes") // tokens that auto-save a streak on a single missed day; earned via badges, capped at 3
+  coins          Int       @default(0) // Hope Coins — earned via daily claims & activities, spent in the rewards store
 
   badges             UserBadge[]
   memories           UserMemory[]
@@ -78,8 +79,26 @@ model User {
   savedQuotes        SavedQuote[]
   dailyRecipes       DailyRecipe[]
   weeklyInsights     WeeklyInsight[]
+  coinTransactions   CoinTransaction[]
 
   @@map("users")
+}
+
+// ── Hope Coins — transaction ledger ─────────────────────────────────────────
+// Positive amounts = earned, negative = spent. User.coins holds the balance.
+
+model CoinTransaction {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  amount    Int // +earn / -spend
+  reason    String   @db.VarChar(100) // daily_claim | challenge_complete | badge_earned | redeem_freeze | redeem_badge | ...
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([userId, reason, createdAt]) // fast "claimed today?" lookups
+  @@map("coin_transactions")
 }
 
 model Badge {
@@ -131,6 +150,7 @@ model CommunityPost {
   body         String              @db.Text
   author       String              @default("Anonymous") @db.VarChar(100)
   tags         String              @default("") @db.VarChar(500)
+  images       String              @default("[]") @db.Text // JSON array of image URLs
   postType     String              @default("story") @db.VarChar(20) // story | wish
   approved     Boolean             @default(false)
   featuredWeek String?             @db.VarChar(10) // YYYY-Www e.g. "2025-W21", null if not featured
@@ -209,6 +229,7 @@ model GroupPost {
   circleId  Int
   userId    Int
   body      String   @db.Text
+  images    String   @default("[]") @db.Text // JSON array of image URLs
   createdAt DateTime @default(now())
 
   circle   Circle        @relation(fields: [circleId], references: [id])

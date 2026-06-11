@@ -32,12 +32,16 @@ export async function GET(req: NextRequest) {
         ? allReactions.filter(r => r.userId === userId).map(r => r.emoji)
         : []
 
+      let images: string[] = []
+      try { images = JSON.parse(p.images || '[]') } catch { /* noop */ }
+
       return {
         id:             p.id,
         title:          p.title,
         body:           p.body,
         author:         p.author,
         tags:           p.tags,
+        images,
         postType:       p.postType,
         createdAt:      p.createdAt,
         user:           p.user,
@@ -56,7 +60,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const session = await getSession()
-    const { title, body, author, tags, postType } = await req.json()
+    const { title, body, author, tags, postType, images } = await req.json()
 
     if (!title?.trim() || !body?.trim())
       return NextResponse.json({ error: 'Title and body are required' }, { status: 400 })
@@ -64,12 +68,18 @@ export async function POST(req: NextRequest) {
     const type      = postType === 'wish' ? 'wish' : 'story'
     const isLoggedIn = !!session?.user?.id
 
+    // Images: logged-in users only, must be our own uploads, max 4
+    const safeImages: string[] = (isLoggedIn && Array.isArray(images))
+      ? images.filter((u: unknown) => typeof u === 'string' && u.startsWith('/uploads/')).slice(0, 4)
+      : []
+
     const post = await prisma.communityPost.create({
       data: {
         title:    title.trim().slice(0, 200),
         body:     body.trim().slice(0, 2000),
         author:   isLoggedIn ? (session.user?.name ?? 'Member') : (author?.trim() || 'Anonymous').slice(0, 100),
         tags:     (tags?.trim() || '').slice(0, 500),
+        images:   JSON.stringify(safeImages),
         postType: type,
         approved: isLoggedIn,
         userId:   isLoggedIn ? Number(session.user.id) : null,

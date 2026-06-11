@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { ReportButton } from '@/components/ReportButton'
+import { LinkifiedText, PostImages, ImageAttach } from '@/components/PostContent'
 
 interface Post {
   id: number
@@ -12,6 +13,7 @@ interface Post {
   body: string
   author: string
   tags: string
+  images?: string[]
   createdAt: string
   approved: boolean
   postType?: string
@@ -41,7 +43,8 @@ function StoryCard({
         <span className="text-[1.8rem] flex-shrink-0">{icon}</span>
         <h3 className="font-body font-semibold text-[0.97rem] text-charcoal leading-snug">{post.title}</h3>
       </div>
-      <p className="text-text-mid text-[0.88rem] leading-[1.75] mb-4 flex-1">{post.body}</p>
+      <LinkifiedText text={post.body} className="text-text-mid text-[0.88rem] leading-[1.75] mb-4 flex-1" />
+      <PostImages images={post.images ?? []} alt={post.title} />
       {tags.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mb-4">
           {tags.map(t => (
@@ -93,7 +96,8 @@ function WishCard({
         <span className="text-[1.8rem] flex-shrink-0">🙏</span>
         <h3 className="font-body font-semibold text-[0.97rem] text-charcoal leading-snug">{post.title}</h3>
       </div>
-      <p className="text-text-mid text-[0.88rem] leading-[1.75] mb-5 flex-1">{post.body}</p>
+      <LinkifiedText text={post.body} className="text-text-mid text-[0.88rem] leading-[1.75] mb-5 flex-1" />
+      <PostImages images={post.images ?? []} alt={post.title} />
 
       {/* Reaction bar */}
       <div className="flex flex-wrap gap-2 mb-4">
@@ -148,6 +152,7 @@ export default function CommunityPage() {
   const [loading,   setLoading]     = useState(true)
 
   const [form,      setForm]        = useState({ title: '', body: '', author: '', tags: '' })
+  const [images,    setImages]      = useState<string[]>([])
   const [submitted, setSubmitted]   = useState(false)
   const [submitting,setSubmitting]  = useState(false)
   const [formType,  setFormType]    = useState<'story' | 'wish'>('story')
@@ -210,7 +215,7 @@ export default function CommunityPage() {
       const res  = await fetch('/api/community', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ ...form, postType: formType }),
+        body:    JSON.stringify({ ...form, images, postType: formType }),
       })
       const data = await res.json()
       if (data.ok) {
@@ -363,7 +368,8 @@ export default function CommunityPage() {
                         <span className="text-[2.5rem] flex-shrink-0">{STORY_ICONS[stories[0].id % STORY_ICONS.length]}</span>
                         <div className="flex-1">
                           <h3 className="font-body font-bold text-[1.05rem] text-charcoal mb-2">{stories[0].title}</h3>
-                          <p className="text-text-mid text-[0.93rem] leading-[1.8] mb-4">{stories[0].body}</p>
+                          <LinkifiedText text={stories[0].body} className="text-text-mid text-[0.93rem] leading-[1.8] mb-4" />
+                          <PostImages images={stories[0].images ?? []} alt={stories[0].title} />
                           <div className="flex items-center gap-3 text-[0.8rem] text-text-xlight">
                             {stories[0].user?.avatarUrl && (
                               <Image src={stories[0].user.avatarUrl} alt={stories[0].user.name} width={24} height={24} className="rounded-full object-cover" />
@@ -457,7 +463,7 @@ export default function CommunityPage() {
                     <p className="text-text-mid text-[0.82rem] mb-4">
                       {formType === 'wish' ? 'The community can now react to your post.' : 'Your story is live in the community.'}
                     </p>
-                    <button onClick={() => { setSubmitted(false); setForm(f => ({ ...f, title: '', body: '', tags: '' })) }}
+                    <button onClick={() => { setSubmitted(false); setImages([]); setForm(f => ({ ...f, title: '', body: '', tags: '' })) }}
                       className="text-teal-mid text-[0.82rem] font-semibold hover:text-teal-deep transition-colors">
                       Share another →
                     </button>
@@ -495,6 +501,8 @@ export default function CommunityPage() {
                           className="w-full px-3.5 py-2.5 bg-teal-ghost border border-teal-light rounded-[12px] text-[0.88rem] outline-none focus:border-teal-mid transition-colors" />
                       </div>
                     )}
+                    {/* Photo attachments — links in the text are auto-detected */}
+                    <ImageAttach images={images} setImages={setImages} max={4} />
                     <button type="submit" disabled={submitting}
                       className={`w-full py-3 rounded-full font-semibold text-[0.9rem] transition-colors disabled:opacity-60 ${
                         formType === 'wish'

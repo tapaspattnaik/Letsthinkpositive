@@ -672,6 +672,19 @@ export default function ProfilePage() {
             {/* Personal Wellness Index */}
             <WellnessScore />
 
+            {/* Hope Coins — rewards */}
+            <Link href="/rewards"
+              className="block bg-gradient-to-br from-amber/20 to-amber/5 border border-amber/30 rounded-[20px] p-5 no-underline hover:shadow-lift hover:-translate-y-0.5 transition-all group">
+              <div className="flex items-center gap-3">
+                <span className="text-[1.8rem]">🪙</span>
+                <div>
+                  <p className="text-amber text-[0.65rem] font-bold uppercase tracking-widest mb-0.5">Hope Coins</p>
+                  <p className="text-charcoal font-display font-bold text-[0.95rem] leading-snug">Daily rewards & store</p>
+                  <p className="text-text-xlight text-[0.72rem] mt-0.5 group-hover:text-text-mid transition-colors">Collect coins, redeem perks →</p>
+                </div>
+              </div>
+            </Link>
+
             {/* Year in Positivity — wrapped */}
             <Link href="/wrapped"
               className="block bg-gradient-to-br from-[#0F4040] to-teal-mid rounded-[20px] p-5 no-underline hover:shadow-lift hover:-translate-y-0.5 transition-all group">

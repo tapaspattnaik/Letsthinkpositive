@@ -45,11 +45,17 @@ const OnThisDayCard = dynamic(
   { ssr: false, loading: () => null }
 )
 
+const DailyRewardCard = dynamic(
+  () => import('./DailyRewardCard').then(m => ({ default: m.DailyRewardCard })),
+  { ssr: false, loading: () => null }
+)
+
 export function PersonalisedSection() {
   return (
     <>
       <OnboardingModal />
       <GentleBanner />
+      <DailyRewardCard />
       <TimeOfDayCard />
       <AffirmationCard />
       <FavouriteToolsBar />

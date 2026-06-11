@@ -11,6 +11,7 @@ import { NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { BADGE_BY_CHALLENGE, BADGES } from '@/lib/badges'
+import { awardCoins, COIN_RULES } from '@/lib/coins'
 
 export async function GET() {
   const session = await getSession()
@@ -59,8 +60,9 @@ export async function GET() {
     }
   }
 
-  // ── 3. Each newly-awarded badge grants a streak freeze (capped at 3) ──────
+  // ── 3. Each newly-awarded badge grants coins + a streak freeze (capped at 3)
   if (awarded.length > 0) {
+    await awardCoins(userId, COIN_RULES.BADGE_EARNED * awarded.length, 'badge_earned').catch(() => {})
     const u = await prisma.user.findUnique({ where: { id: userId }, select: { streakFreezes: true } })
     const newFreezes = Math.min(3, (u?.streakFreezes ?? 0) + awarded.length)
     if (u && newFreezes > u.streakFreezes) {
