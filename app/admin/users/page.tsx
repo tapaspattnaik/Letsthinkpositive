@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
+import Link from 'next/link'
 
 interface AdminUser {
   id: number; name: string; email: string; role: string
@@ -194,9 +195,11 @@ export default function AdminUsersPage() {
                 <tr><td colSpan={8} className="text-center py-12 text-text-xlight">No users found</td></tr>
               ) : users.map(u => (
                 <tr key={u.id} className={`hover:bg-gray-50/60 transition-colors ${u.blocked ? 'bg-red-50/30' : ''}`}>
-                  {/* User */}
+                  {/* User — links to their public profile */}
                   <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
+                    <Link href={`/profile/${u.id}`} target="_blank" rel="noopener"
+                      title="View public profile"
+                      className="flex items-center gap-3 no-underline group/user">
                       {u.avatarUrl ? (
                         <Image src={u.avatarUrl} alt={u.name} width={36} height={36} className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
                       ) : (
@@ -205,10 +208,12 @@ export default function AdminUsersPage() {
                         </div>
                       )}
                       <div>
-                        <p className="font-semibold text-[0.85rem] text-charcoal leading-none">{u.name}</p>
+                        <p className="font-semibold text-[0.85rem] text-charcoal leading-none group-hover/user:text-teal-deep group-hover/user:underline transition-colors">
+                          {u.name} <span className="opacity-0 group-hover/user:opacity-100 text-teal-mid text-[0.7rem] transition-opacity">↗</span>
+                        </p>
                         <p className="text-[0.72rem] text-text-xlight mt-0.5">{u.email}</p>
                       </div>
-                    </div>
+                    </Link>
                   </td>
                   {/* Role */}
                   <td className="px-4 py-3"><RoleBadge role={u.role} /></td>
