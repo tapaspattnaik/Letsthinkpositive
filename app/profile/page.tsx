@@ -11,6 +11,7 @@ import { MoodSleepCard }   from '@/components/profile/MoodSleepCard'
 import { WellnessScore }   from '@/components/profile/WellnessScore'
 import { GentleBanner }    from '@/components/GentleBanner'
 import { WallComposer }    from '@/components/WallComposer'
+import { PhoneInput }      from '@/components/ui/PhoneInput'
 
 const INTERESTS = [
   'Mindfulness','Sleep','Gratitude','Anxiety Relief',
@@ -556,9 +557,8 @@ export default function ProfilePage() {
               </div>
               <div>
                 <label className="block text-[0.78rem] font-semibold text-teal-deep mb-1.5">Phone (optional)</label>
-                <input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
-                  placeholder="+44 7700 900000"
-                  className="w-full border border-teal-light rounded-[14px] px-4 py-3 text-[0.93rem] outline-none focus:border-teal-mid bg-ivory transition-colors" />
+                <PhoneInput value={form.phone} onChange={v => setForm(f => ({ ...f, phone: v }))} />
+                <p className="text-[0.7rem] text-text-xlight mt-1">Formats automatically as you type — include your country code (e.g. +91, +1).</p>
               </div>
               <div>
                 <div className="flex items-center justify-between mb-1.5">
