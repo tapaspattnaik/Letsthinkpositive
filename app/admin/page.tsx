@@ -36,7 +36,12 @@ interface UserBlogPost {
   user: { id: number; name: string; email: string; avatarUrl?: string | null }
 }
 
-type AdminSection = 'reports' | 'comments' | 'blog-posts' | 'story' | 'new-users'
+type AdminSection = 'reports' | 'comments' | 'blog-posts' | 'story' | 'new-users' | 'leads'
+
+interface LaunchLead {
+  id: number; email: string; countryCode?: string | null; countryName?: string | null
+  source: string; createdAt: string; registered: boolean
+}
 
 interface RecentUser {
   id: number; name: string; email: string; avatarUrl?: string
@@ -97,6 +102,10 @@ export default function AdminPage() {
   // ── Recent Signups ────────────────────────────────────────────────
   const [recentUsers,     setRecentUsers]     = useState<RecentUser[]>([])
   const [ruLoading,       setRuLoading]       = useState(false)
+
+  // ── Launch Signups (pre-launch leads) ─────────────────────────────
+  const [leads,           setLeads]           = useState<LaunchLead[]>([])
+  const [leadsLoading,    setLeadsLoading]    = useState(false)
 
   // ── Story of the Week ────────────────────────────────────────────
   const [storyLoading,    setStoryLoading]    = useState(false)
@@ -208,6 +217,16 @@ export default function AdminPage() {
       .then(d => setRecentUsers(d.users ?? []))
       .catch(() => {})
       .finally(() => setRuLoading(false))
+  }, [section])
+
+  useEffect(() => {
+    if (section !== 'leads') return
+    setLeadsLoading(true)
+    fetch('/api/admin/launch-signups')
+      .then(r => r.json())
+      .then(d => setLeads(Array.isArray(d) ? d : []))
+      .catch(() => {})
+      .finally(() => setLeadsLoading(false))
   }, [section])
 
   async function resolve(reportId: number, action: 'remove' | 'keep' | 'dismiss') {
@@ -329,6 +348,11 @@ export default function AdminPage() {
               className={`px-4 py-1.5 rounded-full text-[0.82rem] font-semibold transition-all flex items-center gap-1.5
                 ${section === 'new-users' ? 'bg-green-600 text-white' : 'border border-green-200 text-green-700 hover:bg-green-50'}`}>
               🆕 New Users
+            </button>
+            <button onClick={() => setSection('leads')}
+              className={`px-4 py-1.5 rounded-full text-[0.82rem] font-semibold transition-all flex items-center gap-1.5
+                ${section === 'leads' ? 'bg-sky-600 text-white' : 'border border-sky-200 text-sky-700 hover:bg-sky-50'}`}>
+              🚀 Launch Signups
             </button>
           </div>
         </div>
@@ -824,6 +848,74 @@ export default function AdminPage() {
                         </div>
                       )
                     })}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Launch Signups (pre-launch leads) ────────────────────── */}
+        {section === 'leads' && (
+          <div>
+            <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+              <div>
+                <h2 className="font-display font-bold text-[1.1rem] text-charcoal">🚀 Launch Signups</h2>
+                <p className="text-text-xlight text-[0.78rem] mt-0.5">
+                  Pre-launch landing-page leads · {leads.length} collected ·
+                  {' '}{leads.filter(l => l.registered).length} became members
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  const csv = ['email,country,source,date',
+                    ...leads.map(l => `${l.email},${l.countryName ?? ''},${l.source},${new Date(l.createdAt).toISOString().slice(0, 10)}`),
+                  ].join('\n')
+                  const a = document.createElement('a')
+                  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }))
+                  a.download = 'launch-signups.csv'
+                  a.click()
+                  URL.revokeObjectURL(a.href)
+                }}
+                disabled={leads.length === 0}
+                className="px-4 py-2 rounded-full border border-sky-200 text-sky-700 text-[0.82rem] font-semibold hover:bg-sky-50 transition-colors disabled:opacity-50">
+                ⬇️ Export CSV
+              </button>
+            </div>
+
+            {leadsLoading ? (
+              <div className="flex justify-center py-12">
+                <div className="flex gap-1.5">{[0,1,2].map(i => <span key={i} className="w-2 h-2 rounded-full bg-teal-mid animate-bounce" style={{ animationDelay: `${i*150}ms` }} />)}</div>
+              </div>
+            ) : (
+              <div className="bg-white rounded-[20px] border border-gray-100 shadow-sm overflow-hidden">
+                {leads.length === 0 ? (
+                  <p className="text-center py-12 text-text-xlight">No launch signups found</p>
+                ) : (
+                  <div className="divide-y divide-gray-50">
+                    {leads.map((l, i) => (
+                      <div key={l.id} className="flex items-center gap-4 px-5 py-3.5 hover:bg-gray-50/60 transition-colors">
+                        <span className="text-[0.72rem] font-bold text-text-xlight w-5 text-right flex-shrink-0">{i + 1}</span>
+                        <div className="w-9 h-9 rounded-full bg-sky-50 border border-sky-100 flex items-center justify-center text-[0.95rem] flex-shrink-0">
+                          ✉️
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="font-semibold text-[0.88rem] text-charcoal leading-none truncate">{l.email}</p>
+                            {l.registered && (
+                              <span className="bg-green-100 text-green-700 text-[0.62rem] font-bold px-2 py-0.5 rounded-full flex-shrink-0">✓ Member</span>
+                            )}
+                          </div>
+                          <p className="text-[0.72rem] text-text-xlight mt-0.5">
+                            {l.countryName ?? 'Unknown location'} · via {l.source.replace(/_/g, ' ')}
+                          </p>
+                        </div>
+                        <div className="text-right flex-shrink-0 hidden sm:block">
+                          <p className="text-[0.78rem] font-semibold text-charcoal">{timeAgo(l.createdAt)}</p>
+                          <p className="text-[0.68rem] text-text-xlight">signed up</p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
