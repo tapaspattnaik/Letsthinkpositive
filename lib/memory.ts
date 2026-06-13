@@ -22,7 +22,7 @@ export async function getUserMemoryContext(userId: number): Promise<string> {
   }
 }
 
-const CHALLENGE_NAMES: Record<string, string> = {
+export const CHALLENGE_NAMES: Record<string, string> = {
   'gratitude-30':    '30-Day Gratitude',
   'mindfulness-7':   '7-Day Mindfulness',
   'movement-7':      '7 Days of Movement',

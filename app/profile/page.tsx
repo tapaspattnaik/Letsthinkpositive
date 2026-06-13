@@ -172,6 +172,19 @@ export default function ProfilePage() {
   const coverFileRef = useRef<HTMLInputElement>(null)
   const tabsRef      = useRef<HTMLDivElement>(null)
 
+  // Adaptive tool ordering — most-used tools float to the top of each category
+  const [toolUsage, setToolUsage] = useState<Record<string, number>>({})
+  useEffect(() => {
+    try { setToolUsage(JSON.parse(localStorage.getItem('ltp_tool_usage') ?? '{}')) } catch { /* noop */ }
+  }, [])
+  function trackTool(href: string) {
+    try {
+      const usage = { ...toolUsage, [href]: (toolUsage[href] ?? 0) + 1 }
+      setToolUsage(usage)
+      localStorage.setItem('ltp_tool_usage', JSON.stringify(usage))
+    } catch { /* noop */ }
+  }
+
   // Remove manual redirect — useSession({ required: true }) handles it with callbackUrl
   useEffect(() => {
     if (false) router.push('/login') // kept to avoid unused import warning
@@ -659,8 +672,11 @@ export default function ProfilePage() {
                   <div key={cat.label}>
                     <p className="text-[0.6rem] font-bold text-text-xlight uppercase tracking-widest mb-2">{cat.label}</p>
                     <div className="grid grid-cols-4 gap-1.5">
-                      {cat.tools.map(({ href, icon, label, bg, iconBg }) => (
-                        <Link key={href} href={href}
+                      {/* Sorted by personal usage — your daily tools float to the top */}
+                      {[...cat.tools]
+                        .sort((a, b) => (toolUsage[b.href] ?? 0) - (toolUsage[a.href] ?? 0))
+                        .map(({ href, icon, label, bg, iconBg }) => (
+                        <Link key={href} href={href} onClick={() => trackTool(href)}
                           className={`flex flex-col items-center gap-1.5 p-2 rounded-[12px] no-underline ${bg} hover:scale-105 transition-all group`}>
                           <div className={`w-8 h-8 rounded-[8px] ${iconBg} flex items-center justify-center text-[1.1rem]`}>
                             {icon}
@@ -916,10 +932,16 @@ export default function ProfilePage() {
                         {feedFilter === 'circles' ? '🔒' : '💛'}
                       </span>
                       <p className="font-semibold text-charcoal text-[0.95rem] mb-2">
-                        {feedFilter === 'circles' ? 'No circle updates yet' : 'No community posts yet'}
+                        {feedFilter === 'circles'
+                          ? 'No circle updates yet'
+                          : `Your feed is quiet, ${profile.name.split(' ')[0]} — perfect time to break the ice`}
                       </p>
                       <p className="text-text-mid text-[0.85rem] mb-4">
-                        {feedFilter === 'circles' ? 'Join a circle to see posts from its members.' : 'Be the first to share something with the community.'}
+                        {feedFilter === 'circles'
+                          ? 'Join a circle to see posts from its members.'
+                          : interests.length > 0
+                            ? `You chose ${interests[0]} as an interest — share what it means to you in the box above. Someone out there needs to read it. 💛`
+                            : 'Use the box above to share what’s on your mind — someone out there needs to read it. 💛'}
                       </p>
                       <Link href={feedFilter === 'circles' ? '/circles' : '/community'}
                         className="inline-block bg-teal-deep text-white px-6 py-2.5 rounded-full font-semibold text-[0.85rem] no-underline hover:bg-teal-dark transition-colors">

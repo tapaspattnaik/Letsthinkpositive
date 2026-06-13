@@ -6,6 +6,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { ReportButton } from '@/components/ReportButton'
 import { LinkifiedText, PostImages, ImageAttach } from '@/components/PostContent'
+import { CommunityComments } from '@/components/community/CommunityComments'
 
 interface Post {
   id: number
@@ -19,6 +20,7 @@ interface Post {
   postType?: string
   user?: { id: number; name: string; avatarUrl?: string } | null
   likeCount?: number
+  commentCount?: number
   likedByMe?: boolean
   reactionCounts?: Record<string, number>
   myReactions?: string[]
@@ -76,6 +78,8 @@ function StoryCard({
           <ReportButton postType="community" postId={post.id} compact />
         </div>
       </div>
+      {/* Replies + AI kind-reply suggestions */}
+      <CommunityComments postId={post.id} postTitle={post.title} postBody={post.body} count={post.commentCount ?? 0} />
     </div>
   )
 }
@@ -138,6 +142,8 @@ function WishCard({
         </div>
         <ReportButton postType="community" postId={post.id} compact />
       </div>
+      {/* Replies + AI kind-reply suggestions */}
+      <CommunityComments postId={post.id} postTitle={post.title} postBody={post.body} count={post.commentCount ?? 0} />
     </div>
   )
 }
@@ -351,7 +357,13 @@ export default function CommunityPage() {
                 <div className="text-center py-16 bg-white border border-teal-light rounded-[24px]">
                   <p className="text-[2.5rem] mb-3">{activeTab === 'wish' ? '🙏' : '🌱'}</p>
                   <p className="text-text-mid text-[0.95rem] mb-4">
-                    {activeTab === 'wish' ? 'No wishes yet — be the first to share one!' : 'No stories yet — be the first to share!'}
+                    {activeTab === 'wish'
+                      ? session?.user?.name
+                        ? `No wishes yet, ${session.user.name.split(' ')[0]} — yours could be the first one the community lifts up. 🙏`
+                        : 'No wishes yet — be the first to share one!'
+                      : session?.user?.name
+                        ? `No stories yet, ${session.user.name.split(' ')[0]} — yours could be the one that makes someone's day.`
+                        : 'No stories yet — be the first to share!'}
                   </p>
                   <button onClick={() => openForm(activeTab)}
                     className="bg-teal-deep text-white px-6 py-2.5 rounded-full font-semibold text-[0.88rem] hover:bg-teal-dark transition-colors">

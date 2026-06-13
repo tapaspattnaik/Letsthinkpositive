@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
       take:    40,
       include: {
         user:      { select: { id: true, name: true, avatarUrl: true } },
-        _count:    { select: { likes: true } },
+        _count:    { select: { likes: true, comments: true } },
         likes:     userId ? { where: { userId }, select: { id: true } } : false,
         reactions: postType === 'wish' ? { select: { emoji: true, userId: true } } : false,
       },
@@ -46,6 +46,7 @@ export async function GET(req: NextRequest) {
         createdAt:      p.createdAt,
         user:           p.user,
         likeCount:      p._count.likes,
+        commentCount:   p._count.comments,
         likedByMe:      userId ? (p.likes as {id:number}[]).length > 0 : false,
         reactionCounts,
         myReactions,

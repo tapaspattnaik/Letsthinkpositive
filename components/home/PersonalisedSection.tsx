@@ -50,11 +50,17 @@ const DailyRewardCard = dynamic(
   { ssr: false, loading: () => null }
 )
 
+const NextStepCard = dynamic(
+  () => import('./NextStepCard').then(m => ({ default: m.NextStepCard })),
+  { ssr: false, loading: () => null }
+)
+
 export function PersonalisedSection() {
   return (
     <>
       <OnboardingModal />
       <GentleBanner />
+      <NextStepCard />
       <DailyRewardCard />
       <TimeOfDayCard />
       <AffirmationCard />

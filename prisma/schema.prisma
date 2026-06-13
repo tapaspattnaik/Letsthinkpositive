@@ -64,6 +64,7 @@ model User {
   notifications      Notification[]
   communityLikes     CommunityLike[]
   communityReactions CommunityReaction[]
+  communityComments  CommunityComment[]
   following          Follow[]            @relation("UserFollowing")
   followers          Follow[]            @relation("UserFollowers")
   passwordResets     PasswordReset[]
@@ -159,6 +160,7 @@ model CommunityPost {
   user         User?               @relation(fields: [userId], references: [id])
   likes        CommunityLike[]
   reactions    CommunityReaction[]
+  comments     CommunityComment[]
 
   @@index([approved, createdAt])   // speeds up the main feed query (WHERE approved=true ORDER BY createdAt)
   @@index([approved, postType])    // speeds up story vs wish filtering
@@ -176,6 +178,20 @@ model CommunityLike {
 
   @@unique([postId, userId])
   @@map("community_likes")
+}
+
+model CommunityComment {
+  id        Int      @id @default(autoincrement())
+  postId    Int
+  userId    Int
+  body      String   @db.VarChar(600)
+  createdAt DateTime @default(now())
+
+  post CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([postId, createdAt])
+  @@map("community_comments")
 }
 
 model CommunityReaction {
