@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/blog/submit' },
   title: 'Write for Us',
   description: 'Share your wellness story, insights, or experience with the letsthinkpositive community. Submit your article and inspire others on their journey.',
   openGraph: {

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/feed' },
   title: 'Positivity Feed',
   description: 'Your daily stream of uplifting stories, affirmations, and community moments to keep your mindset positive.',
 }

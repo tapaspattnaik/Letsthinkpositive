@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/tribe' },
   title: 'My Tribe',
   description: 'Your personal wellness circle. See the people you follow and who follow you — build meaningful connections on your journey toward positivity and wellbeing.',
   openGraph: {

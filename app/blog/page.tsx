@@ -2,6 +2,12 @@ import Link from 'next/link'
 import { getAllPosts, PostMeta } from '@/lib/posts'
 import { BlogFilter } from '@/components/blog/BlogFilter'
 import { prisma } from '@/lib/db'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  alternates: { canonical: '/blog' },
+}
+
 
 export const dynamic = 'force-dynamic'  // always fetch fresh approved posts
 

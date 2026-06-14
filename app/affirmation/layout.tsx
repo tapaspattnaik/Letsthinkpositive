@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/affirmation' },
   title: 'Daily Affirmation Card',
   description:
     'Generate a beautiful personalised affirmation card to share on Instagram, WhatsApp, or keep as your phone wallpaper.',

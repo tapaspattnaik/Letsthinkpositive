@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/intention' },
   title:       'Morning Intention | LetsThinkPositive',
   description: 'Start each day with purpose. Set one word, one goal, and one act of kindness.',
 }

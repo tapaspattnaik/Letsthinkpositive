@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/about' },
   title: 'About',
   description: 'The story behind letsthinkpositive — Tapas Pattanaik, the SuperbMan philosophy, and why this community exists.',
 }

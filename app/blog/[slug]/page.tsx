@@ -25,7 +25,7 @@ interface DbPostResult extends Post {
 async function getAuthorByName(name: string): Promise<DbAuthor | null> {
   try {
     const u = await prisma.user.findFirst({
-      where: { name: { contains: name } },
+      where: { name },
       select: {
         id: true, name: true, bio: true, website: true, avatarUrl: true,
         interests: true, currentStreak: true,
@@ -282,7 +282,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
                   </div>
 
                   {/* Bio */}
-                  {dbAuthor?.bio ? (
+                  {dbAuthor?.bio?.trim() ? (
                     <p className="text-text-mid text-[0.88rem] leading-[1.75] mb-3">{dbAuthor.bio}</p>
                   ) : !dbAuthor ? (
                     <p className="text-text-mid text-[0.88rem] leading-[1.75] mb-3">

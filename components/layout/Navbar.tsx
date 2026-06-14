@@ -228,8 +228,6 @@ export function Navbar() {
               </button>
 
               <div
-                role="menu"
-                aria-label={`${group.label} menu`}
                 onMouseEnter={() => openDropdown(group.label)}
                 onMouseLeave={scheduleClose}
                 className={`absolute top-full z-50 transition-all duration-200 origin-top

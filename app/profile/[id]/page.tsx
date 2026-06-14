@@ -14,6 +14,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   return {
     title: `${user.name} — letsthinkpositive`,
     description: user.bio ?? `${user.name} is on their wellness journey at letsthinkpositive.com.`,
+    alternates: { canonical: `/profile/${id}` },
   }
 }
 

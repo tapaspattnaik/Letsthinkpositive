@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/challenges' },
   title: 'Wellness Challenges',
   description: 'Join daily and weekly wellness challenges — gratitude, mindfulness, kindness, movement and more. Small actions, real change. Start your next challenge today.',
   openGraph: {

@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/happy-foods' },
   title: 'Foods That Make You Happy — Science of Joy on a Plate',
   description: 'Discover the science-backed foods that boost serotonin, dopamine, and endorphins — and learn how to eat your way to genuine happiness.',
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/sleep' },
   title: 'Sleep Tracker',
   description: 'Log your sleep, track your quality patterns, and get personalised tips to sleep better. Build a consistent bedtime routine and wake up feeling restored.',
   openGraph: {

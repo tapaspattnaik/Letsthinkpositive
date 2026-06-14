@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/sounds' },
   title: 'Calm Sounds',
   description: 'Relax with procedurally generated ambient sounds — rain, ocean waves, forest, fire, and more. No downloads, no ads. Pure calm, straight from your browser.',
   openGraph: {

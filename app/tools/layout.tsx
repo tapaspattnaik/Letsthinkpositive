@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/tools' },
   title: 'All Wellness Tools',
   description: 'Explore every wellness tool on letsthinkpositive — guided meditation, mood tracking, habit builder, breathing exercises, journaling, sleep tracker, and much more.',
   openGraph: {

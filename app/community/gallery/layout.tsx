@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/community/gallery' },
   title: 'Community Gallery',
   description: 'Browse and celebrate creative expressions from the letsthinkpositive community — drawings, vision boards, affirmations, and moments of joy shared by members.',
   openGraph: {

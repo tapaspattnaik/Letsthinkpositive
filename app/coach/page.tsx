@@ -70,6 +70,15 @@ export default function CoachPage() {
 
   useEffect(() => { categoryRef.current = category }, [category])
 
+  // Proactive opener — the coach greets first, with context, instead of waiting
+  const [opener, setOpener] = useState<string | null>(null)
+  useEffect(() => {
+    fetch('/api/coach-opener')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.opener) setOpener(d.opener) })
+      .catch(() => {})
+  }, [])
+
   // Track scroll position
   useEffect(() => {
     const el = scrollAreaRef.current
@@ -329,9 +338,16 @@ export default function CoachPage() {
                 <h2 className="font-display text-[1.35rem] font-bold text-charcoal mb-2">
                   {activeCat.emoji} {activeCat.label}
                 </h2>
-                <p className="text-text-mid text-[0.88rem] leading-[1.7] max-w-[320px] mb-8">
-                  {activeCat.desc} Choose a starter or type your own thought.
-                </p>
+                {opener ? (
+                  /* Contextual greeting — the coach speaks first */
+                  <div className="max-w-[380px] bg-white border border-teal-light rounded-2xl rounded-tl-md shadow-sm px-5 py-3.5 mb-8 text-left">
+                    <p className="text-charcoal text-[0.9rem] leading-[1.7]">{opener}</p>
+                  </div>
+                ) : (
+                  <p className="text-text-mid text-[0.88rem] leading-[1.7] max-w-[320px] mb-8">
+                    {activeCat.desc} Choose a starter or type your own thought.
+                  </p>
+                )}
                 <div className="w-full max-w-lg grid grid-cols-1 sm:grid-cols-3 gap-2.5 mb-6">
                   {STARTERS[category].map((s, i) => (
                     <button key={i} onClick={() => send(s)}

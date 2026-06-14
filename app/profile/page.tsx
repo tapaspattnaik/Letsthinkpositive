@@ -11,7 +11,8 @@ import { MoodSleepCard }   from '@/components/profile/MoodSleepCard'
 import { WellnessScore }   from '@/components/profile/WellnessScore'
 import { GentleBanner }    from '@/components/GentleBanner'
 import { WallComposer }    from '@/components/WallComposer'
-import { PhoneInput }      from '@/components/ui/PhoneInput'
+import { PhoneInput }        from '@/components/ui/PhoneInput'
+import { BuddySuggestions }  from '@/components/BuddySuggestions'
 
 const INTERESTS = [
   'Mindfulness','Sleep','Gratitude','Anxiety Relief',
@@ -234,14 +235,25 @@ export default function ProfilePage() {
 
   async function saveProfile() {
     setSaving(true)
-    const res = await fetch('/api/profile', {
-      method: 'PUT', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...form, interests: selected }),
-    })
-    const updated = await res.json()
-    setProfile(p => p ? { ...p, ...updated } : p)
-    setSaving(false); setSaved(true); setEditing(false)
-    setTimeout(() => setSaved(false), 3000)
+    try {
+      const res = await fetch('/api/profile', {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...form, interests: selected }),
+      })
+      const updated = await res.json()
+      if (!res.ok) {
+        alert('Could not save profile: ' + (updated?.error ?? 'Unknown error'))
+        setSaving(false)
+        return
+      }
+      setProfile(p => p ? { ...p, ...updated } : p)
+      setSaved(true); setEditing(false)
+      setTimeout(() => setSaved(false), 3000)
+    } catch {
+      alert('Network error — profile not saved. Please try again.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   function jumpToTab(tab: Tab) {
@@ -706,6 +718,19 @@ export default function ProfilePage() {
               </div>
             </Link>
 
+            {/* Letter from your future self */}
+            <Link href="/future-letter"
+              className="block bg-gradient-to-br from-amber-pale to-white border border-amber/30 rounded-[20px] p-5 no-underline hover:shadow-lift hover:-translate-y-0.5 transition-all group">
+              <div className="flex items-center gap-3">
+                <span className="text-[1.8rem]">💌</span>
+                <div>
+                  <p className="text-amber text-[0.65rem] font-bold uppercase tracking-widest mb-0.5">AI · monthly</p>
+                  <p className="text-charcoal font-display font-bold text-[0.95rem] leading-snug">Letter from Your Future Self</p>
+                  <p className="text-text-xlight text-[0.72rem] mt-0.5 group-hover:text-text-mid transition-colors">A personal note from one year ahead →</p>
+                </div>
+              </div>
+            </Link>
+
             {/* Year in Positivity — wrapped */}
             <Link href="/wrapped"
               className="block bg-gradient-to-br from-[#0F4040] to-teal-mid rounded-[20px] p-5 no-underline hover:shadow-lift hover:-translate-y-0.5 transition-all group">
@@ -827,6 +852,9 @@ export default function ProfilePage() {
                 className="mt-3 flex items-center justify-center gap-1.5 w-full border border-teal-light text-teal-deep text-[0.75rem] font-semibold py-2 rounded-full no-underline hover:bg-teal-ghost transition-colors">
                 ✨ Discover more members
               </Link>
+
+              {/* Buddy suggestions — shared challenges + interests */}
+              <BuddySuggestions />
             </div>
 
             {/* Admin + Sign out — mobile */}

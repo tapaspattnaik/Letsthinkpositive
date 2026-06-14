@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/yoga' },
   title: 'Yoga Guide — Types, Steps & Benefits',
   description: 'Explore different styles of yoga, step-by-step guides, and the proven medical benefits of a regular yoga practice.',
 }

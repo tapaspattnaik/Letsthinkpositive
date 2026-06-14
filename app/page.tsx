@@ -11,7 +11,13 @@ import { Newsletter }       from '@/components/home/Newsletter'
 import { DailyCheckIn }    from '@/components/home/DailyCheckIn'
 import { PersonalisedSection } from '@/components/home/PersonalisedSection'
 import { ForYouWrapper }       from '@/components/home/ForYouWrapper'
+import { SmartSearchBar }      from '@/components/SmartSearchBar'
 import Link from 'next/link'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  alternates: { canonical: '/' },
+}
 
 export default function HomePage() {
   return (
@@ -21,6 +27,8 @@ export default function HomePage() {
       <WellnessPillars />
       <section className="py-12 px-[5%] bg-ivory">
         <div className="max-w-2xl mx-auto space-y-6">
+          {/* Smart search — describe how you feel, get routed to the right tool */}
+          <SmartSearchBar />
           {/* Personalised section — client-only (useSession + fetch) */}
           <PersonalisedSection />
           <DailyCheckIn />

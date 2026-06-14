@@ -18,6 +18,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: circle.description
         ? `${circle.description.slice(0, 155)}${circle.description.length > 155 ? '…' : ''}`
         : `Join the ${circle.name} circle on letsthinkpositive and connect with a supportive community.`,
+      alternates: { canonical: `/circles/${slug}` },
       openGraph: {
         title: `${circle.name} — letsthinkpositive`,
         description: circle.description ?? `A private wellness circle on letsthinkpositive.`,

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/coach' },
   title: 'Calm Coach',
   description: 'Chat with Bit, your AI-powered calm coach. Get personalised support for mood, anxiety, motivation, gratitude, sleep, and daily reflection — available any time.',
   openGraph: {

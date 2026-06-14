@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/gratitude-wall' },
   title: 'Gratitude Wall',
   description: 'A daily public space where people share one thing they\'re grateful for today.',
 }

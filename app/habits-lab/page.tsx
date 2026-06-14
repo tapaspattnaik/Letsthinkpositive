@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/habits-lab' },
   title: 'Habits Lab — The Science of Building Better Habits',
   description: 'Learn the science behind habit formation, habit stacking, and atomic habits. Build routines that last.',
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/community' },
   title: 'Community',
   description: 'Share stories, post wishes, and connect with a warm community working on their mental wellness journey.',
 }

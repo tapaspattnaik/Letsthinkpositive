@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/drawing' },
   title: 'Positive Drawing — Meditative Art for Calm & Focus',
   description: 'Discover zentangle, ZenDoodle, mandala, and other meditative drawing styles. No talent needed — just a pen, paper, and a few quiet minutes.',
 }

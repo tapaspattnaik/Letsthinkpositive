@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/vision-board' },
   title: 'Vision Board',
   description: 'Create a personal vision board with intention cards. Visualise your goals and manifest the life you want to live.',
 }

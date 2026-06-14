@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/kids' },
   title: 'Kids Zone — Calm & Kindness Activities',
   description: 'Fun, gentle activities to help children aged 5–12 practice calm, kindness, and gratitude. Simple techniques for little learners.',
 }

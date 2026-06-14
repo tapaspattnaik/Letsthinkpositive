@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { getAllArticles, ALL_CATEGORIES } from '@/lib/library'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/library' },
   title: 'Wellness Library',
   description: 'Evidence-backed articles on mindfulness, sleep, gratitude, anxiety, and self-care — written to help you live better, one read at a time.',
 }

@@ -15,7 +15,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params
   const article = await getArticle(slug)
   if (!article) return {}
-  return { title: article.title, description: article.excerpt }
+  return {
+    title: article.title,
+    description: article.excerpt,
+    alternates: { canonical: `/library/${slug}` },
+  }
 }
 
 export default async function ArticlePage({ params }: { params: Promise<{ slug: string }> }) {

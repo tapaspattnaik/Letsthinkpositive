@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/good-news' },
   title: 'Good News',
   description: 'Your daily dose of positive news. Uplifting stories from around the world — science breakthroughs, acts of kindness, environmental wins, and human connection.',
   openGraph: {

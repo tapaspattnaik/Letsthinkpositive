@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/assessments' },
   title: 'Wellness Assessments',
   description: 'Take evidence-informed wellness assessments to understand your mental and emotional health. Track your scores over time and get guidance on where to focus.',
   openGraph: {

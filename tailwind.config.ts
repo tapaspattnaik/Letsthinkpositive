@@ -25,7 +25,7 @@ const config: Config = {
         charcoal: '#1C2B2B',
         'text-mid':    '#2E4A4A',
         'text-light':  '#4A6565',
-        'text-xlight': '#7A9898',
+        'text-xlight': '#5A7676',
       },
       fontFamily: {
         display: ['var(--font-playfair)', 'Georgia', 'serif'],

@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { JsonLd } from '@/components/JsonLd'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/meditation' },
   title: 'Guided Meditation',
   description: 'Find your calm with guided meditation sessions designed for sleep, anxiety, focus, and morning peace. From 5 to 30 minutes.',
 }

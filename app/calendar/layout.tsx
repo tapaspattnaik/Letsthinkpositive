@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/calendar' },
   title: 'Wellness Calendar',
   description: 'Plan and visualise your wellness journey. Track moods, habits, check-ins, and milestones across the month — your personal wellbeing at a glance.',
   openGraph: {

@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/positive-eating' },
   title: 'Positive Eating — Food, Mood & Mental Wellness',
   description: 'Discover how food affects your mind and mood. Science-backed nutrition for mental wellness, energy, and emotional balance.',
 }

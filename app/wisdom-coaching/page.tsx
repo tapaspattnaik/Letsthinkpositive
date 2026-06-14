@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/wisdom-coaching' },
   title: 'Wisdom Coaching — Life Guidance, Clarity & Purpose',
   description: 'Explore timeless wisdom, coaching frameworks, and practical tools for clarity, purpose, and meaningful living.',
 }

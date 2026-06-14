@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { VoiceDictation } from '@/components/ui/VoiceDictation'
+import { DistressSupport } from '@/components/DistressSupport'
 
 interface Entry {
   id:      string
@@ -109,8 +111,27 @@ export default function JournalPage() {
   const [text, setText]       = useState('')
   const [mood, setMood]       = useState('')
   const [saved, setSaved]     = useState(false)
+  const [tidying, setTidying] = useState(false)
   const [aiPrompt, setAiPrompt]   = useState<string | null>(null)
   const [promptSource, setPromptSource] = useState<'ai' | 'static'>('static')
+
+  // Voice → tidy transcript → fill entry (and suggest mood if none picked)
+  async function handleTranscript(raw: string) {
+    setTidying(true)
+    try {
+      const res = await fetch('/api/ai-tidy-transcript', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transcript: raw }),
+      })
+      const d = res.ok ? await res.json() : { text: raw, mood: null }
+      setText(t => t ? `${t}\n${d.text ?? raw}` : (d.text ?? raw))
+      if (d.mood) setMood(m => m || d.mood)
+    } catch {
+      setText(t => t ? `${t}\n${raw}` : raw)
+    } finally {
+      setTidying(false)
+    }
+  }
 
   const staticPrompt = STATIC_PROMPTS[new Date().getDay() % STATIC_PROMPTS.length]
   const prompt = aiPrompt ?? staticPrompt
@@ -188,13 +209,22 @@ export default function JournalPage() {
             </div>
           </div>
 
+          {/* Voice dictation — speak instead of type */}
+          <div className="flex items-center gap-3 mb-3">
+            <VoiceDictation disabled={tidying} onTranscript={handleTranscript} />
+            {tidying && <span className="text-[0.78rem] text-teal-mid font-medium">✨ Tidying up your words…</span>}
+          </div>
+
           {/* Text area */}
           <textarea
             value={text} onChange={e => setText(e.target.value)}
-            placeholder="Write freely — there are no wrong answers here..."
+            placeholder="Write freely — or tap the mic and just talk. There are no wrong answers here..."
             rows={6}
             className="w-full border border-teal-light rounded-[24px] px-6 py-4 text-[0.97rem] text-charcoal bg-white outline-none focus:border-teal-mid transition-colors resize-none placeholder:text-text-xlight mb-4"
           />
+
+          {/* Distress-aware support — shown instantly if crisis signals detected */}
+          <DistressSupport text={text} />
 
           <div className="flex items-center gap-4">
             <button onClick={save}

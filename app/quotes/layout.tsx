@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/quotes' },
   title:       'Quote Card Creator | Let\'s Think Positive',
   description: 'Create beautiful shareable quote cards. Pick a quote, choose a design, download and share.',
 }

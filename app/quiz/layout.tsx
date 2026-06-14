@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/quiz' },
   title: 'Wellness Quiz',
   description: 'Discover your wellness profile with our quick quiz. Find out which tools, practices, and habits suit your personality and lifestyle best.',
   openGraph: {
