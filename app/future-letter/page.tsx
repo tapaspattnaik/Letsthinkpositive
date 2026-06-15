@@ -3,7 +3,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
-import html2canvas from 'html2canvas'
 
 export default function FutureLetterPage() {
   const { status } = useSession()
@@ -42,6 +41,7 @@ export default function FutureLetterPage() {
     if (!cardRef.current) return
     setSharing(true)
     try {
+      const html2canvas = (await import('html2canvas')).default
       const canvas = await html2canvas(cardRef.current, { scale: 2, useCORS: true, backgroundColor: null })
       canvas.toBlob(async blob => {
         if (!blob) return

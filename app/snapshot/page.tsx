@@ -1,7 +1,5 @@
 'use client'
 
-// npm install html2canvas
-import html2canvas from 'html2canvas'
 import { useState, useEffect, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
@@ -187,6 +185,7 @@ export default function SnapshotPage() {
     if (!snapshotRef.current) return
     setDownloading(true)
     try {
+      const html2canvas = (await import('html2canvas')).default
       const canvas = await html2canvas(snapshotRef.current, {
         backgroundColor: '#EEF7F6',
         scale: 2,

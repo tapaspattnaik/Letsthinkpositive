@@ -1,8 +1,10 @@
 'use client'
 
-import html2canvas from 'html2canvas'
 import { useState, useRef, useCallback } from 'react'
 import Image from 'next/image'
+
+// Lazy-load html2canvas (~150 KiB) only when the user actually exports a card
+const loadHtml2Canvas = () => import('html2canvas').then(m => m.default)
 
 const EXAMPLE_QUOTES = [
   'The comeback is always stronger than the setback.',
@@ -87,6 +89,7 @@ export default function QuoteCreatorPage() {
     if (!cardRef.current) return
     setDownloading(true)
     try {
+      const html2canvas = await loadHtml2Canvas()
       const canvas = await html2canvas(cardRef.current, {
         scale: 2, useCORS: true, allowTaint: true, backgroundColor: null, logging: false,
       })
@@ -101,6 +104,7 @@ export default function QuoteCreatorPage() {
   const handleShare = useCallback(async () => {
     if (!cardRef.current) return
     try {
+      const html2canvas = await loadHtml2Canvas()
       const canvas = await html2canvas(cardRef.current, { scale: 2, useCORS: true, allowTaint: true, logging: false })
       canvas.toBlob(async (blob: Blob | null) => {
         if (!blob) return
@@ -126,6 +130,7 @@ export default function QuoteCreatorPage() {
     if (!cardRef.current) return 'https://letsthinkpositive.com/quotes'
     setShareLoading(true)
     try {
+      const html2canvas = await loadHtml2Canvas()
       const canvas    = await html2canvas(cardRef.current, { scale: 2, useCORS: true, allowTaint: true, logging: false })
       const imageData = canvas.toDataURL('image/png')
       const res       = await fetch('/api/share-image', {
@@ -154,6 +159,7 @@ export default function QuoteCreatorPage() {
     if (wallPosting || !cardRef.current) return
     setWallPosting(true)
     try {
+      const html2canvas = await loadHtml2Canvas()
       const canvas = await html2canvas(cardRef.current, { scale: 2, useCORS: true, allowTaint: true, logging: false })
       const blob: Blob | null = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'))
       let images: string[] = []

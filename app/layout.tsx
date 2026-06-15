@@ -3,7 +3,7 @@ import { Playfair_Display, DM_Sans, DM_Serif_Display } from 'next/font/google'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { SessionProvider } from '@/components/layout/SessionProvider'
-import { BitWidget } from '@/components/BitWidget'
+import { BitWidgetLazy } from '@/components/BitWidgetLazy'
 import { ConstructionBanner } from '@/components/layout/ConstructionBanner'
 import { HeaderHeight } from '@/components/layout/HeaderHeight'
 import { BottomNav } from '@/components/layout/BottomNav'
@@ -153,7 +153,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <BottomNav />
           {/* Footer hidden on mobile — bottom nav replaces it */}
           <div className="hidden lg:block"><Footer /></div>
-          <BitWidget />
+          <BitWidgetLazy />
         </SessionProvider>
         </LanguageProvider>
 
