@@ -107,6 +107,7 @@ export function BitWidget() {
         aria-modal="true"
         aria-label="Bit — AI wellness companion"
         aria-hidden={!open}
+        inert={!open}
         className={`flex flex-col bg-white rounded-[24px] shadow-[0_8px_40px_rgba(0,0,0,0.18)] border border-teal-light overflow-hidden transition-all duration-300 origin-bottom-right
         ${open
           ? 'opacity-100 scale-100 translate-y-0 w-[88vw] max-w-[380px] h-[70vh] max-h-[540px] pointer-events-auto'

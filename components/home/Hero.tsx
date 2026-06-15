@@ -80,7 +80,7 @@ export function Hero() {
               </div>
             </div>
           </div>
-          <p className="mt-8 font-display italic text-[0.93rem] text-white/55 tracking-wide">
+          <p className="mt-8 font-display italic text-[0.93rem] text-white/80 tracking-wide">
             — where every thought begins with hope —
           </p>
         </div>

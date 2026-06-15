@@ -397,6 +397,7 @@ export function Navbar() {
       <div
         className="lg:hidden"
         aria-hidden={!drawerOpen}
+        inert={!drawerOpen}
       >
         {/* Backdrop */}
         <div

@@ -54,7 +54,7 @@ export function DailyRecipe() {
           <h3 className="font-display font-bold text-[1.2rem] leading-tight">
             {greeting()}, {name} ✨
           </h3>
-          <p className="text-white/65 text-[0.8rem] mt-0.5">
+          <p className="text-white/80 text-[0.8rem] mt-0.5">
             Based on your recent mood, sleep & streak
           </p>
         </div>
@@ -68,9 +68,9 @@ export function DailyRecipe() {
             <div className="flex items-center gap-2 mb-1.5">
               <span className="text-[1.2rem]">{tool.emoji}</span>
               <p className="font-semibold text-[0.86rem] text-white leading-none">{tool.label}</p>
-              <span className="ml-auto text-white/40 group-hover:text-white/80 transition-colors text-[0.8rem]">→</span>
+              <span aria-hidden="true" className="ml-auto text-white/70 group-hover:text-white transition-colors text-[0.8rem]">→</span>
             </div>
-            <p className="text-white/60 text-[0.72rem] leading-snug">{tool.reason}</p>
+            <p className="text-white/80 text-[0.72rem] leading-snug">{tool.reason}</p>
             <div className="mt-2 flex items-center gap-1">
               <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[0.65rem] font-bold text-white">
                 {i + 1}
