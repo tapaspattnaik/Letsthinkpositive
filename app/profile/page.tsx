@@ -13,6 +13,7 @@ import { GentleBanner }    from '@/components/GentleBanner'
 import { WallComposer }    from '@/components/WallComposer'
 import { PhoneInput }        from '@/components/ui/PhoneInput'
 import { BuddySuggestions }  from '@/components/BuddySuggestions'
+import { useModalA11y }       from '@/hooks/useModalA11y'
 
 const INTERESTS = [
   'Mindfulness','Sleep','Gratitude','Anxiety Relief',
@@ -172,6 +173,10 @@ export default function ProfilePage() {
   const fileRef      = useRef<HTMLInputElement>(null)
   const coverFileRef = useRef<HTMLInputElement>(null)
   const tabsRef      = useRef<HTMLDivElement>(null)
+
+  // Accessible modals — focus trap, Escape to close, scroll lock, focus restore
+  const editModalRef  = useModalA11y<HTMLDivElement>(editing,       () => setEditing(false))
+  const coverModalRef = useModalA11y<HTMLDivElement>(showCoverPick, () => setShowCoverPick(false))
 
   // Adaptive tool ordering — most-used tools float to the top of each category
   const [toolUsage, setToolUsage] = useState<Record<string, number>>({})
@@ -499,14 +504,16 @@ export default function ProfilePage() {
 
       {/* ── Cover Picker Modal ──────────────────────────────────────────── */}
       {showCoverPick && (
-        <div className="fixed inset-0 z-[70] bg-black/50 backdrop-blur-sm flex items-center justify-center px-4 py-8 overflow-y-auto">
-          <div className="bg-white rounded-[28px] w-full max-w-lg shadow-2xl">
+        <div className="fixed inset-0 z-[70] bg-black/50 backdrop-blur-sm flex items-center justify-center px-4 py-8 overflow-y-auto"
+          onMouseDown={e => { if (e.target === e.currentTarget) setShowCoverPick(false) }}>
+          <div ref={coverModalRef} role="dialog" aria-modal="true" aria-label="Choose Cover" tabIndex={-1}
+            className="bg-white rounded-[28px] w-full max-w-lg shadow-2xl outline-none">
             <div className="flex items-center justify-between px-7 pt-7 pb-4">
               <div>
                 <h2 className="font-display text-[1.3rem] font-bold text-charcoal">Choose Cover</h2>
                 <p className="text-text-xlight text-[0.78rem]">Pick a gradient or upload your own photo</p>
               </div>
-              <button onClick={() => setShowCoverPick(false)} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-teal-ghost transition-colors text-text-mid">✕</button>
+              <button onClick={() => setShowCoverPick(false)} aria-label="Close cover picker" className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-teal-ghost transition-colors text-text-mid">✕</button>
             </div>
 
             <div className="px-7 pb-7 space-y-5">
@@ -568,11 +575,13 @@ export default function ProfilePage() {
 
       {/* Edit form modal */}
       {editing && (
-        <div className="fixed inset-0 z-[70] bg-black/40 backdrop-blur-sm flex items-center justify-center px-4 py-8 overflow-y-auto">
-          <div className="bg-white rounded-[28px] p-8 w-full max-w-lg shadow-2xl">
+        <div className="fixed inset-0 z-[70] bg-black/40 backdrop-blur-sm flex items-center justify-center px-4 py-8 overflow-y-auto"
+          onMouseDown={e => { if (e.target === e.currentTarget) setEditing(false) }}>
+          <div ref={editModalRef} role="dialog" aria-modal="true" aria-label="Edit Profile" tabIndex={-1}
+            className="bg-white rounded-[28px] p-8 w-full max-w-lg shadow-2xl outline-none">
             <div className="flex items-center justify-between mb-6">
               <h2 className="font-display text-[1.3rem] font-bold text-charcoal">Edit Profile</h2>
-              <button onClick={() => setEditing(false)} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-teal-ghost transition-colors text-text-mid text-[1.1rem]">✕</button>
+              <button onClick={() => setEditing(false)} aria-label="Close editor" className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-teal-ghost transition-colors text-text-mid text-[1.1rem]">✕</button>
             </div>
             <div className="space-y-4">
               <div>
