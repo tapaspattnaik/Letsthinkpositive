@@ -17,6 +17,21 @@ const nextConfig = {
     cpus: 2,
   },
 
+  // ── Canonical host: redirect www → non-www (301) ──────────────────────
+  // Backup for the Hostinger-level redirect. Ensures crawlers and users on
+  // www.letsthinkpositive.com land on the canonical apex domain. Only fires
+  // if the request actually reaches the Next server (i.e. www routes to the app).
+  async redirects() {
+    return [
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'www.letsthinkpositive.com' }],
+        destination: 'https://letsthinkpositive.com/:path*',
+        permanent: true,
+      },
+    ]
+  },
+
   async headers() {
     return [
       {
