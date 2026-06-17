@@ -29,7 +29,7 @@ function formatPhone(raw: string): string {
 }
 
 export function PhoneInput({
-  value, onChange, placeholder = '+91 98765 43210',
+  value, onChange, placeholder = '+1 555 123 4567',
 }: {
   value: string
   onChange: (v: string) => void

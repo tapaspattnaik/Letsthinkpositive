@@ -28,7 +28,7 @@ function timeAgo(d?: string) {
   if (hours < 1)   return `${mins}m ago`
   if (hours < 24)  return `${hours}h ago`
   if (days < 30)   return `${days}d ago`
-  return new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: '2-digit' })
+  return new Date(d).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: '2-digit' })
 }
 
 function RoleBadge({ role }: { role: string }) {

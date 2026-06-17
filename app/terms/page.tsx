@@ -46,7 +46,7 @@ const sections = [
   },
   {
     title: '10. Governing Law',
-    body: `These Terms shall be governed by and construed in accordance with the laws of India. Any disputes shall be subject to the exclusive jurisdiction of the courts of India.`,
+    body: `These Terms shall be governed by and construed in accordance with the laws of the jurisdiction in which the site operator is established, without regard to its conflict-of-law provisions. Any disputes shall be subject to the exclusive jurisdiction of the competent courts of that jurisdiction.`,
   },
   {
     title: '11. Contact',

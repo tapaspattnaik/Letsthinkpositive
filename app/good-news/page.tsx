@@ -22,7 +22,7 @@ const FALLBACK_STORIES: Article[] = [
   { title: 'Childhood cancer survival rates reach all-time high of 85%', description: 'Advances in targeted therapy and immunotherapy have pushed five-year survival rates for paediatric cancers to historic highs never seen before.', url: '#', image: null, source: 'Cancer Research UK', publishedAt: new Date().toISOString() },
   { title: 'Former refugee now runs the largest food bank in the city that once sheltered him', description: 'After arriving with nothing 20 years ago, he now distributes over 5,000 meals a week and employs 60 people from similar backgrounds.', url: '#', image: null, source: 'The Guardian', publishedAt: new Date().toISOString() },
   { title: 'Teen starts free library of warm coats for anyone who needs one', description: 'A 15-year-old set up a "take one, leave one" coat exchange that has distributed over 3,000 coats across two consecutive winters in her community.', url: '#', image: null, source: 'Good News Network', publishedAt: new Date().toISOString() },
-  { title: 'India plants 250 million trees in a single day — a new world record', description: 'As part of a national reforestation drive, 1.5 million volunteers participated in a coordinated tree-planting event across 20 states simultaneously.', url: '#', image: null, source: 'NDTV', publishedAt: new Date().toISOString() },
+  { title: 'Volunteers plant 250 million trees in a single day — a new world record', description: 'A coordinated reforestation drive saw 1.5 million volunteers plant a quarter-billion trees in one day, smashing the previous global record.', url: '#', image: null, source: 'Good News Network', publishedAt: new Date().toISOString() },
 ]
 
 const CATEGORIES = [

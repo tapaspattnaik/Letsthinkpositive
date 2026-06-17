@@ -128,7 +128,7 @@ export function BlogFilter({ posts }: { posts: PostMeta[] }) {
             <div className="px-7 py-4 border-t border-teal-ghost flex justify-between items-center">
               <span className="text-[0.82rem] font-semibold text-teal-mid group-hover:text-teal-deep transition-colors">Read more →</span>
               <span className="text-[0.76rem] text-text-xlight">
-                By {post.author} · {new Date(post.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                By {post.author} · {new Date(post.date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
               </span>
             </div>
           </Link>

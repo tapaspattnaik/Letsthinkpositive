@@ -7,10 +7,12 @@ const SIGNALS = [
   /\b(want to die|kill myself|end my life|end it all|no reason to live|better off dead|harm myself|hurt myself|self.harm|suicid|not worth living)\b/i,
 ]
 
-const HELPLINES = [
-  { name: 'iCall (India)', number: '9152987821', note: 'Mon–Sat, 8 am–10 pm' },
-  { name: 'Vandrevala Foundation', number: '1860-2662-345', note: '24/7' },
-  { name: 'iSPOOVA (India)', number: '9999-666-555', note: '24/7' },
+// Global-first crisis resources. Find a Helpline covers every country; the
+// others are major 24/7 lines for the largest English-speaking regions.
+const HELPLINES: { name: string; number: string; note: string; href: string }[] = [
+  { name: 'Find a Helpline', number: 'findahelpline.com', note: 'free & confidential — your country', href: 'https://findahelpline.com' },
+  { name: '988 Suicide & Crisis Lifeline', number: '988', note: 'US & Canada · 24/7', href: 'tel:988' },
+  { name: 'Samaritans', number: '116 123', note: 'UK & Ireland · 24/7', href: 'tel:116123' },
 ]
 
 interface Props { text: string }
@@ -33,7 +35,8 @@ export function DistressSupport({ text }: Props) {
           <div className="flex flex-col gap-2">
             {HELPLINES.map(h => (
               <div key={h.name} className="flex items-center gap-3">
-                <a href={`tel:${h.number.replace(/\D/g, '')}`}
+                <a href={h.href}
+                  {...(h.href.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                   className="font-bold text-rose-700 text-[0.88rem] underline underline-offset-2 hover:text-rose-900">
                   {h.name}: {h.number}
                 </a>

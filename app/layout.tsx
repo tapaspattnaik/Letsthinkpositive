@@ -53,7 +53,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://letsthinkpositive.com'),
   openGraph: {
     siteName: 'letsthinkpositive',
-    locale:   'en_IN',
+    locale:   'en_US',
     type:     'website',
   },
   manifest: '/manifest.json',

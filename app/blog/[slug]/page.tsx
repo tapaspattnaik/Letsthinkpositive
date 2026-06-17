@@ -191,7 +191,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
           <div className="flex items-center gap-3 text-[0.82rem] text-white/55 flex-wrap">
             <span>By {post.author}</span>
             <span>·</span>
-            <span>{new Date(post.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+            <span>{new Date(post.date).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
             <span>·</span>
             <span className="flex items-center gap-1">
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

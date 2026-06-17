@@ -94,7 +94,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
           <div className="flex items-center gap-3 text-[0.82rem] text-white/55">
             <span>By {article.author}</span>
             <span>·</span>
-            <span>{new Date(article.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+            <span>{new Date(article.date).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
           </div>
           {/* Tags */}
           <div className="flex gap-2 flex-wrap mt-5">

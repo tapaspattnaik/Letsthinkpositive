@@ -620,7 +620,7 @@ export default function ProfilePage() {
               <div>
                 <label className="block text-[0.78rem] font-semibold text-teal-deep mb-1.5">Phone (optional)</label>
                 <PhoneInput value={form.phone} onChange={v => setForm(f => ({ ...f, phone: v }))} />
-                <p className="text-[0.7rem] text-text-xlight mt-1">Formats automatically as you type — include your country code (e.g. +91, +1).</p>
+                <p className="text-[0.7rem] text-text-xlight mt-1">Formats automatically as you type — include your country code (e.g. +1, +44).</p>
               </div>
               <div>
                 <div className="flex items-center justify-between mb-1.5">

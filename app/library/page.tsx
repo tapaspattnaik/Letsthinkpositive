@@ -119,7 +119,7 @@ function ArticleCard({ article: a, featured = false }: { article: ReturnType<typ
         <p className="text-[0.875rem] text-text-light leading-[1.7] mb-4 line-clamp-3">{a.excerpt}</p>
         <div className="flex items-center justify-between text-[0.78rem] text-text-xlight">
           <span>{a.author}</span>
-          <span>{new Date(a.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+          <span>{new Date(a.date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
         </div>
       </div>
     </Link>

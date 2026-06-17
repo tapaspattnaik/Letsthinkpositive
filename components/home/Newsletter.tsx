@@ -75,7 +75,7 @@ export function Newsletter() {
           </>
         )}
 
-        <p className="text-[0.8rem] text-text-xlight mt-4">Join readers from across India and the world. Unsubscribe anytime.</p>
+        <p className="text-[0.8rem] text-text-xlight mt-4">Join readers from around the world. Unsubscribe anytime.</p>
       </div>
     </section>
   )

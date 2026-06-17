@@ -94,7 +94,7 @@ export default function FeedPage() {
   const [liked, setLiked]   = useState<Set<number>>(new Set())
   const [saved, setSaved]   = useState<Set<number>>(new Set())
 
-  const today = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })
+  const today = new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' })
 
   // Daily featured item — rotates by date
   const dailyIndex = Math.floor(Date.now() / 86400000) % ALL_FEED_ITEMS.length

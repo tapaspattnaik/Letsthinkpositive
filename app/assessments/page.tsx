@@ -478,7 +478,9 @@ export default function AssessmentsPage() {
               <p className="font-bold text-red-700 text-[0.9rem] mb-1">📞 Please reach out for support</p>
               <p className="text-red-600 text-[0.82rem] leading-[1.7]">
                 Your results suggest you may benefit from talking to a mental health professional.
-                In India: iCall — <strong>9152987821</strong> · Vandrevala Foundation — <strong>1860-2662-345</strong>
+                Find a free, confidential helpline in your country at{' '}
+                <a href="https://findahelpline.com" target="_blank" rel="noopener noreferrer" className="underline font-semibold hover:text-red-800">findahelpline.com</a>
+                {' '}— or call <strong>988</strong> (US &amp; Canada) or <strong>116 123</strong> (UK &amp; Ireland).
               </p>
             </div>
           )}

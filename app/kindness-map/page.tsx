@@ -28,8 +28,6 @@ interface KindnessAct {
 // ─── City presets ─────────────────────────────────────────────────────────────
 
 const CITY_PRESETS = [
-  { label: 'Mumbai, India',           city: 'Mumbai',        country: 'India',          lat: 19.076,   lng: 72.877  },
-  { label: 'Delhi, India',            city: 'Delhi',         country: 'India',          lat: 28.614,   lng: 77.209  },
   { label: 'London, UK',              city: 'London',        country: 'United Kingdom', lat: 51.507,   lng: -0.127  },
   { label: 'New York, USA',           city: 'New York',      country: 'United States',  lat: 40.713,   lng: -74.006 },
   { label: 'Sydney, Australia',       city: 'Sydney',        country: 'Australia',      lat: -33.868,  lng: 151.209 },
@@ -52,6 +50,8 @@ const CITY_PRESETS = [
   { label: 'Istanbul, Turkey',        city: 'Istanbul',      country: 'Turkey',         lat: 41.015,   lng: 28.979  },
   { label: 'Seoul, South Korea',      city: 'Seoul',         country: 'South Korea',    lat: 37.566,   lng: 126.978 },
   { label: 'Los Angeles, USA',        city: 'Los Angeles',   country: 'United States',  lat: 34.052,   lng: -118.244},
+  { label: 'Mumbai, India',           city: 'Mumbai',        country: 'India',          lat: 19.076,   lng: 72.877  },
+  { label: 'Delhi, India',            city: 'Delhi',         country: 'India',          lat: 28.614,   lng: 77.209  },
   { label: 'Bangalore, India',        city: 'Bangalore',     country: 'India',          lat: 12.972,   lng: 77.595  },
 ]
 

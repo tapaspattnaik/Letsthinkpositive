@@ -37,7 +37,7 @@ export default function DisclaimerPage() {
               The Bit chat companion and Calm Coach are powered by artificial intelligence. Their responses are generated algorithmically and may occasionally be incomplete, inaccurate, or inappropriate for your specific situation. These features are designed for general wellness exploration and emotional reflection only — they are not therapists, counsellors, or medical professionals.
             </p>
             <p className="text-text-mid text-[0.95rem] leading-[1.85] mt-3">
-              <strong>If you are in crisis, experiencing thoughts of self-harm, or need urgent support, please stop and contact a qualified professional or emergency services immediately.</strong> In India: iCall — 9152987821. Internationally: please contact your local crisis line or emergency services.
+              <strong>If you are in crisis, experiencing thoughts of self-harm, or need urgent support, please stop and contact a qualified professional or emergency services immediately.</strong> Find a free, confidential helpline in your country at findahelpline.com — or call your local crisis line or emergency services.
             </p>
           </section>
 
