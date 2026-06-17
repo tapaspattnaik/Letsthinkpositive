@@ -55,10 +55,16 @@ const NextStepCard = dynamic(
   { ssr: false, loading: () => null }
 )
 
+const BirthdayBanner = dynamic(
+  () => import('@/components/BirthdayBanner').then(m => ({ default: m.BirthdayBanner })),
+  { ssr: false, loading: () => null }
+)
+
 export function PersonalisedSection() {
   return (
     <>
       <OnboardingModal />
+      <BirthdayBanner />
       <GentleBanner />
       <NextStepCard />
       <DailyRewardCard />

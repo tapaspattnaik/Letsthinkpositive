@@ -37,18 +37,31 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
 
   try {
-    const { name, phone, bio, website, interests, coverStyle, coverUrl } = await req.json()
+    const { name, phone, bio, website, interests, coverStyle, coverUrl,
+            dateOfBirth, pronouns, primaryGoal, lifeStage } = await req.json()
+
+    // Parse DOB: '' clears it, a valid past date sets it, undefined leaves it
+    let dob: Date | null | undefined = undefined
+    if (dateOfBirth === '' || dateOfBirth === null) dob = null
+    else if (dateOfBirth) {
+      const d = new Date(dateOfBirth)
+      if (!isNaN(d.getTime()) && d.getTime() < Date.now()) dob = d
+    }
 
     const updated = await prisma.user.update({
       where: { id: Number(session.user.id) },
       data: {
-        name:       name       || undefined,
-        phone:      phone      ?? undefined,
-        bio:        bio        ?? undefined,
-        website:    website    ?? undefined,
-        interests:  Array.isArray(interests) ? interests.join(',') : (interests ?? undefined),
-        coverStyle: coverStyle ?? undefined,
-        coverUrl:   coverUrl   ?? undefined,
+        name:        name       || undefined,
+        phone:       phone      ?? undefined,
+        bio:         bio        ?? undefined,
+        website:     website    ?? undefined,
+        interests:   Array.isArray(interests) ? interests.join(',') : (interests ?? undefined),
+        coverStyle:  coverStyle ?? undefined,
+        coverUrl:    coverUrl   ?? undefined,
+        dateOfBirth: dob,
+        pronouns:    pronouns    ?? undefined,
+        primaryGoal: primaryGoal ?? undefined,
+        lifeStage:   lifeStage   ?? undefined,
       },
     })
 

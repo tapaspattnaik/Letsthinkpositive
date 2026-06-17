@@ -33,6 +33,14 @@ model User {
   createdAt  DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Personalisation profile — captured at registration / in profile edit.
+  // Drives birthday automation, tailored recommendations, AI tone & timing.
+  dateOfBirth DateTime? @map("date_of_birth")
+  pronouns    String?   @db.VarChar(30)
+  primaryGoal String?   @map("primary_goal") @db.VarChar(50)
+  lifeStage   String?   @map("life_stage")   @db.VarChar(40)
+  timezone    String?   @db.VarChar(64)
+
   // Access control
   role          String    @default("user") @db.VarChar(20)
   blocked       Boolean   @default(false)

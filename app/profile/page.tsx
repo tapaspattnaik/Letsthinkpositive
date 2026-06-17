@@ -21,6 +21,29 @@ const INTERESTS = [
   'Journaling','Community','Kids Wellness','Creative Arts',
 ]
 
+// Primary goal options — must mirror the ids used at registration
+const GOAL_OPTIONS = [
+  { id: 'reduce-anxiety',   label: '😌 Reduce anxiety' },
+  { id: 'sleep-better',     label: '🌙 Sleep better' },
+  { id: 'build-habits',     label: '🎯 Build habits' },
+  { id: 'process-emotions', label: '📓 Process emotions' },
+  { id: 'more-grateful',    label: '🙏 More grateful' },
+  { id: 'find-community',   label: '💛 Find community' },
+  { id: 'boost-confidence', label: '✨ Boost confidence' },
+]
+
+// Tools most relevant to each primary goal — gently floated to the top of the
+// tool grid so new users (with no usage history yet) see what fits their goal.
+const GOAL_TOOLS: Record<string, string[]> = {
+  'reduce-anxiety':   ['/breathing', '/meditation', '/reframe', '/sounds'],
+  'sleep-better':     ['/sleep', '/breathing', '/sounds'],
+  'build-habits':     ['/habits', '/challenges', '/calendar'],
+  'process-emotions': ['/journal', '/mood', '/reframe'],
+  'more-grateful':    ['/gratitude-wall', '/journal', '/affirmation'],
+  'find-community':   ['/community', '/circles', '/tribe'],
+  'boost-confidence': ['/affirmation', '/intention', '/vision-board'],
+}
+
 interface BadgeEntry {
   earnedAt: string
   badge: { slug: string; name: string; description: string; icon: string; tier: string }
@@ -43,6 +66,7 @@ interface UserProfile {
   id: number; name: string; email: string; phone?: string; bio?: string; role?: string
   interests: string; avatarUrl?: string; coverStyle?: string; coverUrl?: string; createdAt: string
   currentStreak?: number; longestStreak?: number; streakFreezes?: number
+  dateOfBirth?: string | null; pronouns?: string; primaryGoal?: string; lifeStage?: string
   badges: BadgeEntry[]; progress: ProgressEntry[]
 }
 
@@ -160,7 +184,7 @@ export default function ProfilePage() {
   const [tribeFollowing, setTribeFollowing] = useState<{id:number;name:string;avatarUrl:string|null}[]>([])
   const [tribeFollowers, setTribeFollowers] = useState<{id:number;name:string;avatarUrl:string|null}[]>([])
   const [editing,     setEditing]     = useState(false)
-  const [form,        setForm]        = useState({ name: '', phone: '', bio: '', website: '' })
+  const [form,        setForm]        = useState({ name: '', phone: '', bio: '', website: '', dateOfBirth: '', pronouns: '', primaryGoal: '', lifeStage: '' })
   const [selected,      setSelected]      = useState<string[]>([])
   const [favTools,      setFavTools]      = useState<string[]>([])
   const [savingFavs,    setSavingFavs]    = useState(false)
@@ -205,7 +229,11 @@ export default function ProfilePage() {
       .finally(() => {
         fetch('/api/profile').then(r => r.json()).then(data => {
           setProfile(data)
-          setForm({ name: data.name, phone: data.phone ?? '', bio: data.bio ?? '', website: data.website ?? '' })
+          setForm({
+            name: data.name, phone: data.phone ?? '', bio: data.bio ?? '', website: data.website ?? '',
+            dateOfBirth: data.dateOfBirth ? String(data.dateOfBirth).split('T')[0] : '',
+            pronouns: data.pronouns ?? '', primaryGoal: data.primaryGoal ?? '', lifeStage: data.lifeStage ?? '',
+          })
           setSelected(data.interests ? data.interests.split(',').filter(Boolean) : [])
           // Load favourite tools
           fetch('/api/favourite-tools').then(r => r.json()).then(({ tools }) => {
@@ -615,6 +643,40 @@ export default function ProfilePage() {
                   className="w-full border border-teal-light rounded-[14px] px-4 py-3 text-[0.93rem] outline-none focus:border-teal-mid bg-ivory transition-colors" />
                 <p className="text-[0.7rem] text-text-xlight mt-1">LinkedIn, Twitter/X, or personal website — linked from your author card.</p>
               </div>
+
+              {/* Personalisation: DOB + pronouns */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[0.78rem] font-semibold text-teal-deep mb-1.5">Date of birth 🎂</label>
+                  <input type="date" value={form.dateOfBirth}
+                    max={new Date().toISOString().split('T')[0]}
+                    onChange={e => setForm(f => ({ ...f, dateOfBirth: e.target.value }))}
+                    className="w-full border border-teal-light rounded-[14px] px-4 py-3 text-[0.93rem] outline-none focus:border-teal-mid bg-ivory transition-colors text-text-mid" />
+                </div>
+                <div>
+                  <label className="block text-[0.78rem] font-semibold text-teal-deep mb-1.5">Pronouns</label>
+                  <input type="text" value={form.pronouns} maxLength={30}
+                    onChange={e => setForm(f => ({ ...f, pronouns: e.target.value }))}
+                    placeholder="she/her, he/him, they/them"
+                    className="w-full border border-teal-light rounded-[14px] px-4 py-3 text-[0.93rem] outline-none focus:border-teal-mid bg-ivory transition-colors" />
+                </div>
+              </div>
+
+              {/* Primary goal */}
+              <div>
+                <label className="block text-[0.78rem] font-semibold text-teal-deep mb-2">What brings you here?</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {GOAL_OPTIONS.map(g => (
+                    <button key={g.id} type="button"
+                      onClick={() => setForm(f => ({ ...f, primaryGoal: f.primaryGoal === g.id ? '' : g.id }))}
+                      className={`px-3 py-1.5 rounded-full border text-[0.8rem] font-medium transition-all
+                        ${form.primaryGoal === g.id ? 'bg-teal-deep text-white border-teal-deep' : 'bg-teal-ghost text-text-mid border-teal-light hover:border-teal-mid'}`}>
+                      {g.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div>
                 <label className="block text-[0.78rem] font-semibold text-teal-deep mb-2">Interests</label>
                 <div className="flex flex-wrap gap-1.5">
@@ -693,9 +755,13 @@ export default function ProfilePage() {
                   <div key={cat.label}>
                     <p className="text-[0.6rem] font-bold text-text-xlight uppercase tracking-widest mb-2">{cat.label}</p>
                     <div className="grid grid-cols-4 gap-1.5">
-                      {/* Sorted by personal usage — your daily tools float to the top */}
+                      {/* Sorted by personal usage + a gentle nudge toward your goal */}
                       {[...cat.tools]
-                        .sort((a, b) => (toolUsage[b.href] ?? 0) - (toolUsage[a.href] ?? 0))
+                        .sort((a, b) => {
+                          const goalTools = GOAL_TOOLS[profile.primaryGoal ?? ''] ?? []
+                          const score = (href: string) => (toolUsage[href] ?? 0) + (goalTools.includes(href) ? 5 : 0)
+                          return score(b.href) - score(a.href)
+                        })
                         .map(({ href, icon, label, bg, iconBg }) => (
                         <Link key={href} href={href} onClick={() => trackTool(href)}
                           className={`flex flex-col items-center gap-1.5 p-2 rounded-[12px] no-underline ${bg} hover:scale-105 transition-all group`}>

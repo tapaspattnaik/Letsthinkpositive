@@ -23,6 +23,18 @@ const INTERESTS = [
   'Journaling', 'Community', 'Kids Wellness', 'Creative Arts',
 ]
 
+// Primary goal — the strongest personalisation signal. Tailors tool
+// recommendations, suggested challenges, and the AI companion's tone.
+const GOALS = [
+  { id: 'reduce-anxiety',   label: '😌 Reduce anxiety & stress' },
+  { id: 'sleep-better',     label: '🌙 Sleep better' },
+  { id: 'build-habits',     label: '🎯 Build positive habits' },
+  { id: 'process-emotions', label: '📓 Process my emotions' },
+  { id: 'more-grateful',    label: '🙏 Feel more grateful' },
+  { id: 'find-community',   label: '💛 Find community' },
+  { id: 'boost-confidence', label: '✨ Boost confidence' },
+]
+
 // ── Password strength helpers ─────────────────────────────────────────────
 const RULES = [
   { id: 'len',     label: 'At least 8 characters',       test: (p: string) => p.length >= 8 },
@@ -50,6 +62,7 @@ export default function RegisterPage() {
   const router = useRouter()
   const [form, setForm] = useState({
     name: '', email: '', password: '', confirm: '', phone: '', bio: '',
+    dateOfBirth: '', primaryGoal: '',
   })
   const [selected,     setSelected]     = useState<string[]>([])
   const [agreed,       setAgreed]       = useState(false)
@@ -84,10 +97,13 @@ export default function RegisterPage() {
     try {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { confirm: _confirm, ...payload } = form
+      // Silently capture timezone for accurate time-of-day + notification timing
+      let timezone = ''
+      try { timezone = Intl.DateTimeFormat().resolvedOptions().timeZone } catch { /* noop */ }
       const res = await fetch('/api/auth/register', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ ...payload, interests: selected }),
+        body:    JSON.stringify({ ...payload, interests: selected, timezone }),
       })
       const data = await res.json()
       if (!res.ok) { setError(data.error || 'Something went wrong.'); return }
@@ -256,6 +272,37 @@ export default function RegisterPage() {
               placeholder="What brings you here? What are you working through, or working towards?"
               rows={3}
               className="w-full border border-teal-light rounded-[14px] px-4 py-2.5 text-[0.93rem] outline-none focus:border-teal-mid transition-colors bg-ivory resize-none" />
+          </div>
+
+          {/* Date of birth — powers birthday surprises + age-appropriate content */}
+          <div>
+            <label htmlFor="reg-dob" className="block text-[0.8rem] font-semibold text-teal-deep mb-1.5">
+              Date of birth <span className="text-text-xlight font-normal">(optional · for birthday surprises 🎂)</span>
+            </label>
+            <input id="reg-dob" type="date" value={form.dateOfBirth}
+              max={new Date().toISOString().split('T')[0]}
+              onChange={e => setForm(f => ({ ...f, dateOfBirth: e.target.value }))}
+              className="w-full border border-teal-light rounded-[14px] px-4 py-2.5 text-[0.93rem] outline-none focus:border-teal-mid transition-colors bg-ivory text-text-mid" />
+          </div>
+
+          {/* Primary goal — strongest personalisation signal */}
+          <div>
+            <label className="block text-[0.8rem] font-semibold text-teal-deep mb-2">
+              What brings you here? <span className="text-text-xlight font-normal">(optional · helps us tailor your experience)</span>
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {GOALS.map(g => (
+                <button key={g.id} type="button"
+                  onClick={() => setForm(f => ({ ...f, primaryGoal: f.primaryGoal === g.id ? '' : g.id }))}
+                  aria-pressed={form.primaryGoal === g.id}
+                  className={`px-3.5 py-1.5 rounded-full border text-[0.82rem] font-medium transition-all
+                    ${form.primaryGoal === g.id
+                      ? 'bg-teal-deep text-white border-teal-deep'
+                      : 'bg-teal-ghost text-text-mid border-teal-light hover:border-teal-mid'}`}>
+                  {g.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Interests */}

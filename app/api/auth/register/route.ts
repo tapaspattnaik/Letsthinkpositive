@@ -5,10 +5,17 @@ import { sendWelcomeEmail } from '@/lib/email'
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, password, phone, bio, interests } = await req.json()
+    const { name, email, password, phone, bio, interests, dateOfBirth, primaryGoal, timezone } = await req.json()
 
     if (!name || !email || !password)
       return NextResponse.json({ error: 'Name, email and password are required.' }, { status: 400 })
+
+    // Parse DOB safely — accept YYYY-MM-DD, ignore anything invalid or in the future
+    let dob: Date | null = null
+    if (dateOfBirth) {
+      const d = new Date(dateOfBirth)
+      if (!isNaN(d.getTime()) && d.getTime() < Date.now()) dob = d
+    }
 
     const existing = await prisma.user.findUnique({ where: { email } })
     if (existing)
@@ -27,6 +34,9 @@ export async function POST(req: NextRequest) {
         phone:     phone    || null,
         bio:       bio      || null,
         interests: Array.isArray(interests) ? interests.join(',') : (interests || ''),
+        dateOfBirth: dob,
+        primaryGoal: primaryGoal ? String(primaryGoal).slice(0, 50) : null,
+        timezone:    timezone    ? String(timezone).slice(0, 64)    : null,
       },
     })
 

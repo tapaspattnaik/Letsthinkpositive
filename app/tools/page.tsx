@@ -40,6 +40,7 @@ const TOOLS = [
   // Create
   { href: '/affirmation', icon: '💌', label: 'Daily Affirmation',   desc: 'Generate a personalised affirmation card and download or share it.',              cat: 'create',    featured: false, color: 'bg-pink-50 border-pink-200' },
   { href: '/quotes',      icon: '🎨', label: 'Quote Creator',       desc: 'Design a beautiful quote card with photo backgrounds. Share to social media.',    cat: 'create',    featured: true,  color: 'bg-amber/10 border-amber/30' },
+  { href: '/birthday-card',icon: '🎂', label: 'Birthday Card Maker', desc: 'AI writes a warm, funny, or poetic birthday message. Pick a design, download & share.', cat: 'create', featured: true,  color: 'bg-pink-50 border-pink-200' },
   { href: '/vision-board',icon: '⭐', label: 'Vision Board',        desc: 'Visualise your goals and future through creative digital collaging.',              cat: 'create',    featured: false, color: 'bg-amber/10 border-amber/30' },
   { href: '/drawing',     icon: '✏️', label: 'Positive Drawing',    desc: 'Zentangle, mandala and mindful drawing — creative calm in your browser.',        cat: 'create',    featured: false, color: 'bg-pink-50 border-pink-200' },
 

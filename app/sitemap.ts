@@ -27,6 +27,7 @@ const STATIC_ROUTES: { path: string; priority: number; changeFrequency: Metadata
   { path: '/habits',           priority: 0.6, changeFrequency: 'monthly' },
   { path: '/gratitude-wall',   priority: 0.6, changeFrequency: 'weekly'  },
   { path: '/affirmation',      priority: 0.6, changeFrequency: 'monthly' },
+  { path: '/birthday-card',    priority: 0.7, changeFrequency: 'monthly' },
   { path: '/reframe',          priority: 0.6, changeFrequency: 'monthly' },
   { path: '/intention',        priority: 0.6, changeFrequency: 'monthly' },
   { path: '/vision-board',     priority: 0.6, changeFrequency: 'monthly' },

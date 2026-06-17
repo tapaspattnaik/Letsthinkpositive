@@ -18,6 +18,7 @@ const DESTINATIONS = [
   { id: 'community',   href: '/community',    title: 'Community Wall',          icon: '💛', desc: 'feel less alone, share story, connect with others, support' },
   { id: 'gratitude',   href: '/gratitude-wall', title: 'Gratitude Wall',        icon: '🙏', desc: 'feel-good posts, thankfulness, positivity boost' },
   { id: 'affirmation', href: '/affirmation',  title: 'Daily Affirmations',      icon: '💌', desc: 'confidence, self-belief, positive self-talk, morning boost' },
+  { id: 'birthday',    href: '/birthday-card', title: 'Birthday Card Maker',    icon: '🎂', desc: 'birthday wish, make a card for someone, celebrate, greeting for a friend' },
   { id: 'intention',   href: '/intention',    title: 'Daily Intention',         icon: '🌅', desc: 'start the day right, focus word, purpose, morning routine' },
   { id: 'habits',      href: '/habits',       title: 'Habit Tracker',           icon: '🎯', desc: 'consistency, build routines, track daily habits' },
   { id: 'quiz',        href: '/quiz',         title: 'Wellness Quiz',           icon: '🩺', desc: 'assess anxiety, depression check, stress level, self-assessment' },
