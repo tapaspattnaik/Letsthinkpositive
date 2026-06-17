@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/quotes' },
-  title:       'Quote Card Creator | Let\'s Think Positive',
-  description: 'Create beautiful shareable quote cards. Pick a quote, choose a design, download and share.',
+  title:       'Free Quote Maker — Create & Share Motivational Quote Cards',
+  description: 'Design beautiful motivational quote cards free online. Add photo backgrounds and share to social media — no watermark, no signup, no app.',
 }
 
 export default function QuotesLayout({ children }: { children: React.ReactNode }) {

@@ -4,8 +4,8 @@ import { JsonLd } from '@/components/JsonLd'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/meditation' },
-  title: 'Guided Meditation',
-  description: 'Find your calm with guided meditation sessions designed for sleep, anxiety, focus, and morning peace. From 5 to 30 minutes.',
+  title: 'Free Guided Meditation Online — Mindfulness, No App',
+  description: 'Free guided meditation and mindfulness sessions online for sleep, anxiety, and focus. Quiet your mind in 5 to 30 minutes — no app download, no signup.',
 }
 
 const sessions = [
