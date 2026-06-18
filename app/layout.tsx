@@ -4,7 +4,6 @@ import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { SessionProvider } from '@/components/layout/SessionProvider'
 import { BitWidgetLazy } from '@/components/BitWidgetLazy'
-import { ConstructionBanner } from '@/components/layout/ConstructionBanner'
 import { HeaderHeight } from '@/components/layout/HeaderHeight'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { AppLoader } from '@/components/layout/AppLoader'
@@ -137,9 +136,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           >
             Skip to main content
           </a>
-          {/* Single fixed header — banner + navbar stacked, no z-index clash */}
+          {/* Single fixed header */}
           <div id="site-header" className="fixed top-0 left-0 right-0 z-50">
-            <ConstructionBanner />
             <Navbar />
           </div>
           {/* Dynamically sets main padding-top = actual header height (navbar ± banner) */}
