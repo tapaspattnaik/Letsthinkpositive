@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useSession, signOut } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { TIER_STYLES } from '@/lib/badges'
@@ -63,7 +62,7 @@ interface FeedPost {
   commentCount?: number; createdAt: string
 }
 interface UserProfile {
-  id: number; name: string; email: string; phone?: string; bio?: string; role?: string
+  id: number; name: string; email: string; phone?: string; bio?: string; role?: string; website?: string
   interests: string; avatarUrl?: string; coverStyle?: string; coverUrl?: string; createdAt: string
   currentStreak?: number; longestStreak?: number; streakFreezes?: number
   dateOfBirth?: string | null; pronouns?: string; primaryGoal?: string; lifeStage?: string
@@ -174,7 +173,6 @@ type Tab = 'overview' | 'badges' | 'challenges' | 'circles'
 export default function ProfilePage() {
   // required:true → NextAuth auto-redirects to /login?callbackUrl=/profile if unauthenticated
   const { data: session, status } = useSession({ required: true })
-  const router = useRouter()
 
   const [profile,     setProfile]     = useState<UserProfile | null>(null)
   const [circles,     setCircles]     = useState<Circle[]>([])
@@ -187,7 +185,6 @@ export default function ProfilePage() {
   const [form,        setForm]        = useState({ name: '', phone: '', bio: '', website: '', dateOfBirth: '', pronouns: '', primaryGoal: '', lifeStage: '' })
   const [selected,      setSelected]      = useState<string[]>([])
   const [favTools,      setFavTools]      = useState<string[]>([])
-  const [savingFavs,    setSavingFavs]    = useState(false)
   const [saving,      setSaving]      = useState(false)
   const [saved,       setSaved]       = useState(false)
   const [uploading,     setUploading]     = useState(false)
@@ -214,11 +211,6 @@ export default function ProfilePage() {
       localStorage.setItem('ltp_tool_usage', JSON.stringify(usage))
     } catch { /* noop */ }
   }
-
-  // Remove manual redirect — useSession({ required: true }) handles it with callbackUrl
-  useEffect(() => {
-    if (false) router.push('/login') // kept to avoid unused import warning
-  }, [status, router])
 
   useEffect(() => {
     if (status !== 'authenticated') return
@@ -269,10 +261,16 @@ export default function ProfilePage() {
   async function saveProfile() {
     setSaving(true)
     try {
-      const res = await fetch('/api/profile', {
-        method: 'PUT', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, interests: selected }),
-      })
+      const [res] = await Promise.all([
+        fetch('/api/profile', {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...form, interests: selected }),
+        }),
+        fetch('/api/favourite-tools', {
+          method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tools: favTools }),
+        }),
+      ])
       const updated = await res.json()
       if (!res.ok) {
         alert('Could not save profile: ' + (updated?.error ?? 'Unknown error'))
@@ -289,6 +287,41 @@ export default function ProfilePage() {
     }
   }
 
+  async function toggleLike(postId: number, type: 'community' | 'circle', circleSlug?: string) {
+    const url = type === 'community'
+      ? `/api/community/${postId}/like`
+      : `/api/circles/${circleSlug}/posts/${postId}/like`
+    // Optimistic update
+    setFeed(prev => prev.map(p =>
+      p.id === postId && p.type === type
+        ? { ...p, likeCount: p.likedByMe ? p.likeCount - 1 : p.likeCount + 1, likedByMe: !p.likedByMe }
+        : p
+    ))
+    try {
+      const res = await fetch(url, { method: 'POST' })
+      if (res.ok) {
+        const { count, liked } = await res.json()
+        setFeed(prev => prev.map(p =>
+          p.id === postId && p.type === type ? { ...p, likeCount: count, likedByMe: liked } : p
+        ))
+      } else {
+        // Revert on API error
+        setFeed(prev => prev.map(p =>
+          p.id === postId && p.type === type
+            ? { ...p, likeCount: p.likedByMe ? p.likeCount + 1 : p.likeCount - 1, likedByMe: !p.likedByMe }
+            : p
+        ))
+      }
+    } catch {
+      // Revert on network error
+      setFeed(prev => prev.map(p =>
+        p.id === postId && p.type === type
+          ? { ...p, likeCount: p.likedByMe ? p.likeCount + 1 : p.likeCount - 1, likedByMe: !p.likedByMe }
+          : p
+      ))
+    }
+  }
+
   function jumpToTab(tab: Tab) {
     setActiveTab(tab)
     setTimeout(() => {
@@ -302,13 +335,20 @@ export default function ProfilePage() {
   async function uploadAvatar(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
+    if (file.size > 5 * 1024 * 1024) { alert('Image must be under 5 MB.'); return }
     setUploading(true)
-    const fd = new FormData()
-    fd.append('avatar', file)
-    const res  = await fetch('/api/profile/avatar', { method: 'POST', body: fd })
-    const data = await res.json()
-    if (data.avatarUrl) setProfile(p => p ? { ...p, avatarUrl: data.avatarUrl } : p)
-    setUploading(false)
+    try {
+      const fd = new FormData()
+      fd.append('avatar', file)
+      const res  = await fetch('/api/profile/avatar', { method: 'POST', body: fd })
+      const data = await res.json()
+      if (!res.ok || !data.avatarUrl) { alert('Upload failed — please try a smaller image.'); return }
+      setProfile(p => p ? { ...p, avatarUrl: data.avatarUrl } : p)
+    } catch {
+      alert('Network error — avatar not saved. Please try again.')
+    } finally {
+      setUploading(false)
+    }
   }
 
   async function selectCoverPreset(key: string) {
@@ -323,16 +363,21 @@ export default function ProfilePage() {
   async function uploadCover(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
+    if (file.size > 5 * 1024 * 1024) { alert('Image must be under 5 MB.'); return }
     setUploadingCover(true)
-    const fd = new FormData()
-    fd.append('cover', file)
-    const res  = await fetch('/api/profile/cover', { method: 'POST', body: fd })
-    const data = await res.json()
-    if (data.coverUrl) {
+    try {
+      const fd = new FormData()
+      fd.append('cover', file)
+      const res  = await fetch('/api/profile/cover', { method: 'POST', body: fd })
+      const data = await res.json()
+      if (!res.ok || !data.coverUrl) { alert('Upload failed — please try a smaller image.'); return }
       setProfile(p => p ? { ...p, coverUrl: data.coverUrl, coverStyle: undefined } : p)
       setShowCoverPick(false)
+    } catch {
+      alert('Network error — cover not saved. Please try again.')
+    } finally {
+      setUploadingCover(false)
     }
-    setUploadingCover(false)
   }
 
   if (status === 'loading' || !profile) {
@@ -471,6 +516,18 @@ export default function ProfilePage() {
             <p className="text-text-xlight text-[0.83rem] mt-0.5">
               {profile.email} · Member since {joinedYear}
             </p>
+            {(profile.pronouns || profile.primaryGoal) && (
+              <div className="flex flex-wrap items-center gap-2 mt-1.5">
+                {profile.pronouns && (
+                  <span className="text-text-xlight text-[0.78rem] italic">{profile.pronouns}</span>
+                )}
+                {profile.primaryGoal && (
+                  <span className="bg-teal-ghost text-teal-deep text-[0.72rem] font-semibold px-2.5 py-1 rounded-full border border-teal-light">
+                    {GOAL_OPTIONS.find(g => g.id === profile.primaryGoal)?.label}
+                  </span>
+                )}
+              </div>
+            )}
             {profile.bio && (
               <p className="text-text-mid text-[0.88rem] mt-1.5 max-w-[500px] leading-[1.65]">{profile.bio}</p>
             )}
@@ -493,7 +550,7 @@ export default function ProfilePage() {
           </div>
 
           {/* ── Stats bar ─────────────────────────────────────────── */}
-          <div className="grid grid-cols-4 gap-3 py-5">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 py-5">
             {([
               { value: profile.currentStreak ?? 0, label: 'Day Streak',       icon: '🔥', color: 'text-orange-500', tab: null,           href: '/mood'  },
               { value: profile.badges.length,       label: 'Badges Earned',   icon: '🏅', color: 'text-amber',      tab: 'badges',       href: null     },
@@ -708,15 +765,6 @@ export default function ProfilePage() {
                     )
                   })}
                 </div>
-                <button type="button" disabled={savingFavs}
-                  onClick={async () => {
-                    setSavingFavs(true)
-                    await fetch('/api/favourite-tools', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tools: favTools }) })
-                    setSavingFavs(false)
-                  }}
-                  className="text-[0.76rem] text-teal-deep border border-teal-light px-3 py-1.5 rounded-full hover:bg-teal-ghost transition-colors disabled:opacity-50">
-                  {savingFavs ? 'Saving…' : '⚡ Save quick access'}
-                </button>
               </div>
             </div>
             <div className="flex gap-3 mt-6">
@@ -768,7 +816,7 @@ export default function ProfilePage() {
                           <div className={`w-8 h-8 rounded-[8px] ${iconBg} flex items-center justify-center text-[1.1rem]`}>
                             {icon}
                           </div>
-                          <span className="text-[0.56rem] font-semibold text-charcoal leading-tight text-center line-clamp-1">{label}</span>
+                          <span className="text-[0.65rem] font-semibold text-charcoal leading-tight text-center line-clamp-1">{label}</span>
                         </Link>
                       ))}
                     </div>
@@ -1055,7 +1103,7 @@ export default function ProfilePage() {
                   return (
                     <div className="space-y-4">
                       {filtered.slice(0, 20).map(post => (
-                        <FeedCard key={`${post.type}-${post.id}`} post={post} />
+                        <FeedCard key={`${post.type}-${post.id}`} post={post} onLike={toggleLike} />
                       ))}
                       {filtered.length > 0 && (
                         <div className="text-center pt-2">
@@ -1120,7 +1168,7 @@ export default function ProfilePage() {
                             {style.label}
                           </span>
                           <p className="text-[0.65rem] text-text-xlight mt-2">
-                            {new Date(earnedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            {new Date(earnedAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
                           </p>
                         </div>
                       )
@@ -1230,7 +1278,7 @@ export default function ProfilePage() {
 }
 
 // ── Feed Card component ──────────────────────────────────────────────────────
-function FeedCard({ post }: { post: FeedPost }) {
+function FeedCard({ post, onLike }: { post: FeedPost; onLike: (id: number, type: 'community' | 'circle', circleSlug?: string) => void }) {
   function timeAgo(d: string) {
     const diff = Date.now() - new Date(d).getTime()
     const mins = Math.floor(diff / 60000)
@@ -1295,12 +1343,14 @@ function FeedCard({ post }: { post: FeedPost }) {
 
       {/* Footer */}
       <div className="flex items-center gap-4 mt-4 pt-3 border-t border-teal-light/40">
-        <div className="flex items-center gap-1.5 text-text-xlight text-[0.78rem]">
-          <svg className={`w-3.5 h-3.5 ${post.likedByMe ? 'text-red-400 fill-current' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <button
+          onClick={() => onLike(post.id, post.type, post.circle?.slug)}
+          className={`flex items-center gap-1.5 text-[0.78rem] transition-colors ${post.likedByMe ? 'text-red-400' : 'text-text-xlight hover:text-red-400'}`}>
+          <svg className={`w-3.5 h-3.5 ${post.likedByMe ? 'fill-current' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
           </svg>
           <span>{post.likeCount}</span>
-        </div>
+        </button>
         {post.commentCount !== undefined && (
           <div className="flex items-center gap-1.5 text-text-xlight text-[0.78rem]">
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
