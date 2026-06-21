@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { ReportButton } from '@/components/ReportButton'
 import { LinkifiedText, PostImages, ImageAttach } from '@/components/PostContent'
 import { CommunityComments } from '@/components/community/CommunityComments'
+import { TrendingHashtags } from '@/components/TrendingHashtags'
 
 interface Post {
   id: number
@@ -35,9 +36,9 @@ function StoryCard({
 }: {
   post: Post; onLike: () => void
 }) {
-  const tags    = post.tags ? post.tags.split(',').map(t => t.trim()).filter(Boolean) : []
+  const tags    = post.tags ? post.tags.split(',').map(t => t.trim().replace(/^#/, '')).filter(Boolean) : []
   const icon    = STORY_ICONS[post.id % STORY_ICONS.length]
-  const dateStr = new Date(post.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+  const dateStr = new Date(post.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })
 
   return (
     <div className="bg-white border border-teal-light rounded-[24px] p-6 hover:-translate-y-0.5 hover:shadow-lift transition-all flex flex-col">
@@ -50,7 +51,10 @@ function StoryCard({
       {tags.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mb-4">
           {tags.map(t => (
-            <span key={t} className="text-[0.68rem] text-teal-mid bg-teal-ghost px-2.5 py-0.5 rounded-full">{t}</span>
+            <Link key={t} href={`/hashtag/${t}`}
+              className="text-[0.68rem] text-teal-mid bg-teal-ghost hover:bg-teal-light/40 hover:text-teal-deep px-2.5 py-0.5 rounded-full no-underline transition-colors">
+              #{t}
+            </Link>
           ))}
         </div>
       )}
@@ -90,7 +94,7 @@ function WishCard({
 }: {
   post: Post; onReact: (emoji: string) => void
 }) {
-  const dateStr = new Date(post.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+  const dateStr = new Date(post.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })
   const myReactions = post.myReactions ?? []
   const counts      = post.reactionCounts ?? {}
 
@@ -390,7 +394,7 @@ export default function CommunityPage() {
                               ? <Link href={`/profile/${stories[0].user.id}`} className="hover:text-teal-deep no-underline">{stories[0].user.name}</Link>
                               : stories[0].author}
                             </span>
-                            <span>· {new Date(stories[0].createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
+                            <span>· {new Date(stories[0].createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}</span>
                             <button
                               onClick={() => handleLike(stories[0].id)}
                               className={`flex items-center gap-1 ml-auto transition-colors ${stories[0].likedByMe ? 'text-red-400' : 'hover:text-red-400'}`}>
@@ -548,6 +552,9 @@ export default function CommunityPage() {
                   Explore Circles →
                 </Link>
               </div>
+
+              {/* Trending hashtags */}
+              <TrendingHashtags />
             </div>
           </div>
         )}

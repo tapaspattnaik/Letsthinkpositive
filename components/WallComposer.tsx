@@ -1,12 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useSession } from 'next-auth/react'
+import Link from 'next/link'
 import { ImageAttach } from '@/components/PostContent'
 
-// ── "What's on your mind?" wall composer ────────────────────────────────────
-// Facebook-style instant composer — no title needed, photos + links supported.
-// Posts go live on the community wall immediately for signed-in users.
+// Extract #hashtags from body text (unique, lowercase, no leading #)
+function extractHashtags(text: string): string[] {
+  const matches = text.match(/#([a-zA-Z][a-zA-Z0-9_]{0,39})/g) ?? []
+  return [...new Set(matches.map(h => h.slice(1).toLowerCase()))]
+}
 
 export function WallComposer({ onPosted }: { onPosted?: () => void }) {
   const { data: session, status } = useSession()
@@ -21,6 +24,10 @@ export function WallComposer({ onPosted }: { onPosted?: () => void }) {
   const firstName = session?.user?.name?.split(' ')[0] ?? 'friend'
   const avatar    = session?.user?.image
 
+  // Auto-detect hashtags as user types
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const detectedTags = useMemo(() => extractHashtags(body), [body])
+
   async function submit() {
     if (!body.trim() || posting) return
     setPosting(true)
@@ -28,7 +35,12 @@ export function WallComposer({ onPosted }: { onPosted?: () => void }) {
       const res = await fetch('/api/community', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ body, images, postType: 'story' }),
+        body: JSON.stringify({
+          body,
+          images,
+          postType: 'story',
+          tags: detectedTags.join(','),
+        }),
       })
       const data = await res.json()
       if (data.ok) {
@@ -67,12 +79,29 @@ export function WallComposer({ onPosted }: { onPosted?: () => void }) {
             autoFocus
             value={body}
             onChange={e => setBody(e.target.value)}
-            placeholder="Write anything — a thought, a win, a photo moment, a link worth sharing…"
+            placeholder="Write anything — a thought, a win, a photo moment… Add #hashtags to help others find your post."
             rows={3}
             className="w-full border border-teal-light rounded-[14px] px-4 py-3 text-[0.9rem] outline-none focus:border-teal-mid bg-ivory resize-none transition-colors"
           />
+
+          {/* Detected hashtag preview */}
+          {detectedTags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 px-1">
+              {detectedTags.map(tag => (
+                <span key={tag}
+                  className="flex items-center gap-1 bg-teal-ghost text-teal-deep text-[0.75rem] font-semibold px-2.5 py-1 rounded-full border border-teal-light">
+                  <span className="text-teal-mid">#</span>{tag}
+                </span>
+              ))}
+              <span className="text-text-xlight text-[0.7rem] self-center ml-1">will be tagged</span>
+            </div>
+          )}
+
           <div className="flex items-center justify-between gap-3 flex-wrap">
-            <ImageAttach images={images} setImages={setImages} max={4} />
+            <div className="flex items-center gap-3">
+              <ImageAttach images={images} setImages={setImages} max={4} />
+              <span className="text-text-xlight text-[0.7rem]">Tip: type #mindfulness to tag your post</span>
+            </div>
             <div className="flex items-center gap-2 ml-auto">
               <button onClick={() => { setOpen(false); setBody(''); setImages([]) }}
                 className="text-text-xlight text-[0.8rem] font-semibold px-3 py-2 hover:text-charcoal transition-colors">
@@ -84,7 +113,18 @@ export function WallComposer({ onPosted }: { onPosted?: () => void }) {
               </button>
             </div>
           </div>
-          <p className="text-[0.68rem] text-text-xlight">Posts appear on the community wall. Links become clickable automatically.</p>
+
+          {/* Suggested hashtags for wellness context */}
+          <div className="flex flex-wrap gap-1.5 pt-1 border-t border-teal-light/40">
+            <span className="text-text-xlight text-[0.68rem] self-center mr-1">Suggest:</span>
+            {['gratitude','mindfulness','anxiety','sleep','affirmation','selfcare','journaling','mentalhealth'].map(s => (
+              <button key={s} type="button"
+                onClick={() => setBody(b => b + (b.endsWith(' ') || b === '' ? '' : ' ') + `#${s} `)}
+                className="text-teal-mid text-[0.72rem] hover:text-teal-deep hover:bg-teal-ghost px-2 py-0.5 rounded-full border border-transparent hover:border-teal-light transition-all">
+                #{s}
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </div>

@@ -8,9 +8,17 @@ export async function GET(req: NextRequest) {
     const userId   = session?.user?.id ? Number(session.user.id) : null
     const { searchParams } = new URL(req.url)
     const postType = searchParams.get('type') ?? 'story'  // story | wish
+    const tagFilter = searchParams.get('tag')?.toLowerCase().replace(/^#/, '') ?? null
 
     const posts = await prisma.communityPost.findMany({
-      where:   { approved: true, postType },
+      where: {
+        approved: true,
+        postType,
+        ...(tagFilter ? { OR: [
+          { tags: { contains: tagFilter } },
+          { body: { contains: `#${tagFilter}` } },
+        ]} : {}),
+      },
       orderBy: { createdAt: 'desc' },
       take:    40,
       include: {

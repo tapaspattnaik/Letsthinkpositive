@@ -253,6 +253,7 @@ model GroupPost {
   circleId  Int
   userId    Int
   body      String   @db.Text
+  tags      String   @default("") @db.VarChar(500)
   images    String   @default("[]") @db.Text // JSON array of image URLs
   createdAt DateTime @default(now())
 
