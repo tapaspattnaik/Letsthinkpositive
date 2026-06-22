@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { ReportButton } from '@/components/ReportButton'
@@ -155,11 +156,14 @@ function WishCard({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function CommunityPage() {
   const { data: session } = useSession()
+  const router = useRouter()
 
   const [activeTab, setActiveTab]   = useState<'story' | 'wish'>('story')
   const [stories,   setStories]     = useState<Post[]>([])
   const [wishes,    setWishes]      = useState<Post[]>([])
   const [loading,   setLoading]     = useState(true)
+  const [searchQ,   setSearchQ]     = useState('')
+  const searchRef = useRef<HTMLInputElement>(null)
 
   const [form,      setForm]        = useState({ title: '', body: '', author: '', tags: '' })
   const [images,    setImages]      = useState<string[]>([])
@@ -301,6 +305,39 @@ export default function CommunityPage() {
       </section>
 
       <div className="max-w-6xl mx-auto py-12 px-[5%]">
+
+        {/* Hashtag search bar */}
+        <form
+          onSubmit={e => {
+            e.preventDefault()
+            const q = searchQ.trim().replace(/^#/, '')
+            if (q) router.push(`/hashtag/${encodeURIComponent(q)}`)
+          }}
+          className="mb-6 flex items-center gap-2">
+          <div className="relative flex-1">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-teal-mid font-bold text-[1rem] pointer-events-none">#</span>
+            <input
+              ref={searchRef}
+              type="text"
+              value={searchQ}
+              onChange={e => setSearchQ(e.target.value.replace(/^#/, ''))}
+              placeholder="Search hashtags — try mindfulness, gratitude, sleep…"
+              aria-label="Search posts by hashtag"
+              className="w-full pl-8 pr-4 py-3 rounded-full border border-teal-light bg-white text-[0.9rem] outline-none focus:border-teal-mid shadow-card transition-colors placeholder:text-text-xlight"
+            />
+            {searchQ && (
+              <button type="button" onClick={() => { setSearchQ(''); searchRef.current?.focus() }}
+                aria-label="Clear search"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-text-xlight hover:text-charcoal transition-colors text-[1rem]">
+                ✕
+              </button>
+            )}
+          </div>
+          <button type="submit" disabled={!searchQ.trim()}
+            className="bg-teal-deep text-white px-5 py-3 rounded-full font-semibold text-[0.88rem] hover:bg-teal-dark disabled:opacity-40 transition-colors whitespace-nowrap flex-shrink-0">
+            Search →
+          </button>
+        </form>
 
         {/* Guidelines */}
         <div className="mb-8 bg-teal-ghost border border-teal-light rounded-[20px] px-6 py-4">
