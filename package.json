@@ -9,7 +9,7 @@
     "dev": "next dev",
     "prebuild": "node scripts/db-push.mjs",
     "build": "prisma generate && next build",
-    "postinstall": "prisma generate",
+    "postinstall": "prisma generate && patch-package",
     "start": "node server.js",
     "lint": "next lint",
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts",
@@ -52,7 +52,7 @@
     "next-auth": "^4.24.14",
     "nodemailer": "^9.0.1",
     "pdf-parse": "^2.4.5",
-    "postcss": "^8",
+    "postcss": ">=8.5.10",
     "prisma": "^5.22.0",
     "prop-types": "^15.8.1",
     "react": "^18",
@@ -66,7 +66,8 @@
     "typescript": "^5"
   },
   "devDependencies": {
-    "@types/react-simple-maps": "^3.0.6"
+    "@types/react-simple-maps": "^3.0.6",
+    "patch-package": "^8.0.1"
   },
   "overrides": {
     "tar": ">=7.5.16",
