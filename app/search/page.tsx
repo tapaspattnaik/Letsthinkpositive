@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 
 interface UserResult   { id: number; name: string; avatar?: string|null; bio?: string|null; interests: string[]; badges: number; href: string }
 interface CircleResult { id: number; name: string; slug: string; description: string; icon: string; members: number; posts: number; href: string }
@@ -13,24 +14,25 @@ interface Results {
   users: UserResult[]; circles: CircleResult[]
   blog: PostResult[]; userPosts: PostResult[]
   community: CommResult[]; library: LibResult[]
+  restricted?: boolean
 }
 
-const FILTERS = [
-  { key: 'all',       label: 'All',       icon: '🔍' },
-  { key: 'users',     label: 'People',    icon: '👤' },
-  { key: 'circles',   label: 'Circles',   icon: '🔒' },
-  { key: 'blog',      label: 'Blog',      icon: '✍️' },
-  { key: 'community', label: 'Community', icon: '💛' },
-  { key: 'library',   label: 'Library',   icon: '📚' },
+const ALL_FILTERS = [
+  { key: 'all',       label: 'All',       icon: '🔍', social: false },
+  { key: 'users',     label: 'People',    icon: '👤', social: true  },
+  { key: 'circles',   label: 'Circles',   icon: '🔒', social: true  },
+  { key: 'blog',      label: 'Blog',      icon: '✍️', social: false },
+  { key: 'community', label: 'Community', icon: '💛', social: true  },
+  { key: 'library',   label: 'Library',   icon: '📚', social: false },
 ] as const
-type FilterKey = typeof FILTERS[number]['key']
+type FilterKey = typeof ALL_FILTERS[number]['key']
 
 function timeAgo(d: string) {
   const days = Math.floor((Date.now() - new Date(d).getTime()) / 86400000)
   if (days === 0) return 'Today'
   if (days < 7)  return `${days}d ago`
   if (days < 30) return `${Math.floor(days / 7)}w ago`
-  return new Date(d).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })
+  return new Date(d).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
 }
 
 function Avatar({ src, name, size = 36 }: { src?: string | null; name: string; size?: number }) {
@@ -53,9 +55,16 @@ function SearchInner() {
   const router   = useRouter()
   const inputRef = useRef<HTMLInputElement>(null)
   const debRef   = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const { data: session, status: authStatus } = useSession()
+  const isLoggedIn = !!session?.user
 
   const initialQ = params.get('q') ?? ''
   const initialF = (params.get('type') ?? 'all') as FilterKey
+
+  // Only show social filters when logged in
+  const FILTERS = authStatus === 'loading'
+    ? ALL_FILTERS.filter(f => !f.social)
+    : ALL_FILTERS.filter(f => isLoggedIn || !f.social)
 
   const [query,   setQuery]   = useState(initialQ)
   const [filter,  setFilter]  = useState<FilterKey>(initialF)
@@ -221,6 +230,19 @@ function SearchInner() {
               </button>
             ))}
           </div>
+
+          {/* Sign-in nudge for guests */}
+          {!isLoggedIn && authStatus !== 'loading' && (
+            <div className="mt-4 flex items-center justify-center gap-3 bg-white/10 border border-white/20 rounded-[14px] px-5 py-3">
+              <span className="text-[1.1rem]">🔒</span>
+              <p className="text-white/80 text-[0.82rem]">
+                <strong className="text-white">Sign in</strong> to also search people, circles, and community posts
+              </p>
+              <Link href="/login" className="flex-shrink-0 bg-white text-teal-deep text-[0.78rem] font-bold px-3.5 py-1.5 rounded-full no-underline hover:bg-teal-ghost transition-colors">
+                Sign in →
+              </Link>
+            </div>
+          )}
         </div>
       </div>
 
@@ -239,16 +261,27 @@ function SearchInner() {
           <div className="text-center py-12">
             <p className="text-[3.5rem] mb-4">✨</p>
             <p className="font-display font-bold text-charcoal text-[1.3rem] mb-2">Search letsthinkpositive</p>
-            <p className="text-text-mid text-[0.92rem] max-w-sm mx-auto mb-8">Find people, circles, blog posts, and wellness articles.</p>
+            <p className="text-text-mid text-[0.92rem] max-w-sm mx-auto mb-8">
+              {isLoggedIn
+                ? 'Find people, circles, blog posts, and wellness articles.'
+                : 'Find blog posts and wellness articles. Sign in to also search people, circles, and community posts.'}
+            </p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-w-lg mx-auto text-left">
-              {[
-                ['👤','People','Find community members'],
-                ['🔒','Circles','Private wellness groups'],
-                ['✍️','Blog','Stories & articles'],
-                ['💛','Community','Shared posts & wishes'],
-                ['📚','Library','Wellness articles'],
-                ['🔍','All','Search everything'],
-              ].map(([icon, label, desc]) => (
+              {(isLoggedIn
+                ? [
+                    ['👤','People','Find community members'],
+                    ['🔒','Circles','Private wellness groups'],
+                    ['✍️','Blog','Stories & articles'],
+                    ['💛','Community','Shared posts & wishes'],
+                    ['📚','Library','Wellness articles'],
+                    ['🔍','All','Search everything'],
+                  ]
+                : [
+                    ['✍️','Blog','Stories & articles'],
+                    ['📚','Library','Wellness articles'],
+                    ['🔍','All','Search everything'],
+                  ]
+              ).map(([icon, label, desc]) => (
                 <button key={label} onClick={() => { changeFilter(label.toLowerCase() as FilterKey); inputRef.current?.focus() }}
                   className="bg-white border border-teal-light rounded-[14px] p-3.5 text-left hover:border-teal-mid hover:shadow-card transition-all">
                   <p className="font-semibold text-charcoal text-[0.85rem]">{icon} {label}</p>
@@ -256,6 +289,20 @@ function SearchInner() {
                 </button>
               ))}
             </div>
+
+            {/* Guest upgrade CTA */}
+            {!isLoggedIn && authStatus !== 'loading' && (
+              <div className="mt-8 inline-flex items-center gap-3 bg-teal-ghost border border-teal-light rounded-[16px] px-6 py-4 text-left max-w-sm">
+                <span className="text-[1.8rem]">🔓</span>
+                <div>
+                  <p className="font-semibold text-teal-deep text-[0.9rem]">More results when you sign in</p>
+                  <p className="text-text-xlight text-[0.78rem] mt-0.5 mb-2">Search people, circles & community posts</p>
+                  <Link href="/login" className="text-white bg-teal-deep text-[0.78rem] font-bold px-4 py-1.5 rounded-full no-underline hover:bg-teal-dark transition-colors inline-block">
+                    Sign in free →
+                  </Link>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -269,9 +316,18 @@ function SearchInner() {
 
         {results && !loading && total > 0 && (
           <div className="space-y-8">
-            <p className="text-text-xlight text-[0.82rem]">
-              <strong className="text-charcoal">{total}</strong> result{total !== 1 ? 's' : ''} for &ldquo;{query}&rdquo;
-            </p>
+            <div className="flex items-center flex-wrap gap-3">
+              <p className="text-text-xlight text-[0.82rem]">
+                <strong className="text-charcoal">{total}</strong> result{total !== 1 ? 's' : ''} for &ldquo;{query}&rdquo;
+                {results.restricted && <span className="ml-1 text-text-xlight">(public content only)</span>}
+              </p>
+              {results.restricted && (
+                <Link href={`/login?next=/search?q=${encodeURIComponent(query)}`}
+                  className="text-teal-deep text-[0.8rem] font-semibold border border-teal-mid px-3 py-1 rounded-full no-underline hover:bg-teal-ghost transition-colors">
+                  🔓 Sign in for people & community results
+                </Link>
+              )}
+            </div>
 
             {/* People */}
             {results.users.length > 0 && (

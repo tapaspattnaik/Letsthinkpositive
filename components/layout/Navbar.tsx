@@ -380,7 +380,7 @@ export function Navbar() {
               ref={searchRef}
               value={searchQ}
               onChange={e => setSearchQ(e.target.value)}
-              placeholder="Search articles, stories, library…"
+              placeholder={session ? 'Search people, posts, circles, articles…' : 'Search blog posts and wellness articles…'}
               className="flex-1 px-4 py-4 text-[0.95rem] outline-none bg-transparent"
             />
             <button type="button" onClick={() => setSearchOpen(false)}

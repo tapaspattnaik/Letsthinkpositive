@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { getSession }    from '@/lib/auth'
 import { getAllPosts }    from '@/lib/posts'
 import { getAllArticles } from '@/lib/library'
 
@@ -11,12 +12,17 @@ export async function GET(req: NextRequest) {
   const type = searchParams.get('type') ?? 'all'
 
   if (!q || q.length < 2)
-    return NextResponse.json({ blog: [], community: [], library: [], users: [], circles: [], userPosts: [] })
+    return NextResponse.json({ blog: [], community: [], library: [], users: [], circles: [], userPosts: [], restricted: false })
 
-  const inc = (t: string) => type === 'all' || type === t
+  const session    = await getSession()
+  const isLoggedIn = !!session?.user?.id
 
-  // ── 1. Users ───────────────────────────────────────────────────────────
-  const users = inc('users') ? await prisma.user.findMany({
+  const inc    = (t: string) => type === 'all' || type === t
+  // Social content (users, circles, community) is restricted to logged-in users
+  const social = (t: string) => isLoggedIn && inc(t)
+
+  // ── 1. Users (logged-in only) ──────────────────────────────────────────
+  const users = social('users') ? await prisma.user.findMany({
     where: {
       OR: [
         { name:  { contains: q } },
@@ -41,8 +47,8 @@ export async function GET(req: NextRequest) {
     href:      `/profile/${u.id}`,
   }))) : []
 
-  // ── 2. Circles ─────────────────────────────────────────────────────────
-  const circles = inc('circles') ? await prisma.circle.findMany({
+  // ── 2. Circles (logged-in only) ────────────────────────────────────────
+  const circles = social('circles') ? await prisma.circle.findMany({
     where: {
       OR: [
         { name:        { contains: q } },
@@ -89,8 +95,8 @@ export async function GET(req: NextRequest) {
     author: p.user?.name ?? 'Community', avatar: p.user?.avatarUrl,
   }))) : []
 
-  // ── 5. Community posts ─────────────────────────────────────────────────
-  const community = inc('community') ? await prisma.communityPost.findMany({
+  // ── 5. Community posts (logged-in only) ────────────────────────────────
+  const community = social('community') ? await prisma.communityPost.findMany({
     where: {
       approved: true,
       OR: [
@@ -125,5 +131,5 @@ export async function GET(req: NextRequest) {
       title: a.title, excerpt: a.excerpt, href: `/library/${a.slug}`, category: a.category,
     })) : []
 
-  return NextResponse.json({ blog, userPosts, community, library, users, circles })
+  return NextResponse.json({ blog, userPosts, community, library, users, circles, restricted: !isLoggedIn })
 }
