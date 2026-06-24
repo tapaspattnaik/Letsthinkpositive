@@ -75,10 +75,30 @@ export function MessagesWidget() {
   const [loadingChat, setLoadingChat] = useState(false)
   const [notified, setNotified] = useState(false)
 
-  const bottomRef  = useRef<HTMLDivElement>(null)
-  const inputRef   = useRef<HTMLTextAreaElement>(null)
-  const pollRef    = useRef<ReturnType<typeof setInterval> | null>(null)
-  const presRef    = useRef<ReturnType<typeof setInterval> | null>(null)
+  const bottomRef     = useRef<HTMLDivElement>(null)
+  const inputRef      = useRef<HTMLTextAreaElement>(null)
+  const pollRef       = useRef<ReturnType<typeof setInterval> | null>(null)
+  const presRef       = useRef<ReturnType<typeof setInterval> | null>(null)
+  const prevUnreadRef = useRef<number>(0)          // track conversation-level new messages
+  const knownMsgIds   = useRef<Set<number>>(new Set()) // track chat-level new messages
+
+  // ── Browser notification helpers ────────────────────────────────────────
+  const requestNotifPermission = useCallback(async () => {
+    if (typeof Notification === 'undefined') return
+    if (Notification.permission === 'default') await Notification.requestPermission()
+  }, [])
+
+  const notify = useCallback((title: string, body: string) => {
+    if (typeof Notification === 'undefined') return
+    if (Notification.permission !== 'granted') return
+    if (!document.hidden) return          // skip if tab is already focused
+    const n = new Notification(title, {
+      body,
+      icon: '/icons/icon-192.png',
+      tag:  'ltp-dm',                     // collapses rapid-fire into one alert
+    })
+    n.onclick = () => { window.focus(); n.close() }
+  }, [])
 
   // ── Presence ping ───────────────────────────────────────────────────────
   const pingPresence = useCallback(async () => {
@@ -105,20 +125,43 @@ export function MessagesWidget() {
     const res = await fetch('/api/dm/conversations')
     if (!res.ok) return
     const data: Convo[] = await res.json()
-    setConvos(data)
+
+    // Browser notification when unread count goes up
+    const newTotal = data.reduce((s, c) => s + c.unread, 0)
+    if (newTotal > prevUnreadRef.current) {
+      // Find the conversation that gained unread messages
+      setConvos(prev => {
+        const newConvo = data.find(c => {
+          const old = prev.find(x => x.userId === c.userId)
+          return c.unread > (old?.unread ?? 0)
+        })
+        if (newConvo) notify(`💬 ${newConvo.name}`, newConvo.lastMessage)
+        return data
+      })
+    } else {
+      setConvos(data)
+    }
+    prevUnreadRef.current = newTotal
     if (data.length) fetchOnline(data.map(c => c.userId))
-  }, [fetchOnline])
+  }, [fetchOnline, notify])
 
   // ── Load messages for a chat ────────────────────────────────────────────
   const loadMessages = useCallback(async (userId: number) => {
     const res = await fetch(`/api/dm/${userId}`)
     if (!res.ok) return
     const data = await res.json() as { other: OtherUser; messages: Msg[] }
+
+    // Browser notification for new inbound messages in open chat
+    const newInbound = data.messages.filter(m => !m.fromMe && !knownMsgIds.current.has(m.id))
+    data.messages.forEach(m => knownMsgIds.current.add(m.id))
+    if (newInbound.length > 0) {
+      notify(`💬 ${data.other.name}`, newInbound[newInbound.length - 1].body)
+    }
+
     setOther(data.other)
     setMessages(data.messages)
-    // mark as read
     fetch(`/api/dm/${userId}/read`, { method: 'PATCH' }).catch(() => {})
-  }, [])
+  }, [notify])
 
   // ── Polling ─────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -171,7 +214,8 @@ export function MessagesWidget() {
     setView('list')
     setOpen(true)
     loadConvos()
-  }, [loadConvos])
+    requestNotifPermission()   // ask once, on first widget open
+  }, [loadConvos, requestNotifPermission])
 
   // ── Open chat from list ──────────────────────────────────────────────────
   const openChat = useCallback((c: Convo) => {
