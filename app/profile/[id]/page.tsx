@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { prisma } from '@/lib/db'
 import { TIER_STYLES } from '@/lib/badges'
 import { FollowButton } from '@/components/FollowButton'
+import { DMButton }     from '@/components/DMButton'
 import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
@@ -107,9 +108,10 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
             )}
           </div>
 
-          {/* Follow button — pushed down past the cover so it sits in white area */}
-          <div className="mt-[64px] sm:mt-[80px] flex-shrink-0">
+          {/* Follow + Message buttons */}
+          <div className="mt-[64px] sm:mt-[80px] flex items-center gap-2 flex-shrink-0">
             <FollowButton userId={id} showStats={false} />
+            <DMButton userId={id} name={user.name} avatar={user.avatarUrl} variant="pill" />
           </div>
         </div>
 

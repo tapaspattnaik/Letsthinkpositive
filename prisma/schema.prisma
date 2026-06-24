@@ -89,6 +89,9 @@ model User {
   dailyRecipes       DailyRecipe[]
   weeklyInsights     WeeklyInsight[]
   coinTransactions   CoinTransaction[]
+  sentMessages       DirectMessage[] @relation("SentMessages")
+  receivedMessages   DirectMessage[] @relation("ReceivedMessages")
+  presence           UserPresence?
 
   @@map("users")
 }
@@ -673,5 +676,36 @@ model WeeklyInsight {
 
   @@unique([userId, week])
   @@map("weekly_insights")
+}
+
+// ── Direct Messaging ─────────────────────────────────────────────────────────
+
+model DirectMessage {
+  id         Int       @id @default(autoincrement())
+  senderId   Int
+  receiverId Int
+  body       String    @db.Text
+  createdAt  DateTime  @default(now())
+  readAt     DateTime?
+
+  sender   User @relation("SentMessages",     fields: [senderId],   references: [id], onDelete: Cascade)
+  receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@index([senderId, receiverId, createdAt])
+  @@index([receiverId, readAt])
+  @@map("direct_messages")
+}
+
+// ── User Presence ─────────────────────────────────────────────────────────────
+// lastSeenAt updated via /api/presence ping every ~90 s.
+// Online = last seen within 5 minutes.
+
+model UserPresence {
+  userId     Int      @id
+  lastSeenAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_presence")
 }
 

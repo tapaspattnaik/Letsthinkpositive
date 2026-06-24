@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
+import { DMButton } from '@/components/DMButton'
 
 interface UserResult   { id: number; name: string; avatar?: string|null; bio?: string|null; interests: string[]; badges: number; href: string }
 interface CircleResult { id: number; name: string; slug: string; description: string; icon: string; members: number; posts: number; href: string }
@@ -364,18 +365,18 @@ function SearchInner() {
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {results.users.map(u => (
-                    <Link key={u.id} href={u.href}
-                      className="flex items-start gap-3 bg-white border border-teal-light rounded-[16px] px-4 py-3.5 no-underline hover:border-teal-mid hover:shadow-card transition-all group">
+                    <div key={u.id} className="flex items-start gap-3 bg-white border border-teal-light rounded-[16px] px-4 py-3.5 hover:border-teal-mid hover:shadow-card transition-all group">
                       <Avatar src={u.avatar} name={u.name} size={44} />
-                      <div className="flex-1 min-w-0">
+                      <Link href={u.href} className="flex-1 min-w-0 no-underline">
                         <p className="font-bold text-charcoal text-[0.93rem] group-hover:text-teal-deep transition-colors">{u.name}</p>
                         {u.bio && <p className="text-text-xlight text-[0.78rem] mt-0.5 line-clamp-1">{u.bio}</p>}
                         <div className="flex flex-wrap gap-1.5 mt-1.5 items-center">
                           {u.interests.map(i => <span key={i} className="bg-teal-ghost text-teal-deep text-[0.63rem] font-medium px-2 py-0.5 rounded-full">{i}</span>)}
                           {u.badges > 0 && <span className="text-amber text-[0.72rem] font-semibold">🏅 {u.badges}</span>}
                         </div>
-                      </div>
-                    </Link>
+                      </Link>
+                      {isLoggedIn && <DMButton userId={u.id} name={u.name} avatar={u.avatar} variant="icon" />}
+                    </div>
                   ))}
                 </div>
               </section>
