@@ -113,6 +113,17 @@ export default function HabitsPage() {
     setConfirmDelete(null)
   }
 
+  const [struggling, setStruggling] = useState<{ id: number; name: string; emoji: string; logged: number; lite: string }[]>([])
+
+  useEffect(() => {
+    if (status === 'authenticated' && habits.length > 0) {
+      fetch('/api/insights/struggling-habits')
+        .then(r => r.ok ? r.json() : [])
+        .then(d => setStruggling(Array.isArray(d) ? d : []))
+        .catch(() => {})
+    }
+  }, [habits, status])
+
   const doneCount  = habits.filter(h => h.doneToday).length
   const totalCount = habits.length
   const pct        = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0
@@ -178,6 +189,23 @@ export default function HabitsPage() {
       </div>
 
       <div className="max-w-2xl mx-auto py-8 px-[5%]">
+
+        {/* Struggling habit nudges */}
+        {struggling.length > 0 && (
+          <div className="mb-6 space-y-2">
+            {struggling.map(h => (
+              <div key={h.id} className="bg-amber-pale border border-amber/30 rounded-[16px] px-4 py-3 flex items-start gap-3">
+                <span className="text-[1.4rem] flex-shrink-0">{h.emoji}</span>
+                <div className="min-w-0">
+                  <p className="text-[0.8rem] font-bold text-charcoal">{h.name} — let&apos;s make it easier</p>
+                  <p className="text-[0.75rem] text-text-mid mt-0.5 leading-snug">
+                    You&apos;ve only checked in {h.logged}× this week. Try instead: <span className="font-semibold text-teal-deep">{h.lite}</span>
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Habits list */}
         {habits.length === 0 ? (

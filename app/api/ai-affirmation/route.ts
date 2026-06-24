@@ -36,7 +36,7 @@ export async function GET() {
 
   const userId = Number(session.user.id)
   const today  = todayStr()
-  const cacheKey = `affirmation_${today}`
+  const cacheKey = `affirmation_v2_${today}`
 
   // Check cache
   const cached = await prisma.userMemory.findUnique({
@@ -66,6 +66,18 @@ export async function GET() {
 
   const streak = user?.currentStreak ?? 0
 
+  // Fetch richer profile context for personalisation
+  const profile = await prisma.user.findUnique({
+    where:  { id: userId },
+    select: { name: true, primaryGoal: true, lifeStage: true, interests: true },
+  })
+
+  const name      = profile?.name?.split(' ')[0] ?? ''
+  const goalCtx   = profile?.primaryGoal ? `Their primary wellness goal is: ${profile.primaryGoal}.` : ''
+  const stageCtx  = profile?.lifeStage   ? `They are at life stage: ${profile.lifeStage}.`           : ''
+  const topInterest = profile?.interests?.split(',').filter(Boolean)[0] ?? ''
+  const interestCtx = topInterest ? `One of their key interests is: ${topInterest}.` : ''
+
   // Build context description
   const moodCtx = moodAvg === null ? 'no recent mood data'
     : moodAvg >= 4 ? 'feeling great lately'
@@ -83,7 +95,7 @@ export async function GET() {
       const completion = await groq.chat.completions.create({
         model: 'llama-3.1-8b-instant',
         stream: false,
-        max_tokens: 50,
+        max_tokens: 60,
         temperature: 0.85,
         messages: [
           {
@@ -91,12 +103,17 @@ export async function GET() {
             content: `You write short, powerful daily affirmations for a wellness app.
 Write exactly ONE affirmation — a single sentence of encouragement.
 Tone: warm, personal, empowering. Not generic or clichéd.
-Length: 10–18 words. Do NOT start with "I am" — vary the phrasing.
-Match the affirmation to the user's current emotional state.`,
+Length: 10–20 words. Vary the opening phrase — do not always start with "I am".
+Use the user's first name naturally if it fits. Mirror their goal and interests.`,
           },
           {
             role: 'user',
-            content: `User is ${moodCtx} and ${streakCtx}. Write their affirmation for today.`,
+            content: [
+              name         ? `User's name: ${name}.`            : '',
+              goalCtx, stageCtx, interestCtx,
+              `They are ${moodCtx} and ${streakCtx}.`,
+              'Write their affirmation for today.',
+            ].filter(Boolean).join(' '),
           },
         ],
       })

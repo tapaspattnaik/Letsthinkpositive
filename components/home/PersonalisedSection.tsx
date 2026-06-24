@@ -55,6 +55,16 @@ const NextStepCard = dynamic(
   { ssr: false, loading: () => null }
 )
 
+const WhatWorkedCard = dynamic(
+  () => import('./WhatWorkedCard').then(m => ({ default: m.WhatWorkedCard })),
+  { ssr: false, loading: () => null }
+)
+
+const DowNudgeCard = dynamic(
+  () => import('./DowNudgeCard').then(m => ({ default: m.DowNudgeCard })),
+  { ssr: false, loading: () => null }
+)
+
 const BirthdayBanner = dynamic(
   () => import('@/components/BirthdayBanner').then(m => ({ default: m.BirthdayBanner })),
   { ssr: false, loading: () => null }
@@ -66,12 +76,14 @@ export function PersonalisedSection() {
       <OnboardingModal />
       <BirthdayBanner />
       <GentleBanner />
+      <DowNudgeCard />
       <NextStepCard />
       <DailyRewardCard />
       <TimeOfDayCard />
       <AffirmationCard />
       <FavouriteToolsBar />
       <InsightCard />
+      <WhatWorkedCard />
       <OnThisDayCard />
       <DailyRecipe />
     </>

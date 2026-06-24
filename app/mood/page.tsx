@@ -130,6 +130,7 @@ export default function MoodPage() {
   const [saving,     setSaving]     = useState(false)
   const [savedToday, setSavedToday] = useState(false)
   const [todayMood,  setTodayMood]  = useState<MoodEntry | null>(null)
+  const [readings,   setReadings]   = useState<{ title: string; excerpt: string; category: string; href: string }[]>([])
 
   async function load() {
     setLoading(true)
@@ -167,6 +168,11 @@ export default function MoodPage() {
         const today = data.date
         return [data, ...prev.filter(e => e.date !== today)]
       })
+      // Fetch curated reading for this mood
+      fetch(`/api/insights/reading-for-mood?mood=${selected}`)
+        .then(r => r.ok ? r.json() : [])
+        .then(d => setReadings(Array.isArray(d) ? d : []))
+        .catch(() => {})
     }
     setSaving(false)
   }
@@ -312,6 +318,22 @@ export default function MoodPage() {
                 </p>
               </div>
               <MoodActivitySuggestion mood={selected} />
+              {readings.length > 0 && (
+                <div className="mt-3 bg-white border border-teal-light rounded-[14px] px-4 py-3.5">
+                  <p className="text-[0.65rem] font-bold text-teal-mid uppercase tracking-widest mb-2.5">📚 Reading for how you feel</p>
+                  <div className="space-y-2.5">
+                    {readings.map(r => (
+                      <a key={r.href} href={r.href} className="flex items-start gap-2 group no-underline">
+                        <span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-teal-mid flex-shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-[0.82rem] font-semibold text-charcoal group-hover:text-teal-deep transition-colors leading-snug">{r.title}</p>
+                          <p className="text-[0.7rem] text-text-xlight mt-0.5 line-clamp-1">{r.excerpt}</p>
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
             </>
           )}
 

@@ -111,11 +111,15 @@ function timeAgo(d: string) {
   return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 }
 
+interface ForYouUser { id: number; name: string; avatar: string | null; bio: string | null; badges: number; followers: number; sharedInterests: string[]; sameGoal: boolean }
+interface ForYouCircle { id: number; name: string; slug: string; icon: string; description: string; members: number }
+
 export default function TribePage() {
   const { data: session, status } = useSession()
   const [data,    setData]    = useState<TribeData | null>(null)
   const [loading, setLoading] = useState(false)
   const [tab,     setTab]     = useState<Tab>('feed')
+  const [forYou,  setForYou]  = useState<{ users: ForYouUser[]; circles: ForYouCircle[] } | null>(null)
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -147,7 +151,10 @@ export default function TribePage() {
   }, [])
 
   useEffect(() => {
-    if (status === 'authenticated') fetchData()
+    if (status === 'authenticated') {
+      fetchData()
+      fetch('/api/tribe/for-you').then(r => r.ok ? r.json() : null).then(d => { if (d) setForYou(d) }).catch(() => {})
+    }
   }, [status, fetchData])
 
   const TABS: { key: Tab; label: string; icon: string; count?: number }[] = [
@@ -321,6 +328,49 @@ export default function TribePage() {
             {/* ── Discover ────────────────────────────────────────── */}
             {tab === 'discover' && (
               <div>
+                {/* ── For You: people + circles matched to profile ── */}
+                {forYou && (forYou.users.length > 0 || forYou.circles.length > 0) && (
+                  <div className="mb-6">
+                    <p className="text-[0.65rem] font-bold text-teal-mid uppercase tracking-widest mb-3">🎯 Matched to your goals &amp; interests</p>
+                    <div className="space-y-2.5 mb-4">
+                      {forYou.users.map(u => (
+                        <div key={u.id} className="bg-white border border-teal-light rounded-[18px] p-3.5 flex items-center gap-3 hover:border-teal-mid hover:shadow-card transition-all">
+                          <Link href={`/profile/${u.id}`} className="no-underline flex-shrink-0">
+                            <Avatar src={u.avatar} name={u.name} size={44} />
+                          </Link>
+                          <div className="flex-1 min-w-0">
+                            <Link href={`/profile/${u.id}`} className="font-bold text-charcoal text-[0.9rem] no-underline hover:text-teal-deep block truncate">{u.name}</Link>
+                            {u.bio && <p className="text-text-xlight text-[0.72rem] line-clamp-1 mt-0.5">{u.bio}</p>}
+                            <div className="flex gap-1 mt-1 flex-wrap">
+                              {u.sameGoal && <span className="bg-amber/10 text-amber text-[0.6rem] font-bold px-2 py-0.5 rounded-full">Same goal</span>}
+                              {u.sharedInterests.map(i => <span key={i} className="bg-teal-ghost text-teal-deep text-[0.6rem] font-medium px-2 py-0.5 rounded-full">{i}</span>)}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {forYou.circles.length > 0 && (
+                      <>
+                        <p className="text-[0.65rem] font-bold text-teal-mid uppercase tracking-widest mb-2.5">Circles you might like</p>
+                        <div className="space-y-2.5 mb-5">
+                          {forYou.circles.map(c => (
+                            <Link key={c.id} href={`/circles/${c.slug}`}
+                              className="flex items-center gap-3 bg-white border border-teal-light rounded-[18px] px-4 py-3 no-underline hover:border-teal-mid hover:shadow-card transition-all">
+                              <span className="text-[1.6rem]">{c.icon}</span>
+                              <div className="min-w-0">
+                                <p className="font-bold text-charcoal text-[0.88rem]">{c.name}</p>
+                                <p className="text-text-xlight text-[0.72rem] line-clamp-1">{c.description}</p>
+                              </div>
+                              <span className="ml-auto text-text-xlight text-[0.7rem] flex-shrink-0">👥 {c.members}</span>
+                            </Link>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                    <hr className="border-teal-light mb-5" />
+                  </div>
+                )}
+
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h2 className="font-bold text-charcoal text-[1rem]">✨ Members You Might Know</h2>
