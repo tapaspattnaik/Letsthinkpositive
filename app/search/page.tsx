@@ -10,15 +10,18 @@ interface CircleResult { id: number; name: string; slug: string; description: st
 interface PostResult   { title: string; excerpt: string; href: string; tag: string; date: string; author: string; avatar?: string|null }
 interface CommResult   { title: string; excerpt: string; href: string; author: string; avatar?: string|null; likes: number; tags: string[] }
 interface LibResult    { title: string; excerpt: string; href: string; category: string }
+interface ToolResult   { title: string; href: string; icon: string; desc: string }
 interface Results {
   users: UserResult[]; circles: CircleResult[]
   blog: PostResult[]; userPosts: PostResult[]
   community: CommResult[]; library: LibResult[]
+  tools: ToolResult[]
   restricted?: boolean
 }
 
 const ALL_FILTERS = [
   { key: 'all',       label: 'All',       icon: '🔍', social: false },
+  { key: 'tools',     label: 'Tools',     icon: '🛠️', social: false },
   { key: 'users',     label: 'People',    icon: '👤', social: true  },
   { key: 'circles',   label: 'Circles',   icon: '🔒', social: true  },
   { key: 'blog',      label: 'Blog',      icon: '✍️', social: false },
@@ -143,7 +146,7 @@ function SearchInner() {
   }
 
   const total = results
-    ? results.users.length + results.circles.length + results.blog.length +
+    ? results.tools.length + results.users.length + results.circles.length + results.blog.length +
       results.userPosts.length + results.community.length + results.library.length
     : 0
 
@@ -328,6 +331,29 @@ function SearchInner() {
                 </Link>
               )}
             </div>
+
+            {/* Tools */}
+            {results.tools.length > 0 && (
+              <section>
+                <h2 className="font-bold text-charcoal text-[0.95rem] mb-3 flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-teal-ghost flex items-center justify-center text-[0.8rem]">🛠️</span>
+                  Tools &amp; Pages <span className="text-text-xlight font-normal text-[0.8rem]">({results.tools.length})</span>
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {results.tools.map(t => (
+                    <Link key={t.href} href={t.href}
+                      className="flex items-center gap-3 bg-white border border-teal-light rounded-[16px] px-4 py-3 no-underline hover:border-teal-mid hover:shadow-card transition-all group">
+                      <span className="text-[1.6rem] flex-shrink-0">{t.icon}</span>
+                      <div className="min-w-0">
+                        <p className="font-bold text-charcoal text-[0.9rem] group-hover:text-teal-deep transition-colors">{t.title}</p>
+                        <p className="text-text-xlight text-[0.72rem] mt-0.5 line-clamp-1"
+                          dangerouslySetInnerHTML={{ __html: hl(t.desc.split(',')[0]) }} />
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
 
             {/* People */}
             {results.users.length > 0 && (
